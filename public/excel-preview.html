@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles for the entire page */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow: hidden;
+        }
+
+        /* Toolbar for actions */
+        #toolbar {
+            padding: 12px 16px;
+            background: #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Styling for toolbar buttons */
+        button {
+            padding: 10px 16px;
+            background-color: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Container for the Excel table */
+        #scrollContainer {
+            overflow: auto;
+            height: calc(100vh - 70px);
+            padding: 10px;
+        }
+
+        /* Table specific styles */
+        table {
+            border-collapse: collapse;
+            min-width: 100%;
+        }
+
+        /* Styles for table header and data cells */
+        th,
+        td {
+            border: 1px solid #94a3b8;
+            padding: 8px 12px;
+            text-align: center;
+            background-color: white;
+            color: #1e293b;
+            white-space: nowrap;
+            min-width: 80px;
+            box-sizing: border-box;
+        }
+
+        /* Header specific styles */
+        th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        th.selected {
+            background-color: #dbeafe;
+        }
+
+        /* Focus styles for editable cells */
+        td[contenteditable="true"]:focus,
+        th[contenteditable="true"]:focus {
+            outline: 2px solid #60a5fa;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
+        }
+
+        /* Style for the Row column */
+        th:first-child,
+        td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 6;
+            background-color: #e2e8f0;
+            border-right: 2px solid #64748b;
+            min-width: 60px;
+        }
+
+        th:first-child {
+            z-index: 7;
+            background-color: #cbd5e1;
+        }
+
+        /* Loading spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Error message */
+        .error {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 12px;
+            margin: 10px;
+            border-radius: 6px;
+        }
+
+        /* Column selection highlight */
+        .column-selected {
+            background-color: #dbeafe !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toolbar">
+        <button onclick="addNewColumn()">➕ Add Column</button>
+        <button onclick="deleteSelectedColumn()" id="deleteBtn" disabled>🗑️ Delete Column</button>
+        <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
+        <button onclick="scrollTableRight()">➡️ Scroll Right</button>
+        <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
+    </div>
+
+    <div id="scrollContainer">
+        <div class="loading">
+            <div class="spinner"></div>
+            <span style="margin-left: 10px;">Loading Excel data...</span>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const taskId = urlParams.get('taskId');
+        const companyId = urlParams.get('companyId');
+        const userId = urlParams.get('userId');
+        const userRole = urlParams.get('userRole');
+
+        let currentData = [];
+        let selectedColumn = null;
+        let isUpdating = false;
+        let updateTimeout = null;
+        let isRendering = false;
+
+
+
+
+
+        // Debounced update function
+        function debouncedUpdateCell(row, col, newValue) {
+            try {
+                if (updateTimeout) {
+                    clearTimeout(updateTimeout);
+                }
+
+                updateTimeout = setTimeout(() => {
+                    updateCell(row, col, newValue);
+                }, 500);
+            } catch (error) {
+                // Silent error handling
+            }
+        }
+
+        function handleCellKeyDown(event, currentRow, currentCol) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+
+                // Save current cell value first
+                const currentCell = event.target;
+                debouncedUpdateCell(currentRow, currentCol, currentCell.innerText);
+
+                // Move to next row, same column
+                const nextRow = currentRow + 1;
+
+                // If next row doesn't exist, create it
+                if (nextRow >= currentData.length) {
+                    const maxCols = currentData.length > 0 ? Math.max(...currentData.map(row => row.length)) : 1;
+                    const newRow = Array(maxCols).fill('');
+                    currentData.push(newRow);
+                    renderTable();
+                }
+
+                // Focus on the next row, same column
+                setTimeout(() => {
+                    const nextCell = document.querySelector(`td[data-row="${nextRow}"][data-col="${currentCol}"]`);
+                    if (nextCell) {
+                        nextCell.focus();
+                        // Place cursor at the end of the cell content
+                        const range = document.createRange();
+                        const selection = window.getSelection();
+                        range.selectNodeContents(nextCell);
+                        range.collapse(false);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }, 100);
+            }
+        }
+
+        // Session validation helper
+        function validateSession() {
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+
+            if (!user || !token) {
+                alert('Session expired. Please login again.');
+                window.close();
+                return false;
+            }
+
+            try {
+                const userData = JSON.parse(user);
+                const userIdFromStorage = userData.userId || userData.id;
+                const companyIdFromStorage = userData.companyId;
+
+                if (userIdFromStorage != userId || companyIdFromStorage != companyId) {
+                    alert('Session data mismatch. Please refresh and try again.');
+                    return false;
+                }
+            } catch (e) {
+                alert('Invalid session data. Please login again.');
+                window.close();
+                return false;
+            }
+
+            return true;
+        }
+
+        // Load Excel data on page load
+        window.onload = function () {
+            if (!taskId || !companyId) {
+                document.getElementById('scrollContainer').innerHTML =
+                    '<div class="error">❌ Missing task ID or company ID</div>';
+                return;
+            }
+
+            if (!userId || !userRole) {
+                document.getElementById('scrollContainer').innerHTML =
+                    '<div class="error">❌ Missing user information. Please try again from the dashboard.</div>';
+                return;
+            }
+
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+
+            if (!user || !token) {
+                document.getElementById('scrollContainer').innerHTML =
+                    '<div class="error">❌ Please login first to access Excel data. <br><br><button onclick="window.close()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button></div>';
+                return;
+            }
+
+            // Load Excel data directly without role-based access validation
+            loadExcelData();
+        };
+
+        async function tryMultiplePortsWithAuth(authHeaders) {
+            const ports = [8080, 8081, 9090, 3000];
+
+            for (const port of ports) {
+                try {
+                    const apiUrl = `http://localhost:${port}/api/task-files/${taskId}/preview?companyId=${companyId}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: authHeaders
+                    });
+
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return await response.json();
+                        }
+                    } else if (response.status === 403) {
+                        throw new Error('Access denied. You may not have permission to view this task.');
+                    } else if (response.status === 401) {
+                        throw new Error('Authentication required. Please login again.');
+                    }
+                } catch (e) {
+                    if (e.message.includes('Access denied') || e.message.includes('Authentication required')) {
+                        throw e;
+                    }
+                    continue;
+                }
+            }
+
+            throw new Error('Could not connect to backend server on any common port (8080, 8081, 9090, 3000)');
+        }
+
+        async function loadExcelData() {
+            try {
+                let data;
+
+                // Get authentication token from localStorage
+                const token = localStorage.getItem('token');
+                const authHeaders = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                };
+
+                // Add Authorization header if token exists
+                if (token) {
+                    authHeaders['Authorization'] = `Bearer ${token}`;
+                }
+
+                try {
+                    const response = await fetch(`/api/task-files/${taskId}/preview?companyId=${companyId}`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: authHeaders
+                    });
+
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            data = await response.json();
+                        } else {
+                            throw new Error('Non-JSON response from relative URL');
+                        }
+                    } else if (response.status === 403) {
+                        throw new Error('Access denied. You may not have permission to view this task.');
+                    } else if (response.status === 401) {
+                        throw new Error('Authentication required. Please login again.');
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (relativeError) {
+                    if (window.location.port === '5173') {
+                        data = await tryMultiplePortsWithAuth(authHeaders);
+                    } else {
+                        throw relativeError;
+                    }
+                }
+
+                if (!Array.isArray(data)) {
+                    throw new Error('Invalid data format received from server');
+                }
+
+                currentData = JSON.parse(JSON.stringify(data));
+                renderTable();
+            } catch (error) {
+                let errorMessage = error.message;
+
+                if (error.message.includes('Could not connect to backend')) {
+                    errorMessage = 'Backend server not running. Please start the Spring Boot application on port 8080.';
+                } else if (error.message.includes('Access denied')) {
+                    errorMessage = 'Access denied. You may not have permission to view this task. Please check with your administrator.';
+                } else if (error.message.includes('Authentication required')) {
+                    errorMessage = 'Authentication required. Please login first and try again.';
+                } else if (error.message.includes('non-JSON') || error.message.includes('Unexpected token')) {
+                    errorMessage = 'Authentication required. Please login first and try again.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error. Please check your connection.';
+                }
+
+                document.getElementById('scrollContainer').innerHTML =
+                    `<div class="error">❌ Failed to load Excel data: ${errorMessage}<br><br>
+                     <strong>Debug Info:</strong><br>
+                     Task ID: ${taskId}<br>
+                     Company ID: ${companyId}<br>
+                     User ID: ${userId}<br>
+                     User Role: ${userRole}<br><br>
+
+                     <button onclick="loadExcelData()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🔄 Retry</button>
+                     <button onclick="window.close()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
+                     </div>`;
+            }
+        }
+
+        function getColumnLetter(colIndex) {
+            let letter = '';
+            let tempIndex = colIndex;
+            while (tempIndex >= 0) {
+                letter = String.fromCharCode(65 + (tempIndex % 26)) + letter;
+                tempIndex = Math.floor(tempIndex / 26) - 1;
+            }
+            return letter;
+        }
+
+        function selectColumn(colIndex) {
+            // Clear previous selection
+            document.querySelectorAll('th').forEach(th => th.classList.remove('selected'));
+            document.querySelectorAll('td').forEach(td => td.classList.remove('column-selected'));
+
+            if (selectedColumn === colIndex) {
+                // Deselect if clicking the same column
+                selectedColumn = null;
+                document.getElementById('deleteBtn').disabled = true;
+            } else {
+                // Select new column
+                selectedColumn = colIndex;
+                document.getElementById('deleteBtn').disabled = false;
+
+                // Highlight column header
+                const headerCell = document.querySelector(`th[data-col="${colIndex}"]`);
+                if (headerCell) {
+                    headerCell.classList.add('selected');
+                }
+
+                // Highlight all cells in the column
+                document.querySelectorAll(`td[data-col="${colIndex}"]`).forEach(td => {
+                    td.classList.add('column-selected');
+                });
+            }
+        }
+
+        function renderTable() {
+            if (isRendering) {
+                return;
+            }
+
+            isRendering = true;
+
+            if (!currentData || currentData.length === 0) {
+                document.getElementById('scrollContainer').innerHTML =
+                    '<div class="error">❌ No Excel data found for this task</div>';
+                isRendering = false;
+                return;
+            }
+
+            let maxCols = 0;
+            if (currentData.length > 0) {
+                maxCols = Math.max(...currentData.map(row => row.length));
+            }
+
+            if (maxCols === 0) {
+                maxCols = 5;
+            }
+
+            let html = '<table id="editableExcel">';
+
+            // Header Row
+            html += "<tr>";
+            html += `<th>Row</th>`;
+            for (let colIndex = 0; colIndex < maxCols; colIndex++) {
+                const colLetter = getColumnLetter(colIndex);
+                html += `<th data-col="${colIndex}" onclick="selectColumn(${colIndex})" style="cursor: pointer;">
+                            ${colLetter}<br>
+                            <small style="font-size: 10px; color: #6b7280;">Click to select</small>
+                        </th>`;
+            }
+            html += "</tr>";
+
+            // Data Rows
+            currentData.forEach((row, rowIndex) => {
+                html += "<tr>";
+                html += `<td>${rowIndex + 1}</td>`;
+
+                for (let colIndex = 0; colIndex < maxCols; colIndex++) {
+                    const safeCell = row[colIndex] ?? "";
+                    html += `<td data-col="${colIndex}" data-row="${rowIndex}" contenteditable="true" 
+                                onblur="debouncedUpdateCell(${rowIndex}, ${colIndex}, this.innerText)"
+                                onkeydown="handleCellKeyDown(event, ${rowIndex}, ${colIndex})">
+                                ${safeCell}
+                            </td>`;
+                }
+                html += "</tr>";
+            });
+
+            html += '</table>';
+            document.getElementById('scrollContainer').innerHTML = html;
+
+            isRendering = false;
+        }
+
+        async function makeApiCall(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const defaultHeaders = {
+                'Accept': 'application/json'
+            };
+
+            // Add Authorization header if token exists
+            if (token) {
+                defaultHeaders['Authorization'] = `Bearer ${token}`;
+            }
+
+            if (options.body && !options.headers?.['Content-Type']) {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
+
+            const mergedOptions = {
+                credentials: 'include',
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                },
+                ...options
+            };
+
+            let apiUrl;
+            if (window.location.port === '5173') {
+                apiUrl = `http://localhost:8080${endpoint}`;
+            } else {
+                apiUrl = endpoint;
+            }
+
+            return await fetch(apiUrl, mergedOptions);
+        }
+
+        async function updateCell(row, col, newValue) {
+            if (isUpdating) {
+                return;
+            }
+
+            if (!validateSession()) {
+                return;
+            }
+
+            const oldValue = currentData[row]?.[col] || '';
+
+            if (oldValue === newValue) {
+                return;
+            }
+
+            isUpdating = true;
+
+            // Update local data
+            if (!currentData[row]) {
+                const newRowLength = Math.max(col + 1, currentData[0] ? currentData[0].length : 0);
+                currentData[row] = Array(newRowLength).fill("");
+            } else {
+                while (currentData[row].length <= col) {
+                    currentData[row].push("");
+                }
+            }
+            currentData[row][col] = newValue;
+
+            try {
+                const endpoint = `/api/task-files/${taskId}/update-cell?companyId=${companyId}&row=${row}&col=${col}&newValue=${encodeURIComponent(newValue)}`;
+
+                const response = await makeApiCall(endpoint, {
+                    method: "PATCH"
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+
+                    // Revert on failure
+                    currentData[row][col] = oldValue;
+
+                    if (response.status === 400) {
+                        alert('Invalid request format. Please try again.');
+                    } else if (response.status === 401) {
+                        alert('Session expired. Please refresh the page and login again.');
+                    } else if (response.status === 403) {
+                        alert('Access denied. You may not have permission to edit this task.');
+                    } else if (response.status === 404) {
+                        alert('Task not found. It may have been deleted.');
+                    } else {
+                        alert(`Failed to update cell: ${errorText || 'Unknown error'}`);
+                    }
+                }
+            } catch (e) {
+
+                // Revert on error
+                currentData[row][col] = oldValue;
+
+                if (e.message.includes('Failed to fetch')) {
+                    alert('Cannot connect to server. Please check if the backend is running.');
+                } else {
+                    alert(`Network error: ${e.message}`);
+                }
+            } finally {
+                isUpdating = false;
+            }
+        }
+
+        async function addNewColumn() {
+            // Add empty column to all rows
+            currentData.forEach(row => {
+                row.push('');
+            });
+
+            // If no data exists, create first row with empty column
+            if (currentData.length === 0) {
+                currentData.push(['']);
+            }
+
+            renderTable();
+        }
+
+        async function deleteSelectedColumn() {
+            if (selectedColumn === null) {
+                alert('Please select a column to delete');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete column ${getColumnLetter(selectedColumn)}?`)) {
+                return;
+            }
+
+            try {
+                const endpoint = `/api/task-files/${taskId}/delete-column?companyId=${companyId}&colIndex=${selectedColumn}`;
+                const response = await makeApiCall(endpoint, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+
+                    if (response.status === 401) {
+                        alert('Session expired. Please refresh the page and login again.');
+                    } else if (response.status === 400) {
+                        alert('Invalid column index or column does not exist.');
+                    } else {
+                        alert(`Failed to delete column: ${errorText || 'Unknown error'}`);
+                    }
+                } else {
+
+                    // Remove column from local data
+                    currentData.forEach(row => {
+                        if (selectedColumn < row.length) {
+                            row.splice(selectedColumn, 1);
+                        }
+                    });
+
+                    selectedColumn = null;
+                    document.getElementById('deleteBtn').disabled = true;
+                    renderTable();
+                }
+            } catch (e) {
+                if (e.message.includes('Failed to fetch')) {
+                    alert('Cannot connect to server. Please check if the backend is running.');
+                }
+            }
+        }
+
+        function scrollTableLeft() {
+            document.getElementById('scrollContainer').scrollBy({
+                left: -200,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollTableRight() {
+            document.getElementById('scrollContainer').scrollBy({
+                left: 200,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+
+</html>
