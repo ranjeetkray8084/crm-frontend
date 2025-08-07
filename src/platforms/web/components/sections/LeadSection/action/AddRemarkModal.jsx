@@ -14,7 +14,6 @@ const AddRemarkModal = ({ isOpen, onClose, lead, onAddRemark }) => {
 
         if (!remark.trim()) {
             // Using a more modern notification would be better than alert()
-            console.error('Remark cannot be empty');
             return;
         }
 
@@ -28,7 +27,6 @@ const AddRemarkModal = ({ isOpen, onClose, lead, onAddRemark }) => {
             setRemark('');
             onClose();
         } catch (error) {
-            console.error('Error adding remark:', error);
             // Consider showing an error toast to the user
         } finally {
             setIsSubmitting(false);

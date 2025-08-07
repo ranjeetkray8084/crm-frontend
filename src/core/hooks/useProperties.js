@@ -4,57 +4,7 @@ import { customAlert } from '../utils/alertUtils';
 
 
 
-/**
- * Applies role-based visibility rules for properties
- * - Director: Can see unit and owner number for all properties
- * - Admin: Can see properties they created and properties assigned to users
- * - User: Can only see properties they created
- * Note: This function only adds metadata for UI display, server should handle filtering
- */
-const applyVisibilityRules = (properties, role, userId) => {
-  console.log('🔍 Applying visibility rules:', { role, userId, propertiesCount: properties.length });
-  
-  return properties.map(property => {
-    const propertyCreatedById = property.createdById || property.createdBy?.id;
-    const isOwner = String(propertyCreatedById) === String(userId);
-    
-    console.log('🏠 Property check:', {
-      propertyId: property.id || property.propertyId,
-      propertyName: property.propertyName,
-      propertyCreatedById,
-      currentUserId: userId,
-      isOwner,
-      role
-    });
-    
-    // Role-based visibility logic for UI display
-    let canViewPrivateFields = false;
-    
-    switch (role) {
-      case 'DIRECTOR':
-        // Director can see unit and owner number for all properties
-        canViewPrivateFields = true;
-        break;
-        
-      case 'ADMIN':
-        // Admin can see properties they created and assigned properties
-        canViewPrivateFields = isOwner || property.assignedToUserId === userId;
-        break;
-        
-      case 'USER':
-      default:
-        // User can only see properties they created
-        canViewPrivateFields = isOwner;
-        break;
-    }
-
-    return {
-      ...property,
-      _isOwner: isOwner,
-      _canViewPrivateFields: canViewPrivateFields,
-    };
-  });
-};
+// Visibility logic removed - server now handles all filtering and visibility
 
 export const useProperties = (companyId, userId, userRole) => {
   const [properties, setProperties] = useState([]);
@@ -72,15 +22,6 @@ export const useProperties = (companyId, userId, userRole) => {
     const userIdFromStorage = localStorage.getItem('userId');
     const finalUserId = userId || localUser.userId || localUser.id || (userIdFromStorage ? parseInt(userIdFromStorage) : null);
 
-    console.log('👤 User info debug:', {
-      propUserId: userId,
-      localUserUserId: localUser.userId,
-      localUserId: localUser.id,
-      userIdFromStorage,
-      finalUserId,
-      role: userRole || localUser.role,
-      companyId: companyId || localUser.companyId
-    });
 
     return {
       companyId: companyId || localUser.companyId,
@@ -101,18 +42,18 @@ export const useProperties = (companyId, userId, userRole) => {
 
       try {
         let result;
-        
+
         // Prepare role-based parameters
         const roleParams = {
           userId: userInfo.userId,
           role: userInfo.role
         };
-        
+
         if (searchParams && Object.keys(searchParams).some(key => searchParams[key])) {
           // Use search API if filters are applied
           result = await PropertyService.searchProperties(
-            userInfo.companyId, 
-            { ...searchParams, ...roleParams }, 
+            userInfo.companyId,
+            { ...searchParams, ...roleParams },
             { page, size }
           );
         } else {
@@ -122,31 +63,17 @@ export const useProperties = (companyId, userId, userRole) => {
 
         if (result.success) {
           const propertiesData = result.data.content || result.data || [];
-          console.log('📊 Raw properties from API:', propertiesData.length, propertiesData);
-          
-          const propertiesWithVisibility = applyVisibilityRules(propertiesData, userInfo.role, userInfo.userId);
-          
-          console.log('✅ Properties with visibility rules applied:', propertiesWithVisibility.length, propertiesWithVisibility);
 
-          // Don't filter here - let the server handle pagination
-          // The visibility rules are applied for UI display purposes only
-          setProperties(propertiesWithVisibility);
-          
+          // Server handles all filtering and visibility - no client-side processing needed
+          setProperties(propertiesData);
+
           const paginationData = {
             page: result.data.number ?? page,
             size: result.data.size ?? size,
             totalElements: result.data.totalElements ?? propertiesData.length,
             totalPages: result.data.totalPages ?? Math.ceil((result.data.totalElements || propertiesData.length) / size),
           };
-          
-          console.log('📄 Setting pagination data:', paginationData);
-          console.log('📄 Raw API pagination:', {
-            number: result.data.number,
-            size: result.data.size,
-            totalElements: result.data.totalElements,
-            totalPages: result.data.totalPages
-          });
-          
+
           setPagination(paginationData);
         } else {
           throw new Error(result.error || 'Failed to fetch data.');
@@ -222,7 +149,6 @@ export const useProperties = (companyId, userId, userRole) => {
       try {
         return await PropertyService.getRemarksByPropertyId(userInfo.companyId, propertyId);
       } catch (err) {
-        console.error('Error in getRemarks:', err);
         return { success: false, data: [], error: 'Failed to get remarks' };
       }
     },

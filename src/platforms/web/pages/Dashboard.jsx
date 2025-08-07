@@ -15,12 +15,14 @@ import ViewAdmins from "../components/sections/AdminSection";
 import CompaniesSection from "../components/sections/CompaniesSection";
 import DirectorSection from "../components/sections/DirectorSection";
 
+
 import AddCompanyForm from '../components/forms/AddCompanyFrom';
 import AddLeadForm from '../components/forms/AddLeadForm';
 import AddNoteFormWrapper from '../components/forms/AddNoteFormWrapper';
 import AddPropertyForm from '../components/forms/AddPropertyForm';
 import AddTaskForm from '../components/forms/AddTaskFrom';
 import AddAdmin from '../components/forms/AddUserFrom';
+
 
 function Dashboard() {
   const [userRole, setUserRole] = useState('');
@@ -30,36 +32,64 @@ function Dashboard() {
   const [companyName, setCompanyName] = useState('SmartProCare');
   const [activeSection, setActiveSection] = useState('ViewDashboard');
   const [showSidebar, setShowSidebar] = useState(false); // mobile sidebar
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        console.log('🏠 Dashboard user data:', parsedUser);
-        
-        const finalUserId = parsedUser.userId || parsedUser.id || '';
-        const finalUserRole = parsedUser.role || '';
-        const finalCompanyId = parsedUser.companyId || '';
-        
-        console.log('🏠 Dashboard final values:', {
-          userId: finalUserId,
-          role: finalUserRole,
-          companyId: finalCompanyId
-        });
-        
-        setUserRole(finalUserRole);
-        setUserName(parsedUser.name || '');
-        setUserId(finalUserId);
-        setCompanyId(finalCompanyId);
-        if (parsedUser.companyName) {
-          setCompanyName(parsedUser.companyName);
+    const initializeDashboard = () => {
+      const storedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      if (storedUser && token) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          
+          const finalUserId = parsedUser.userId || parsedUser.id || '';
+          const finalUserRole = parsedUser.role || '';
+          const finalCompanyId = parsedUser.companyId || '';
+          
+          // More lenient check - only redirect if critical data is missing
+          if (!finalUserId || !finalUserRole) {
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+          }
+          
+          // Set user data
+          setUserRole(finalUserRole);
+          setUserName(parsedUser.name || '');
+          setUserId(finalUserId);
+          setCompanyId(finalCompanyId || ''); // Allow empty companyId for now
+          if (parsedUser.companyName) {
+            setCompanyName(parsedUser.companyName);
+          }
+          
+          setIsLoading(false);
+        } catch (err) {
+          localStorage.clear();
+          window.location.href = '/';
         }
-      } catch (err) {
-        console.error('Error parsing user data:', err);
+      } else {
+        localStorage.clear();
+        window.location.href = '/';
       }
-    }
+    };
+
+    // Add a small delay to ensure localStorage is fully available
+    const timer = setTimeout(initializeDashboard, 100);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Show loading state while initializing
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-gray-100 items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     localStorage.clear();
@@ -71,6 +101,7 @@ function Dashboard() {
       case 'ViewDashboard': return <DashboardContent />;
       case 'ViewUsers': return <Users />;
       case 'ViewLead': return <Leads userRole={userRole} userId={userId} companyId={companyId} />;
+
       case 'ViewProperty': return <Properties userRole={userRole} userId={userId} companyId={companyId} />;
       case 'ViewNotes': return <Notes />;
       case 'ViewTask': return <Tasks userRole={userRole} userId={userId} companyId={companyId} />;
@@ -149,6 +180,8 @@ function Dashboard() {
           {renderContent()}
         </div>
       </div>
+      
+
     </div>
   );
 }

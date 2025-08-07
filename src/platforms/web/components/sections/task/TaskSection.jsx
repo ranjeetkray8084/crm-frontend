@@ -30,56 +30,38 @@ const TaskSection = () => {
             const companyIdRaw = localStorage.getItem('companyId');
             const companyIdAlt = localStorage.getItem('company_id');
             
-            console.log('📦 localStorage data:', {
-                companyIdRaw,
-                companyIdAlt,
-                userRaw: userRaw ? 'exists' : 'missing',
-                token: token ? 'exists' : 'missing'
-            });
-
             if (!token) {
-                console.error('❌ No token found in localStorage');
                 alert('DEBUG: No authentication token found. This might cause logout.');
                 return;
             }
 
             const userData = JSON.parse(userRaw || '{}');
-            console.log('👤 Parsed user data:', userData);
 
             // Find the first valid company ID from various sources
             let companyId = null;
             if (companyIdRaw) {
                 companyId = parseInt(companyIdRaw, 10);
-                console.log('✅ Using companyIdRaw:', companyId);
             } else if (user.companyId) {
                 companyId = parseInt(user.companyId, 10);
-                console.log('✅ Using user.companyId:', companyId);
             } else if (companyIdAlt) {
                 companyId = parseInt(companyIdAlt, 10);
-                console.log('✅ Using companyIdAlt:', companyId);
             } else {
-                console.error('❌ No companyId found anywhere');
+                alert('❌ No companyId found anywhere');
             }
 
             const userId = user.id || user.userId;
             const userRole = user.role || 'USER';
 
-            console.log('🎯 Final userInfo:', { companyId, userId, role: userRole });
-
             if (!companyId || !userId) {
-                console.error('❌ Missing critical data:', { companyId, userId });
                 alert(`DEBUG: Missing data - companyId: ${companyId}, userId: ${userId}`);
             }
 
             setUserInfo({ companyId, userId, role: userRole });
 
         } catch (error) {
-            console.error('💥 Error in TaskSection useEffect:', error);
             alert(`DEBUG: Error reading localStorage: ${error.message}`);
         }
     }, []);
-
-    console.log('🔗 Calling useTasks with:', userInfo);
 
     const {
         // Data
@@ -111,15 +93,6 @@ const TaskSection = () => {
         clearError
     } = useTasks(userInfo.companyId, userInfo.userId, userInfo.role);
 
-    console.log('📊 useTasks returned:', {
-        tasksCount: tasks?.length || 0,
-        assignedTasksCount: assignedTasks?.length || 0,
-        uploadedTasksCount: uploadedTasks?.length || 0,
-        loading,
-        error,
-        hasLoadFunction: !!loadTasksByRole
-    });
-
     // Handle global task error
     useEffect(() => {
         if (error) {
@@ -145,18 +118,8 @@ const TaskSection = () => {
 
 
     useEffect(() => {
-        console.log('🔄 TaskSection second useEffect - calling loadTasksByRole');
-        console.log('📋 Current userInfo when loading tasks:', userInfo);
-
         if (loadTasksByRole && userInfo.companyId && userInfo.userId) {
-            console.log('✅ All conditions met, calling loadTasksByRole');
             loadTasksByRole();
-        } else {
-            console.log('❌ Not calling loadTasksByRole:', {
-                hasFunction: !!loadTasksByRole,
-                hasCompanyId: !!userInfo.companyId,
-                hasUserId: !!userInfo.userId
-            });
         }
     }, [loadTasksByRole, userInfo.companyId, userInfo.userId]);
 
@@ -279,7 +242,6 @@ const TaskSection = () => {
     };
 
     const handleOpen = async (taskId) => {
-        console.log('🔍 Opening Excel Editor for task ID:', taskId);
         
         // Store taskId in localStorage
         localStorage.setItem('currentTaskId', taskId);
@@ -466,14 +428,7 @@ const TaskSection = () => {
         });
     };
 
-    console.log('🎨 TaskSection render - Current state:', {
-        loading,
-        userInfo,
-        tasksCount: tasks?.length || 0
-    });
-
     if (loading) {
-        console.log('⏳ Showing loading spinner');
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -484,7 +439,6 @@ const TaskSection = () => {
 
     // Check if user info is missing
     if (!userInfo.companyId || !userInfo.userId) {
-        console.log('❌ Missing user info, showing error');
         return (
             <div className="text-center p-4 text-yellow-600 bg-yellow-100 rounded-lg mb-4">
                 <div className="font-semibold">User session expired or not found. Please log in again.</div>
@@ -497,8 +451,6 @@ const TaskSection = () => {
             </div>
         );
     }
-
-    console.log('✅ Rendering TaskSection main content');
 
     return (
         <div className="space-y-6">

@@ -3,12 +3,6 @@ import { MoreVertical, Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
 
 const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange }) => {
   const [showActions, setShowActions] = useState(false);
-  const currentUserId = parseInt(localStorage.getItem("userId"));
-  const userRole = JSON.parse(localStorage.getItem('user') || '{}').role;
-  
-  // Use the visibility rules from the property object
-  const isOwner = property._isOwner;
-  const canViewPrivateFields = property._canViewPrivateFields;
 
   const statusOptions = [
     { value: 'AVAILABLE_FOR_SALE', label: 'For Sale' },
@@ -93,11 +87,11 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.sector || 'N/A'}</td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.bhk || 'N/A'}</td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
-        {canViewPrivateFields ? (property.unit || property.unitDetails || 'N/A') : '🔒 Hidden'}
+        {property.unit || property.unitDetails || 'N/A'}
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.floor || 'N/A'}</td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
-        {canViewPrivateFields ? (property.ownerContact || property.ownerNumber || 'N/A') : '🔒 Hidden'}
+        {property.ownerContact || property.ownerNumber || 'N/A'}
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
         {formatDate(property.createdAt)}

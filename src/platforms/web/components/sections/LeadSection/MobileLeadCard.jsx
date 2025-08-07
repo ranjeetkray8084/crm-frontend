@@ -10,7 +10,8 @@ import {
     MoreVertical,
     Target,
     Calendar,
-    GitBranch
+    GitBranch,
+    Clock
   } from 'lucide-react';
   
   const MobileLeadCard = ({
@@ -25,7 +26,9 @@ import {
     onViewRemarks,
     onAssign,
     onUnassign,
-    onUpdate
+    onUpdate,
+    onAddFollowUp,
+    onViewFollowUps
   }) => {
     if (!lead) return null;
   
@@ -112,6 +115,18 @@ import {
                     className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                   >
                     <MessageSquare size={14} /> Add Remark
+                  </button>
+                  <button
+                    onClick={() => onAddFollowUp(lead)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full"
+                  >
+                    <Calendar size={14} /> Add Follow-Up
+                  </button>
+                  <button
+                    onClick={() => onViewFollowUps(lead)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full"
+                  >
+                    <Clock size={14} /> View Follow-ups
                   </button>
                   <button
                     onClick={() => onViewRemarks(lead)}

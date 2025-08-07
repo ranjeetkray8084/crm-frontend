@@ -40,7 +40,7 @@ const TaskActions = ({
       setActionLoading(true);
       await callback(task.id);
     } catch (error) {
-      console.error('Action failed:', error);
+      // console.error('Action failed:', error);
     } finally {
       setActionLoading(false);
       setOpen(false);

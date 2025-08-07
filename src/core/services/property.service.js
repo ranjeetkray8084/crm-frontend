@@ -5,14 +5,17 @@ import { API_ENDPOINTS } from './api.endpoints';
 export class PropertyService {
   static async getPropertiesByCompany(companyId, page = 0, size = 10, roleParams = {}) {
     try {
-      console.log('🌐 API call params:', { companyId, page, size, roleParams });
+      // Use the existing paged endpoint with role and userId parameters
       const response = await axios.get(API_ENDPOINTS.PROPERTIES.GET_PAGED(companyId), {
-        params: { page, size, ...roleParams }
+        params: { 
+          page, 
+          size, 
+          role: roleParams.role,
+          userId: roleParams.userId
+        }
       });
-      console.log('🌐 API response:', response.data);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('🌐 API error:', error);
       return { success: false, error: error.response?.data?.message || 'Failed to load properties' };
     }
   }
@@ -136,44 +139,40 @@ export class PropertyService {
 
   static async searchProperties(companyId, searchParams = {}, pageable = {}) {
     try {
-      const params = new URLSearchParams();
-      
-      // Add pagination
-      params.append('page', pageable.page || 0);
-      params.append('size', pageable.size || 10);
-      
-      // Add role-based parameters
-      if (searchParams.userId) params.append('userId', searchParams.userId);
-      if (searchParams.role) params.append('role', searchParams.role);
+      const params = {
+        // Add pagination
+        page: pageable.page || 0,
+        size: pageable.size || 10,
+        
+        // Add role-based parameters
+        role: searchParams.role,
+        userId: searchParams.userId
+      };
       
       // Handle keywords search - split by space and add multiple keywords
       if (searchParams.keywords && searchParams.keywords.trim()) {
-        const keywordsArr = searchParams.keywords.trim().split(/\s+/).filter(k => k);
-        keywordsArr.forEach(keyword => params.append('keywords', keyword));
+        params.keywords = searchParams.keywords.trim();
       }
       
       // Handle budget range
       if (searchParams.budgetRange) {
         const [minPrice, maxPrice] = searchParams.budgetRange.split('-').map(Number);
-        if (!isNaN(minPrice)) params.append('minPrice', minPrice);
-        if (!isNaN(maxPrice)) params.append('maxPrice', maxPrice);
+        if (!isNaN(minPrice)) params.minPrice = minPrice;
+        if (!isNaN(maxPrice)) params.maxPrice = maxPrice;
       }
       
       // Add other filters
-      if (searchParams.status) params.append('status', searchParams.status);
-      if (searchParams.type) params.append('type', searchParams.type);
-      if (searchParams.bhk) params.append('bhk', searchParams.bhk);
-      if (searchParams.source) params.append('source', searchParams.source);
-      if (searchParams.createdBy) params.append('createdByName', searchParams.createdBy);
+      if (searchParams.status) params.status = searchParams.status;
+      if (searchParams.type) params.type = searchParams.type;
+      if (searchParams.bhk) params.bhk = searchParams.bhk;
+      if (searchParams.source) params.source = searchParams.source;
+      if (searchParams.createdBy) params.createdByName = searchParams.createdBy;
 
-      const url = `/api/companies/${companyId}/properties/search-paged?${params.toString()}`;
-      console.log('Property search API call:', url);
-  
-      const response = await axios.get(url);
+      // Use the existing search-paged endpoint with role and userId parameters
+      const response = await axios.get(API_ENDPOINTS.PROPERTIES.SEARCH_PAGED(companyId), { params });
       return { success: true, data: response.data };
   
     } catch (error) {
-      console.error('Search Properties Error:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Failed to search properties',

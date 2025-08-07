@@ -7,7 +7,42 @@ export const useDashboardStats = (companyId, userId, role) => {
   const [error, setError] = useState(null);
 
   const loadStats = useCallback(async () => {
-    if (!companyId || !userId || !role) return;
+    if (!userId || !role) {
+      setLoading(false);
+      return;
+    }
+
+    if (!companyId) {
+      setStats({
+        totalLeads: 0,
+        newLeads: 0,
+        contactedLeads: 0,
+        totalProperties: 0,
+        propertyOverview: {
+          totalProperties: 0,
+          'available for sale': 0,
+          'available for rent': 0,
+          'sold out': 0,
+          'rent out': 0,
+        },
+        dealsOverview: {
+          'total close': 0,
+          closed: 0,
+          dropped: 0,
+        },
+        usersOverview: {
+          totalNormalUsers: 0,
+          activeAdmins: 0,
+          totalUsers: 0,
+          totalAdmins: 0,
+          deactiveAdmins: 0,
+          deactiveNormalUsers: 0,
+          activeNormalUsers: 0,
+        },
+      });
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -59,10 +94,12 @@ export const useDashboardStats = (companyId, userId, role) => {
         };
       }
 
+      // Users overview API call
       let usersOverviewResult;
       try {
         usersOverviewResult = await DashboardService.getUsersAndAdminsOverview(companyId);
-      } catch {
+      } catch (err) {
+        console.warn('Users overview API failed:', err);
         usersOverviewResult = {
           data: {
             totalNormalUsers: 0,
@@ -96,7 +133,6 @@ export const useDashboardStats = (companyId, userId, role) => {
         usersOverview: usersOverviewResult.data,
       });
     } catch (err) {
-      console.error('❌ Dashboard stats fetch failed:', err);
       setError(err.message || 'Failed to load dashboard stats');
     } finally {
       setLoading(false);
@@ -116,7 +152,16 @@ export const useTodayEvents = (companyId, userId) => {
   const [error, setError] = useState(null);
 
   const loadTodayEvents = useCallback(async () => {
-    if (!companyId || !userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    if (!companyId) {
+      setTodayEvents([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -157,7 +202,6 @@ export const useTodayEvents = (companyId, userId) => {
 
       setTodayEvents(enrichedEvents);
     } catch (err) {
-      console.error('❌ Today events fetch failed:', err);
       setError(err.message || 'Failed to load today events');
     } finally {
       setLoading(false);

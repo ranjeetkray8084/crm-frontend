@@ -40,7 +40,7 @@ export const API_ENDPOINTS = {
     ASSIGN_ADMIN: (userId) => `/api/users/${userId}/assign-admin`,
     UNASSIGN_ADMIN: (userId) => `/api/users/${userId}/unassign-admin`,
     COUNT_BY_ADMIN: (adminId) => `/api/users/count-by-admin/${adminId}`,
-    USERS_AND_ADMINS_OVERVIEW: (companyId) => `/api/users/users-and-admins-overview/${companyId}`,
+    USERS_AND_ADMINS_OVERVIEW: (companyId) => `/api/users/count-summary/${companyId}`,
     CHECK_SESSION: '/api/users/check-session'
   },
 
@@ -62,12 +62,15 @@ export const API_ENDPOINTS = {
 
   // Follow-up Management Endpoints (FollowUpController)
   FOLLOWUPS: {
-    GET_ALL: '/api/followups',
-    GET_BY_ID: (id) => `/api/followups/${id}`,
-    CREATE: '/api/followups',
-    UPDATE: '/api/followups',
-    DELETE: (id) => `/api/followups/${id}`
+    GET_ALL: (companyId) => `/api/${companyId}/followups`,
+    GET_BY_ID: (companyId, id) => `/api/${companyId}/followups/${id}`,
+    GET_BY_LEAD_ID: (companyId, leadId) => `/api/${companyId}/followups/lead/${leadId}`,
+    GET_TODAY: (companyId) => `/api/${companyId}/followups/today`,
+    CREATE: (companyId) => `/api/${companyId}/followups`,
+    UPDATE: (companyId) => `/api/${companyId}/followups`,
+    DELETE: (companyId, id) => `/api/${companyId}/followups/${id}`
   },
+  
 
   // Lead Management Endpoints (LeadController)
   LEADS: {

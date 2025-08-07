@@ -81,16 +81,13 @@ export class DashboardService {
   static async getNewContactedLeadsCount(companyId) {
     try {
       const apiUrl = API_ENDPOINTS.LEADS.COUNT_NEW_CONTACTED(companyId);
-      console.log('🔗 Calling new/contacted leads API:', apiUrl);
       const response = await axios.get(apiUrl);
-      console.log('✅ New/contacted leads API response:', response.data);
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      console.warn('New/contacted leads API not available:', error.response?.status);
       // Return fallback data instead of throwing error
       return {
         success: true,
@@ -110,16 +107,13 @@ export class DashboardService {
   static async getDealsCloseCount(companyId) {
     try {
       const apiUrl = API_ENDPOINTS.LEADS.COUNT_DEALS_CLOSE(companyId);
-      console.log('💼 Calling deals close count API:', apiUrl);
       const response = await axios.get(apiUrl);
-      console.log('✅ Deals close count API response:', response.data);
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      console.warn('Deals close count API not available:', error.response?.status);
       // Return fallback data instead of throwing error
       return {
         success: true,
@@ -149,16 +143,13 @@ export class DashboardService {
   static async getPropertiesOverview(companyId) {
     try {
       const apiUrl = API_ENDPOINTS.PROPERTIES.COUNT_PROPERTY_OVERVIEW(companyId);
-      console.log('🏢 Calling properties count overview API:', apiUrl);
       const response = await axios.get(apiUrl);
-      console.log('✅ Properties count overview API response:', response.data);
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      console.warn('Properties count overview API not available:', error.response?.status);
       // Return fallback data instead of throwing error
       return {
         success: true,
@@ -240,20 +231,13 @@ export class DashboardService {
   static async getUsersAndAdminsOverview(companyId) {
     try {
       const apiUrl = API_ENDPOINTS.USERS.USERS_AND_ADMINS_OVERVIEW(companyId);
-      console.log('👥 Calling users and admins overview API:', apiUrl);
       const response = await axios.get(apiUrl);
-      console.log('✅ Users and admins overview API response:', response.data);
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      console.warn('⚠️ Users and admins overview API failed:', {
-        status: error.response?.status,
-        message: error.response?.data?.message,
-        url: apiUrl
-      });
   
       // Don't throw error - return fallback data to prevent logout
       return {

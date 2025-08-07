@@ -1,15 +1,16 @@
-// FollowUp Service - Reusable for Web & Mobile
+// FollowUp Service - Updated for Backend Controller API
 import axios from '../../legacy/api/axios';
 import { API_ENDPOINTS } from './api.endpoints';
 
 export class FollowUpService {
   /**
-   * Get all follow-ups
+   * Get all follow-ups for a company
+   * @param {number|string} companyId 
    * @returns {Promise<Object>} API response
    */
-  static async getAllFollowUps() {
+  static async getAllFollowUps(companyId) {
     try {
-      const response = await axios.get(API_ENDPOINTS.FOLLOWUPS.GET_ALL);
+      const response = await axios.get(`/api/${companyId}/followups`);
       return {
         success: true,
         data: response.data
@@ -24,12 +25,13 @@ export class FollowUpService {
 
   /**
    * Get follow-up by ID
-   * @param {number} followUpId 
+   * @param {number|string} companyId 
+   * @param {number|string} followUpId 
    * @returns {Promise<Object>} API response
    */
-  static async getFollowUpById(followUpId) {
+  static async getFollowUpById(companyId, followUpId) {
     try {
-      const response = await axios.get(API_ENDPOINTS.FOLLOWUPS.GET_BY_ID(followUpId));
+      const response = await axios.get(`/api/${companyId}/followups/${followUpId}`);
       return {
         success: true,
         data: response.data
@@ -43,13 +45,34 @@ export class FollowUpService {
   }
 
   /**
+   * Get today's follow-ups for a company
+   * @param {number|string} companyId 
+   * @returns {Promise<Object>} API response
+   */
+  static async getTodayFollowUps(companyId) {
+    try {
+      const response = await axios.get(`/api/${companyId}/followups/today`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load today\'s follow-ups'
+      };
+    }
+  }
+
+  /**
    * Create new follow-up
+   * @param {number|string} companyId 
    * @param {Object} followUpData 
    * @returns {Promise<Object>} API response
    */
-  static async createFollowUp(followUpData) {
+  static async createFollowUp(companyId, followUpData) {
     try {
-      const response = await axios.post(API_ENDPOINTS.FOLLOWUPS.CREATE, followUpData);
+      const response = await axios.post(`/api/${companyId}/followups`, followUpData);
       return {
         success: true,
         data: response.data,
@@ -65,12 +88,13 @@ export class FollowUpService {
 
   /**
    * Update follow-up
+   * @param {number|string} companyId 
    * @param {Object} followUpData 
    * @returns {Promise<Object>} API response
    */
-  static async updateFollowUp(followUpData) {
+  static async updateFollowUp(companyId, followUpData) {
     try {
-      const response = await axios.put(API_ENDPOINTS.FOLLOWUPS.UPDATE, followUpData);
+      const response = await axios.put(`/api/${companyId}/followups`, followUpData);
       return {
         success: true,
         data: response.data,
@@ -86,12 +110,13 @@ export class FollowUpService {
 
   /**
    * Delete follow-up
-   * @param {number} followUpId 
+   * @param {number|string} companyId 
+   * @param {number|string} followUpId 
    * @returns {Promise<Object>} API response
    */
-  static async deleteFollowUp(followUpId) {
+  static async deleteFollowUp(companyId, followUpId) {
     try {
-      await axios.delete(API_ENDPOINTS.FOLLOWUPS.DELETE(followUpId));
+      await axios.delete(`/api/${companyId}/followups/${followUpId}`);
       return {
         success: true,
         message: 'Follow-up deleted successfully'

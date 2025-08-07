@@ -46,8 +46,6 @@ export const useAuth = () => {
     try {
       await AuthService.logout();
     } catch (error) {
-      console.error('Logout API call failed:', error);
-    } finally {
       // Always clear local state regardless of API call result
       setUser(null);
       setIsAuthenticated(false);

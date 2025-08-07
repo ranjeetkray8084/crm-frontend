@@ -11,9 +11,7 @@ const CompaniesSection = () => {
     const [actionLoading, setActionLoading] = useState({});
 
     useEffect(() => {
-        console.log('CompaniesSection: User role:', user?.role);
         if (user?.role === 'DEVELOPER') {
-            console.log('CompaniesSection: Loading companies for developer...');
             loadAllCompanies();
         }
     }, [user?.role, loadAllCompanies]);
@@ -36,7 +34,7 @@ const CompaniesSection = () => {
             }
             await loadAllCompanies(); // Refresh the list
         } catch (error) {
-            console.error('Error toggling company status:', error);
+            // console.error('Error toggling company status:', error);
         } finally {
             setActionLoading(prev => ({ ...prev, [companyId]: false }));
         }

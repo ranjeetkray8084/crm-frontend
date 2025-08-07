@@ -22,10 +22,14 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
 
         if (storedUser && token) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } else {
+          // Clear any partial data
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
         }
       } catch (error) {
-        console.error('Error loading user from localStorage:', error);
         // Clear invalid data
         localStorage.removeItem('user');
         localStorage.removeItem('token');
@@ -37,28 +41,27 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const login = (userData) => {
+  const login = (userData, token) => {
+    
     localStorage.setItem('user', JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     setUser(userData);
   };
 
   const logout = async () => {
-    console.log('🚪 LOGOUT TRIGGERED FROM AuthContext');
-    console.log('📍 Current URL:', window.location.pathname);
-    console.log('👤 Current User:', user);
-    console.trace('🔍 Logout call stack trace');
     
     try {
       const { AuthService } = await import('../../core/services/auth.service');
       await AuthService.logout();
     } catch (error) {
-      console.error('Logout API call failed:', error);
+      // console.error('Logout API call failed:', error);
     } finally {
       // Always clear local data regardless of API call result
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       setUser(null);
-      console.log('✅ User data cleared from AuthContext');
     }
   };
 

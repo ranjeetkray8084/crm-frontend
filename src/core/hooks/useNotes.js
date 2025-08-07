@@ -149,7 +149,6 @@ export const useNotes = (companyId, userId, role) => {
     error,
     loadNotes,
     createNote: (noteData) => {
-      console.log('useNotes createNote called with:', { noteData, companyId, userId });
       
       // Validate required data
       if (!companyId) {
@@ -203,7 +202,6 @@ export const useNotes = (companyId, userId, role) => {
     addRemarkToNote: (noteId, remarkData) =>
       executeNoteAction(
         () => {
-          console.log('Sending remark:', { ...remarkData, userId });
           return NoteService.addRemarkToNote(companyId, noteId, { ...remarkData, userId });
         },
         'Remark added',

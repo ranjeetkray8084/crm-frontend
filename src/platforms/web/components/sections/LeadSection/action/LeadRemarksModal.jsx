@@ -30,7 +30,6 @@ const LeadRemarksModal = ({ isOpen, onClose, lead, onGetRemarks }) => {
       }
     } catch (err) {
       setError('Failed to load remarks');
-      console.error('Error fetching remarks:', err);
     } finally {
       setLoading(false);
     }

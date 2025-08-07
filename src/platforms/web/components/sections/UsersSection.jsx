@@ -36,27 +36,22 @@ const UsersSection = () => {
     // For DEVELOPER, we don't need companyId since they see all users across companies
     if (role === 'DEVELOPER') {
       if (!role || !userId) {
-        console.log('UsersSection: Missing role or userId for developer:', { role, userId });
         return;
       }
     } else {
       // For other roles, we need companyId
       if (!companyId || !role || !userId) {
-        console.log('UsersSection: Missing required data:', { companyId, role, userId });
         return;
       }
     }
 
-    console.log('UsersSection: Starting to load users for role:', role);
     setUserLoading(true);
     try {
       let result;
 
       if (role === 'DEVELOPER') {
         // Developer can see all USER role users across all companies using specific endpoint
-        console.log('UsersSection: Loading users for developer using /api/users/user-role...');
         result = await getUsersWithUserRole();
-        console.log('UsersSection: User result:', result);
       } else if (role === 'DIRECTOR') {
         // Director can see all USER role users in the company
         result = await getUsersByRoleAndCompany('USER');
@@ -71,15 +66,11 @@ const UsersSection = () => {
       }
 
       if (result.success) {
-        console.log('UsersSection: Setting user data:', result.data);
-        console.log('UsersSection: First user sample:', result.data?.[0]);
         setUserRoleUsers(result.data || []);
       } else {
-        console.error('Failed to load users:', result.error);
         setUserRoleUsers([]);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
       setUserRoleUsers([]);
     } finally {
       setUserLoading(false);
@@ -87,7 +78,6 @@ const UsersSection = () => {
   };
 
   useEffect(() => {
-    console.log('UsersSection: useEffect triggered with:', { companyId, role, userId });
     loadUserRoleUsers();
   }, [companyId, role, userId]);
 

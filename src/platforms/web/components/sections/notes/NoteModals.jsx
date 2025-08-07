@@ -129,7 +129,7 @@ const NoteModals = ({
         closeRemarkModal();
       }
     } catch (error) {
-      console.error('Error adding remark:', error);
+      // console.error('Error adding remark:', error);
     }
   };
 

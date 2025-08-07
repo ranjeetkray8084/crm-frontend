@@ -123,14 +123,14 @@ const MobilePropertyList = ({ properties, onDelete, onAddRemark, onViewRemarks, 
               {property.ownerName && (
                 <div className="col-span-2">
                   <span className="font-medium">Owner:</span>{' '}
-                  {property.ownerName} ({property._canViewPrivateFields ? (property.ownerContact || 'No contact') : '🔒 Hidden'})
+                  {property.ownerName} ({property.ownerContact || 'No contact'})
                 </div>
               )}
 
               {property.unit && (
                 <div className="col-span-2">
                   <span className="font-medium">Unit:</span>{' '}
-                  {property._canViewPrivateFields ? property.unit : '🔒 Hidden'}
+                  {property.unit}
                 </div>
               )}
             </div>

@@ -24,7 +24,7 @@ const NoteForm = ({ companyId, userId, createNote }) => {
                         setAvailableUsers(filteredUsers);
                     }
                 } catch (error) {
-                    console.error("Failed to load users:", error);
+                    // console.error("Failed to load users:", error);
                 }
             };
             fetchUsers();

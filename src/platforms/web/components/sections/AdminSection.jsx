@@ -32,27 +32,22 @@ const AdminSection = () => {
     // For DEVELOPER, we don't need companyId since they see all admins across companies
     if (role === 'DEVELOPER') {
       if (!role || !userId) {
-        console.log('AdminSection: Missing role or userId for developer:', { role, userId });
         return;
       }
     } else {
       // For other roles, we need companyId
       if (!companyId || !role || !userId) {
-        console.log('AdminSection: Missing required data:', { companyId, role, userId });
         return;
       }
     }
 
-    console.log('AdminSection: Starting to load admins for role:', role);
     setLoading(true);
     try {
       let result;
 
       if (role === 'DEVELOPER') {
         // Developer can see all ADMIN role users across all companies
-        console.log('AdminSection: Loading admins for developer using getAllAdmins...');
         result = await getAllAdmins();
-        console.log('AdminSection: Admin result:', result);
       } else if (role === 'DIRECTOR') {
         // Director can see all ADMIN role users in the company
         result = await getAdminsByRoleAndCompany();
@@ -64,14 +59,11 @@ const AdminSection = () => {
       }
 
       if (result.success) {
-        console.log('AdminSection: Setting admin data:', result.data);
         setAdmins(result.data || []);
       } else {
-        console.error('Failed to load admins:', result.error);
         setAdmins([]);
       }
     } catch (error) {
-      console.error('Error loading admins:', error);
       setAdmins([]);
     } finally {
       setLoading(false);
@@ -79,7 +71,6 @@ const AdminSection = () => {
   };
 
   useEffect(() => {
-    console.log('AdminSection: useEffect triggered with:', { companyId, role, userId });
     loadAdmins();
   }, [companyId, role, userId]);
 

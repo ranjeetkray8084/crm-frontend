@@ -12,6 +12,7 @@ import {
   Menu,
   Plus,
   Eye,
+  Clock,
 } from 'lucide-react';
 
 function Sidebar({ userRole, activeSection, onSectionChange, companyName, userName, userRoleDisplay }) {

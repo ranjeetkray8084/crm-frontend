@@ -10,12 +10,10 @@ export const useUsers = (companyId, role, userId) => {
   // --- Primary Data Loading ---
   const loadUsers = useCallback(async () => {
     if (!companyId) {
-      console.log("⚠️ Missing companyId:", companyId);
       return;
     }
 
     setLoading(true);
-    console.log("📥 Loading users with params:", { companyId, role, userId });
 
     try {
       let data = [];
@@ -31,15 +29,12 @@ export const useUsers = (companyId, role, userId) => {
       }
       else {
         // If no role is provided or unsupported role, load all company users
-        console.log("🔄 No role provided or unsupported role, loading all company users");
         const res = await UserService.getAllUsersByCompany(companyId);
         data = res.data;
       }
 
-      console.log("✅ Users fetched:", data);
       setUsers(data);
     } catch (err) {
-      console.error("❌ Error loading users:", err);
       setError(err.message || 'Failed to load users');
     } finally {
       setLoading(false);

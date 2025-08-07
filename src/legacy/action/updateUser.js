@@ -36,7 +36,6 @@ export async function updateUserProfile(user, onSuccess, onError) {
         // Auto-close any modal if still open
         document.querySelector(".modal")?.remove();
     } catch (error) {
-        console.error("❌ Error updating user:", error);
         const message = error?.response?.data?.message || "Error updating user";
         customAlert(message);
         if (typeof onError === 'function') onError(error);

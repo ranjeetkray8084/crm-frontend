@@ -63,11 +63,9 @@ const AddUserForm = ({ onSuccess }) => {
         const adminsList = await response.json();
         setAdmins(adminsList);
       } else {
-        console.error('Failed to load admins');
         setAdmins([]);
       }
     } catch (error) {
-      console.error('Error loading admins:', error);
       setAdmins([]);
     } finally {
       setLoadingAdmins(false);
@@ -137,8 +135,6 @@ const AddUserForm = ({ onSuccess }) => {
       // Remove confirmPassword before sending (backend validation)
       delete user.confirmPassword;
   
-      console.log('📦 Final Payload Sent (exact working structure):', JSON.stringify(user, null, 2));
-  
       const result = await createUser(user);
   
       if (result.success) {
@@ -155,7 +151,6 @@ const AddUserForm = ({ onSuccess }) => {
       }
     } catch (error) {
       
-      console.error('Error adding user:', error);
       customAlert('❌ Error adding user: ' + error.message);
     }
   }, [formData, companyId, createUser, onSuccess, userRole, userId]);

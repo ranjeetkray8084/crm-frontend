@@ -18,7 +18,6 @@ export async function loadAccountInfo() {
     UfetchAvatar(userId);
     localStorage.setItem("user", JSON.stringify(user));
   } catch (error) {
-    console.error("Failed to fetch user:", error);
     customAlert("Error loading user info.");
   }
 }
@@ -77,7 +76,6 @@ export async function saveAccount(event) {
 
     loadAccountInfo();
   } catch (error) {
-    console.error("Save error:", error);
     const msg = error?.response?.data?.message || "An error occurred while saving.";
     customAlert(msg);
   }
@@ -90,7 +88,6 @@ export async function UfetchAvatar(userId) {
     const avatarPreview = document.getElementById("UavatarPreview");
     if (avatarPreview) avatarPreview.src = imageUrl;
   } catch (error) {
-    console.error("Avatar fetch error:", error);
     const avatarPreview = document.getElementById("UavatarPreview");
     if (avatarPreview) avatarPreview.src = "assets/default-avatar.png";
   }
@@ -128,7 +125,6 @@ export function setupAvatarUploadListener() {
         UfetchAvatar(updatedUser.userId);
         localStorage.setItem("user", JSON.stringify(updatedUser));
       } catch (error) {
-        console.error("Avatar upload error:", error);
         customAlert("Error uploading avatar: " + error.message);
         avatarPreview.src = "assets/default-avatar.png";
       }

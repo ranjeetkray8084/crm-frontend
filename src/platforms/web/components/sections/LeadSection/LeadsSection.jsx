@@ -16,6 +16,9 @@ import AssignLeadModal from './action/AssignLeadModal';
 import UpdateLeadModal from './action/UpdateLeadModal';
 import AddRemarkModal from './action/AddRemarkModal';
 import LeadRemarksModal from './action/LeadRemarksModal';
+import AddFollowUpModal from './action/AddFollowUpModal';
+import ViewFollowUpsModal from './action/ViewFollowUpsModal';
+
 
 const LeadsSection = ({ userRole, userId, companyId }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -26,6 +29,9 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   const [editingLead, setEditingLead] = useState(null);
   const [remarkingLead, setRemarkingLead] = useState(null);
   const [viewingRemarksLead, setViewingRemarksLead] = useState(null);
+  const [followUpLead, setFollowUpLead] = useState(null);
+  const [viewFollowUpsLead, setViewFollowUpsLead] = useState(null);
+
   const [assignModal, setAssignModal] = useState({ isOpen: false, leadId: null });
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -94,6 +100,25 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
 
   const handleGetRemarks = (lead) => setViewingRemarksLead(lead);
 
+  const handleAddFollowUp = (lead) => setFollowUpLead(lead);
+
+  const handleViewFollowUps = (lead) => setViewFollowUpsLead(lead);
+
+
+
+  const handleConfirmAddFollowUp = async (followUpData) => {
+    if (!followUpLead) return;
+    const leadId = followUpLead.id || followUpLead.leadId;
+    
+    try {
+      // The follow-up is already created by the modal using useFollowUp hook
+      setFollowUpLead(null);
+      handleRefresh();
+    } catch (error) {
+      // console.error('Error in handleConfirmAddFollowUp:', error);
+    }
+  };
+
   const handleStatusUpdate = async (leadId, newStatus) => {
     await updateLeadStatus(leadId, newStatus);
     handleRefresh();
@@ -130,7 +155,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   };
 
   const handleExport = () => {
-    console.log('Export functionality to be implemented');
+    // console.log('Export functionality to be implemented');
   };
 
   const actionHandlers = {
@@ -141,6 +166,8 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
     onUpdate: handleUpdateLead,
     onAddRemark: handleAddRemark,
     onGetRemarks: handleGetRemarks,
+    onAddFollowUp: handleAddFollowUp,
+    onViewFollowUps: handleViewFollowUps,
     companyId: companyId
   };
 
@@ -252,6 +279,20 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
         lead={viewingRemarksLead}
         companyId={companyId}
         onGetRemarks={getRemarks}
+      />
+
+      <AddFollowUpModal
+        isOpen={!!followUpLead}
+        onClose={() => setFollowUpLead(null)}
+        onAddFollowUp={handleConfirmAddFollowUp}
+        lead={followUpLead}
+      />
+
+      <ViewFollowUpsModal
+        isOpen={!!viewFollowUpsLead}
+        onClose={() => setViewFollowUpsLead(null)}
+        lead={viewFollowUpsLead}
+        companyId={companyId}
       />
 
       <AssignLeadModal

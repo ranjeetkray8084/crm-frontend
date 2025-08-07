@@ -1,19 +1,31 @@
-// FollowUp Hook - Reusable for Web & Mobile
-import { useState, useEffect, useCallback } from 'react';
+// FollowUp Hook - Updated for Backend Controller API
+import { useState, useCallback, useMemo } from 'react';
 import { FollowUpService } from '../services/followup.service';
 
-export const useFollowUp = () => {
+export const useFollowUp = (companyId) => {
   const [followUps, setFollowUps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Memoize companyId to prevent unnecessary re-renders
+  const currentCompanyId = useMemo(() => {
+    if (companyId) return companyId;
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user.companyId;
+  }, [companyId]);
+
   // Load all follow-ups
   const loadFollowUps = useCallback(async () => {
+    if (!currentCompanyId) {
+      setError('Company ID is required');
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      const result = await FollowUpService.getAllFollowUps();
+      const result = await FollowUpService.getAllFollowUps(currentCompanyId);
       if (result.success) {
         setFollowUps(result.data);
       } else {
@@ -24,13 +36,17 @@ export const useFollowUp = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentCompanyId]);
 
   // Get follow-up by ID
-  const getFollowUpById = async (followUpId) => {
+  const getFollowUpById = useCallback(async (followUpId) => {
+    if (!currentCompanyId) {
+      return { success: false, error: 'Company ID is required' };
+    }
+
     setLoading(true);
     try {
-      const result = await FollowUpService.getFollowUpById(followUpId);
+      const result = await FollowUpService.getFollowUpById(currentCompanyId, followUpId);
       if (result.success) {
         return { success: true, data: result.data };
       } else {
@@ -44,13 +60,42 @@ export const useFollowUp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentCompanyId]);
 
-  // Create new follow-up
-  const createFollowUp = async (followUpData) => {
+  // Get today's follow-ups
+  const getTodaysFollowUps = useCallback(async () => {
+    if (!currentCompanyId) {
+      return { success: false, error: 'Company ID is required' };
+    }
+
     setLoading(true);
     try {
-      const result = await FollowUpService.createFollowUp(followUpData);
+      const result = await FollowUpService.getTodayFollowUps(currentCompanyId);
+      if (result.success) {
+        setFollowUps(result.data);
+        return { success: true, data: result.data };
+      } else {
+        setError(result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (err) {
+      const errorMsg = 'Failed to load today\'s follow-ups';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  }, [currentCompanyId]);
+
+  // Create new follow-up
+  const createFollowUp = useCallback(async (followUpData) => {
+    if (!currentCompanyId) {
+      return { success: false, error: 'Company ID is required' };
+    }
+
+    setLoading(true);
+    try {
+      const result = await FollowUpService.createFollowUp(currentCompanyId, followUpData);
       if (result.success) {
         await loadFollowUps(); // Reload follow-ups
         return { success: true, message: result.message, data: result.data };
@@ -65,13 +110,17 @@ export const useFollowUp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentCompanyId, loadFollowUps]);
 
   // Update follow-up
-  const updateFollowUp = async (followUpData) => {
+  const updateFollowUp = useCallback(async (followUpData) => {
+    if (!currentCompanyId) {
+      return { success: false, error: 'Company ID is required' };
+    }
+
     setLoading(true);
     try {
-      const result = await FollowUpService.updateFollowUp(followUpData);
+      const result = await FollowUpService.updateFollowUp(currentCompanyId, followUpData);
       if (result.success) {
         await loadFollowUps(); // Reload follow-ups
         return { success: true, message: result.message, data: result.data };
@@ -86,13 +135,17 @@ export const useFollowUp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentCompanyId, loadFollowUps]);
 
   // Delete follow-up
-  const deleteFollowUp = async (followUpId) => {
+  const deleteFollowUp = useCallback(async (followUpId) => {
+    if (!currentCompanyId) {
+      return { success: false, error: 'Company ID is required' };
+    }
+
     setLoading(true);
     try {
-      const result = await FollowUpService.deleteFollowUp(followUpId);
+      const result = await FollowUpService.deleteFollowUp(currentCompanyId, followUpId);
       if (result.success) {
         await loadFollowUps(); // Reload follow-ups
         return { success: true, message: result.message };
@@ -107,17 +160,12 @@ export const useFollowUp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentCompanyId, loadFollowUps]);
 
   // Clear error state
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
-  };
-
-  // Load follow-ups on mount
-  useEffect(() => {
-    loadFollowUps();
-  }, [loadFollowUps]);
+  }, []);
 
   return {
     followUps,
@@ -125,6 +173,7 @@ export const useFollowUp = () => {
     error,
     loadFollowUps,
     getFollowUpById,
+    getTodaysFollowUps,
     createFollowUp,
     updateFollowUp,
     deleteFollowUp,

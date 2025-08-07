@@ -37,7 +37,6 @@ const ForgetPassword = ({ onBack }) => {
       }
     } catch (error) {
       setVerifying(false);
-      console.error('Verify OTP error:', error);
       customAlert(`❌ Network error: ${error.message}`);
     }
   };
@@ -58,7 +57,6 @@ const ForgetPassword = ({ onBack }) => {
       }
     } catch (error) {
       setSaving(false);
-      console.error('Reset password error:', error);
       customAlert(`❌ Network error: ${error.message}`);
     }
   };

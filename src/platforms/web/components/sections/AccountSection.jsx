@@ -40,7 +40,6 @@ const AccountSection = () => {
         customAlert('Error loading user info.')
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error)
       customAlert('Error loading user info.')
     }
   }
@@ -54,7 +53,6 @@ const AccountSection = () => {
         setAvatarUrl('/assets/default-avatar.png')
       }
     } catch (error) {
-      console.error('Avatar fetch error:', error)
       setAvatarUrl('/assets/default-avatar.png')
     }
   }
@@ -123,7 +121,6 @@ const AccountSection = () => {
         customAlert('❌ Error updating account: ' + result.error)
       }
     } catch (error) {
-      console.error('Save error:', error)
       customAlert('❌ An error occurred while saving.')
     } finally {
       setLoading(false)
@@ -164,7 +161,6 @@ const AccountSection = () => {
           setAvatarUrl('/assets/default-avatar.png')
         }
       } catch (error) {
-        console.error('Avatar upload error:', error)
         customAlert('❌ Error uploading avatar: ' + error.message)
         setAvatarUrl('/assets/default-avatar.png')
       }

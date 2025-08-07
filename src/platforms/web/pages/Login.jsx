@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import ForgetPassword from "./ForgetPassword";
 import { AuthService } from "../../../core/services/auth.service";
 
+
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -39,14 +40,16 @@ const Login = () => {
       const result = await AuthService.login(formData);
 
       if (result.success) {
-        // Store token in localStorage
-        localStorage.setItem('token', result.token);
+        // Update auth context with both user data and token
+        login(result.user, result.token);
         
-        // Update auth context
-        login(result.user);
+        // Verify data is available
+        const storedUser = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
         
         // Navigate to dashboard or redirect URL
         const redirectUrl = localStorage.getItem("redirectUrl");
+        
         if (redirectUrl) {
           localStorage.removeItem("redirectUrl");
           navigate(redirectUrl);
@@ -57,7 +60,6 @@ const Login = () => {
         setError(result.error || "Login failed");
       }
     } catch (err) {
-      console.error('Login error:', err);
       setError(err?.message || "Login failed");
     } finally {
       setIsLoading(false);

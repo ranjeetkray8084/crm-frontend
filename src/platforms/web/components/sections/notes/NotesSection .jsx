@@ -109,7 +109,6 @@ const NotesSection = () => {
 
   // Manual function to set companyId (for debugging)
   const setCompanyIdManually = (id) => {
-    console.log('Setting companyId manually to:', id);
     localStorage.setItem('companyId', id.toString());
     setUserInfo(prev => ({ ...prev, companyId: parseInt(id, 10) }));
   };

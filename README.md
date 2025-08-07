@@ -28,27 +28,76 @@ npm run build
 ```
 src/
 ├── core/                    # ✅ Platform-Independent (85% reusable)
-│   ├── services/           # Business logic & API calls
-│   ├── hooks/              # React hooks (Web & Mobile)
-│   ├── utils/              # Utility functions
-│   ├── config/             # Configuration
-│   └── index.js            # Core exports
+│   ├── hooks/               # React hooks (Web & Mobile)
+│   │   ├── useDashboardStats.js
+│   │   ├── useProperties.js
+│   │   ├── useCompanies.js
+│   │   ├── useAdmins.js
+│   │   ├── useUsers.js
+│   │   ├── useAuth.js
+│   │   ├── useNotifications.js
+│   │   ├── useTasks.js
+│   │   ├── useNotes.js
+│   │   ├── usePropertySearch.js
+│   │   ├── useLeads.js
+│   │   ├── useLeadSearch.js
+│   │   ├── useCompany.js
+│   │   ├── useFollowUp.js
+│   │   ├── useContact.js
+│   │   ├── useApi.js
+│   │   ├── useDashboard.js
+│   │   └── index.js
+│   ├── services/            # Business logic & API calls
+│   │   ├── dashboard.service.js
+│   │   ├── api.endpoints.js
+│   │   ├── company.service.js
+│   │   ├── admin.service.js
+│   │   ├── auth.service.js
+│   │   ├── property.service.js
+│   │   ├── task.service.js
+│   │   ├── index.js
+│   │   ├── note.service.js
+│   │   ├── lead.service.js
+│   │   ├── user.service.js
+│   │   ├── followup.service.js
+│   │   ├── notification.service.js
+│   │   └── contact.service.js
+│   ├── utils/               # Utility functions
+│   │   ├── authUtils.js
+│   │   ├── platform.js
+│   │   ├── alertUtils.js
+│   │   └── auth.js
+│   ├── config/              # Configuration
+│   │   └── index.js
+│   └── index.js             # Core exports
 │
 ├── shared/                  # ✅ Shared Components (70% reusable)
-│   ├── contexts/           # React contexts
-│   └── constants/          # App constants
+│   └── contexts/            # React contexts
+│       └── AuthContext.jsx
 │
 ├── platforms/               # ✅ Platform-Specific
-│   ├── web/                # Web application
-│   │   ├── components/     # Web UI components
-│   │   ├── pages/          # Web pages
-│   │   └── index.js        # Web entry point
-│   ├── mobile/             # Mobile app (React Native)
-│   └── desktop/            # Desktop app (Electron)
+│   ├── web/                 # Web application
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── index.js
+│   ├── mobile/              # Mobile app (React Native)
+│   │   └── index.js
+│   └── desktop/             # Desktop app (Electron)
+│       └── index.js
 │
 └── legacy/                  # ❌ Legacy code (being phased out)
-    ├── api/                # Old API patterns
-    └── action/             # Old action patterns
+    ├── utils/
+    │   └── propertyRoleUtils.js
+    ├── api/
+    │   ├── axios.js
+    │   ├── loadUser.js
+    │   ├── loadAdmin.js
+    │   ├── leadadd.js
+    │   ├── authApi.js
+    │   └── accountUtils.js
+    └── action/
+        ├── updateUser.js
+        └── assignAdmin.js
 ```
 
 ## 🔧 **Core Services**

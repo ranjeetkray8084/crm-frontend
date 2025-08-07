@@ -13,7 +13,6 @@ const AddRemarkModal = ({ isOpen, onClose, property, onAddRemark }) => {
         e.preventDefault();
 
         if (!remark.trim()) {
-            console.error('Remark cannot be empty');
             return;
         }
 
@@ -27,7 +26,7 @@ const AddRemarkModal = ({ isOpen, onClose, property, onAddRemark }) => {
             setRemark('');
             onClose();
         } catch (error) {
-            console.error('Error adding remark:', error);
+            // console.error('Error adding remark:', error);
         } finally {
             setIsSubmitting(false);
         }

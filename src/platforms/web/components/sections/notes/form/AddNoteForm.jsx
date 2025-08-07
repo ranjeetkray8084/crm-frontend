@@ -97,10 +97,6 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
       visibleUserIds: (vis === 'SPECIFIC_USERS' || vis === 'SPECIFIC_ADMIN') ? selectedUsers : [],
     };
   
-    // ✅ ADD THESE LOGS
-    console.log("🧾 Note Submit Payload:", noteData);
-    console.log("👤 Selected Users:", selectedUsers);
-  
     setIsSubmitting(true);
     try {
       const success = await onSubmit(noteData);

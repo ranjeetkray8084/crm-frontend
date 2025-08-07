@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     MoreVertical, Edit, Trash2, MessageSquare, Eye,
-    UserPlus, UserMinus, ChevronDown
+    UserPlus, UserMinus, ChevronDown, Calendar, Clock
 } from 'lucide-react';
 
 const LeadTableRow = ({
@@ -14,6 +14,8 @@ const LeadTableRow = ({
     onAssign,
     onUnassign,
     onUpdate,
+    onAddFollowUp,
+    onViewFollowUps,
     companyId
 }) => {
     if (!lead) return null;
@@ -77,6 +79,16 @@ const LeadTableRow = ({
 
     const handleViewRemarksClick = () => {
         onGetRemarks(lead);
+        setShowActions(false);
+    };
+
+    const handleAddFollowUpClick = () => {
+        onAddFollowUp(lead);
+        setShowActions(false);
+    };
+
+    const handleViewFollowUpsClick = () => {
+        onViewFollowUps(lead);
         setShowActions(false);
     };
 
@@ -168,6 +180,8 @@ const LeadTableRow = ({
                         <div className="py-1">
                             <button onClick={handleUpdateClick} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"><Edit size={14} /> Update Lead</button>
                             <button onClick={handleAddRemarkClick} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"><MessageSquare size={14} /> Add Remark</button>
+                            <button onClick={handleAddFollowUpClick} className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"><Calendar size={14} /> Add Follow-Up</button>
+                            <button onClick={handleViewFollowUpsClick} className="flex items-center gap-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"><Clock size={14} /> View Follow-ups</button>
                             <button onClick={handleViewRemarksClick} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"><Eye size={14} /> View Remarks</button>
                             {isAssigned ? (
                                 <button onClick={() => { onUnassign(leadId); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left"><UserMinus size={14} /> Unassign Lead</button>

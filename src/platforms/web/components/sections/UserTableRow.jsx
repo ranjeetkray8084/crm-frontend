@@ -67,14 +67,6 @@ const UserTableRow = ({
     const isActive = user.status === true || user.status === 'active';
     const hasAdmin = user.adminName && user.adminName !== 'No Admin';
 
-    // Debug logging
-    console.log('UserTableRow: Rendering user:', user.name, {
-        showCompanyColumn,
-        isDeveloper,
-        companyName: user.companyName,
-        userId: user.userId
-    });
-
     return (
         <tr className="text-sm text-gray-700 hover:bg-blue-50">
             <td className="px-6 py-4 font-medium text-gray-900">

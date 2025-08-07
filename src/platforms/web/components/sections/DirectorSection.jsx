@@ -28,24 +28,18 @@ const DirectorSection = () => {
   // Load all directors for Developer role
   const loadDirectors = async () => {
     if (role !== 'DEVELOPER') {
-      console.log('DirectorSection: Not a developer, role:', role);
       return;
     }
 
-    console.log('DirectorSection: Loading directors for developer using /api/users/director-role...');
     setLoading(true);
     try {
       const result = await getUsersWithDirectorRole();
-      console.log('DirectorSection: Director result:', result);
       if (result.success) {
         setDirectors(result.data || []);
-        console.log('DirectorSection: Loaded directors:', result.data);
       } else {
-        console.error('Failed to load directors:', result.error);
         setDirectors([]);
       }
     } catch (error) {
-      console.error('Error loading directors:', error);
       setDirectors([]);
     } finally {
       setLoading(false);
@@ -53,7 +47,6 @@ const DirectorSection = () => {
   };
 
   useEffect(() => {
-    console.log('DirectorSection: useEffect triggered with role:', role);
     loadDirectors();
   }, [role]);
 

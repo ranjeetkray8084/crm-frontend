@@ -15,7 +15,9 @@ const MobileLeadList = ({
   onGetRemarks,
   onAssign,
   onUnassign,
-  onUpdate
+  onUpdate,
+  onAddFollowUp,
+  onViewFollowUps
 }) => {
   const [activeLeadId, setActiveLeadId] = useState(null);
   const [selectedLeads, setSelectedLeads] = useState(new Set());
@@ -157,6 +159,8 @@ const MobileLeadList = ({
               onAssign={onAssign}
               onUnassign={onUnassign}
               onUpdate={onUpdate}
+              onAddFollowUp={onAddFollowUp}
+              onViewFollowUps={onViewFollowUps}
             />
           </div>
         );

@@ -16,19 +16,13 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('🔗 Making API Request:', config.method?.toUpperCase(), config.url);
-    console.log('🔑 Token Status:', token ? 'Present' : 'Missing');
     
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
-      console.log('✅ Authorization header added');
-    } else {
-      console.warn('⚠️ No token found in localStorage');
     }
     return config;
   },
   (error) => {
-    console.error("Axios Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -37,28 +31,33 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Log all errors for debugging
     if (error.response?.status === 401) {
-      console.error('🚨 401 UNAUTHORIZED ERROR DETECTED!');
-      console.error('🔗 Failed API URL:', error.config?.url);
-      console.error('📝 Request Method:', error.config?.method);
-      console.error('📋 Request Headers:', error.config?.headers);
-      console.error('💾 Current Token:', localStorage.getItem("token") ? 'Present' : 'Missing');
-      console.error('👤 Current User:', localStorage.getItem("user") ? 'Present' : 'Missing');
-      console.error('📄 Full Error Response:', error.response?.data);
-      
-      // Clear auth data
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      
-      // Check if we're already on the login page
-      if (!window.location.pathname.includes('/login')) {
-        console.log('🔄 Redirecting to login page...');
-        // Store the current URL to redirect back after login
-        localStorage.setItem('redirectUrl', window.location.pathname);
+      // Only logout for authentication-related endpoints
+      const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
+      const isFollowUpEndpoint = error.config?.url?.includes('/followups');
+      const isOnLogin = window.location.pathname.includes('/login') || window.location.pathname === '/';
+
+      // Don't logout for follow-up API errors (temporary fix for backend JPA issue)
+      if (isFollowUpEndpoint) {
+        return Promise.reject(error);
+      }
+
+      if (isAuthEndpoint && !isOnLogin) {
+        // Clear auth data
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
         // Redirect to login
         window.location.href = "/";
       }
     }
+
+    // Handle 500 errors (like your JPA parameter binding issue)
+    if (error.response?.status === 500) {
+      // Don't logout for server errors
+    }
+
     return Promise.reject(error);
   }
 );

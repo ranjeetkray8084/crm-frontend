@@ -78,7 +78,24 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await onUpdate(propertyToUpdate.propertyId, formData);
+        
+        // Prepare the data in the exact format required
+        const updateData = {
+            propertyName: formData.propertyName,
+            type: formData.type,
+            bhk: formData.bhk,
+            unitDetails: formData.unitDetails,
+            floor: formData.floor,
+            size: formData.size ? parseInt(formData.size) : null,
+            location: formData.location,
+            ownerContact: formData.ownerContact,
+            ownerName: formData.ownerName,
+            price: formData.price,
+            sector: formData.sector,
+            status: formData.status
+        };
+        
+        await onUpdate(updateData);
         onClose(); // Close modal after successful update
     };
 

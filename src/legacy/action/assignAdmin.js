@@ -12,7 +12,6 @@ export async function fetchCompanyAdmins(companyId) {
         const response = await axios.get(`/users/admin-role/${companyId}`);
         return response.data;
     } catch (error) {
-        console.error("Failed to fetch admins:", error);
         throw new Error("Unable to load admins.");
     }
 }
@@ -31,7 +30,6 @@ export async function assignAdminToUser(selectedAdminId, userId) {
         });
         customAlert("✅ Admin assigned successfully.");
     } catch (error) {
-        console.error("Error assigning admin:", error);
 
         // Handle 401 specifically to prevent automatic logout
         if (error.response?.status === 401) {
@@ -68,7 +66,6 @@ export function confirmAssignAdmin(userId) {
             if (window.closeAssignModal) window.closeAssignModal();
         })
         .catch(err => {
-            console.error("Error assigning admin:", err);
             const message = err.response?.data?.message || err.message || "Error assigning admin.";
             customAlert(message);
         });
@@ -85,7 +82,6 @@ export async function unassignAdminFromUser(userId) {
         // Reload users if function exists
         if (window.loadUsers) window.loadUsers();
     } catch (error) {
-        console.error("Error unassigning admin:", error);
 
         // Handle 401 specifically to prevent automatic logout
         if (error.response?.status === 401) {

@@ -30,7 +30,6 @@ const PropertyRemarksModal = ({ isOpen, onClose, property, onGetRemarks }) => {
       }
     } catch (err) {
       setError('Failed to load remarks');
-      console.error('Error fetching remarks:', err);
     } finally {
       setLoading(false);
     }

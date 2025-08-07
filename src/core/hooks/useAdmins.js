@@ -14,14 +14,12 @@ export const useAdmins = (companyId, role, userId) => {
     // For DEVELOPER role, we don't need companyId since they see all admins across companies
     if (role === 'DEVELOPER') {
       if (!role || !userId) {
-        console.log('useAdmins: Missing role or userId for developer:', { role, userId });
         setLoading(false);
         return;
       }
     } else {
       // For other roles, we need companyId
       if (!companyId || !role || !userId) {
-        console.log('useAdmins: Missing required data:', { companyId, role, userId });
         setLoading(false);
         return;
       }
@@ -35,7 +33,6 @@ export const useAdmins = (companyId, role, userId) => {
 
       if (role === 'DEVELOPER') {
         // Developer can see all admins across all companies
-        console.log('useAdmins: Loading all admins for developer...');
         result = await AdminService.getAllAdmins();
       } else {
         // Other roles see admins by company

@@ -64,11 +64,9 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   // Initial load and page changes
   useEffect(() => {
     if (!companyId) {
-      console.log('No companyId provided');
       return;
     }
     
-    console.log('Loading properties - Page:', currentPage, 'RefreshKey:', refreshKey);
     loadProperties(currentPage, pageSize);
   }, [companyId, currentPage, refreshKey, loadProperties]);
 
@@ -77,11 +75,9 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     if (!companyId) return;
     
     if (isSearchActive && activeSearchParams) {
-      console.log('Search active, calling searchProperties with:', activeSearchParams);
       searchProperties(activeSearchParams, currentPage, pageSize);
     } else if (!isSearchActive) {
       // When search becomes inactive (cleared), reload original data
-      console.log('Search cleared, loading original properties');
       loadProperties(currentPage, pageSize);
     }
   }, [companyId, isSearchActive, activeSearchParams, currentPage, searchProperties, searchTrigger, loadProperties, pageSize]);
@@ -128,7 +124,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   };
 
   const handleExport = () => {
-    console.log('Export functionality to be implemented');
+    // Export functionality to be implemented
   };
 
   const actionHandlers = {

@@ -17,11 +17,7 @@ export class AuthService {
    */
   static async login(credentials) {
     try {
-      console.log('Attempting login with:', { email: credentials.email });
-      console.log('API Endpoint:', API_ENDPOINTS.AUTH.LOGIN);
-      
       const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-      console.log('Login Response:', response.data);
       
       // Extract token and user data
       const token = response.data.accessToken || response.data.token;
@@ -35,14 +31,29 @@ export class AuthService {
         img: response.data.avatar,
       };
 
-      console.log('Extracted user data:', user);
-      console.log('Token:', token ? 'Present' : 'Missing');
+      if (!token) {
+        return {
+          success: false,
+          error: 'No authentication token received from server'
+        };
+      }
+
+      if (!user.userId || !user.role || !user.companyId) {
+        return {
+          success: false,
+          error: 'Incomplete user data received from server'
+        };
+      }
 
       // Save session
       this.saveSession(user, token);
 
       // Configure axios with new token
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // Verify data was saved
+      const savedUser = localStorage.getItem(this.SESSION_KEYS.USER);
+      const savedToken = localStorage.getItem(this.SESSION_KEYS.TOKEN);
 
       // Return success response
       return {
@@ -53,11 +64,6 @@ export class AuthService {
         redirectTo: '/dashboard' // Explicitly set redirect to dashboard
       };
     } catch (error) {
-      console.error('Login failed:', error);
-      console.error('Error Response:', error.response?.data);
-      console.error('Error Status:', error.response?.status);
-      
-      // Extract error message from various possible response formats
       let errorMessage = 'Login failed';
       
       if (error.response?.data) {
@@ -87,22 +93,16 @@ export class AuthService {
    */
   static async sendOtp(email) {
     try {
-      console.log('Sending OTP to:', email);
-      console.log('API Endpoint:', API_ENDPOINTS.AUTH.SEND_OTP);
-      
       const response = await axios.post(API_ENDPOINTS.AUTH.SEND_OTP, null, {
         params: { email }
       });
       
-      console.log('OTP Response:', response.data);
       return {
         success: true,
         data: response.data,
         message: 'OTP sent to your email'
       };
     } catch (error) {
-      console.error('Send OTP Error:', error);
-      console.error('Error Response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.error || error.response?.data?.message || 'Failed to send OTP'
@@ -118,22 +118,16 @@ export class AuthService {
    */
   static async verifyOtp(email, otp) {
     try {
-      console.log('Verifying OTP:', { email, otp });
-      console.log('API Endpoint:', API_ENDPOINTS.AUTH.VERIFY_OTP);
-      
       const response = await axios.post(API_ENDPOINTS.AUTH.VERIFY_OTP, null, {
         params: { email, otp }
       });
       
-      console.log('Verify OTP Response:', response.data);
       return {
         success: true,
         data: response.data,
         valid: response.data.valid
       };
     } catch (error) {
-      console.error('Verify OTP Error:', error);
-      console.error('Error Response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.message || error.response?.data?.error || 'OTP verification failed'
@@ -149,22 +143,16 @@ export class AuthService {
    */
   static async resetPasswordWithOtp(email, newPassword) {
     try {
-      console.log('Resetting password for:', email);
-      console.log('API Endpoint:', API_ENDPOINTS.AUTH.RESET_PASSWORD_WITH_OTP);
-      
       const response = await axios.post(API_ENDPOINTS.AUTH.RESET_PASSWORD_WITH_OTP, null, {
         params: { email, newPassword }
       });
       
-      console.log('Reset Password Response:', response.data);
       return {
         success: true,
         data: response.data,
         message: 'Password reset successfully'
       };
     } catch (error) {
-      console.error('Reset Password Error:', error);
-      console.error('Error Response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.message || error.response?.data?.error || 'Password reset failed'
@@ -261,8 +249,21 @@ export class AuthService {
    * @param {string} token - JWT token
    */
   static saveSession(userData, token) {
-    localStorage.setItem(this.SESSION_KEYS.USER, JSON.stringify(userData));
-    localStorage.setItem(this.SESSION_KEYS.TOKEN, token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try {
+      if (!userData) {
+        return;
+      }
+      
+      if (!token) {
+        return;
+      }
+      
+      localStorage.setItem(this.SESSION_KEYS.USER, JSON.stringify(userData));
+      localStorage.setItem(this.SESSION_KEYS.TOKEN, token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+    } catch (error) {
+      // console.error('❌ saveSession: Error saving session data:', error);
+    }
   }
 }

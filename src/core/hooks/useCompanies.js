@@ -11,7 +11,6 @@ export const useCompanies = (role) => {
     // Load companies based on user role
     const loadCompanies = useCallback(async () => {
         if (!role) {
-            console.log('useCompanies: Missing role:', { role });
             setLoading(false);
             return;
         }
@@ -24,7 +23,6 @@ export const useCompanies = (role) => {
 
             if (role === 'DEVELOPER') {
                 // Developer can see all companies
-                console.log('useCompanies: Loading all companies for developer...');
                 result = await CompanyService.getAllCompanies();
             } else {
                 // Other roles see their own company

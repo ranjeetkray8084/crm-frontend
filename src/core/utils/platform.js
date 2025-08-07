@@ -14,11 +14,9 @@ export class Storage {
       } else {
         // Mobile environment - would use AsyncStorage
         // await AsyncStorage.setItem(key, JSON.stringify(value));
-        console.warn('Mobile storage not implemented');
         return false;
       }
     } catch (error) {
-      console.error('Storage setItem error:', error);
       return false;
     }
   }
@@ -33,11 +31,9 @@ export class Storage {
         // Mobile environment - would use AsyncStorage
         // const item = await AsyncStorage.getItem(key);
         // return item ? JSON.parse(item) : null;
-        console.warn('Mobile storage not implemented');
         return null;
       }
     } catch (error) {
-      console.error('Storage getItem error:', error);
       return null;
     }
   }
@@ -51,11 +47,9 @@ export class Storage {
       } else {
         // Mobile environment - would use AsyncStorage
         // await AsyncStorage.removeItem(key);
-        console.warn('Mobile storage not implemented');
         return false;
       }
     } catch (error) {
-      console.error('Storage removeItem error:', error);
       return false;
     }
   }
@@ -69,11 +63,9 @@ export class Storage {
       } else {
         // Mobile environment - would use AsyncStorage
         // await AsyncStorage.clear();
-        console.warn('Mobile storage not implemented');
         return false;
       }
     } catch (error) {
-      console.error('Storage clear error:', error);
       return false;
     }
   }
@@ -95,7 +87,6 @@ export class Navigation {
     } else {
       // Mobile environment - would use React Navigation
       // navigation.navigate(route, params);
-      console.warn('Mobile navigation not implemented');
     }
   }
 
@@ -106,7 +97,6 @@ export class Navigation {
     } else {
       // Mobile environment - would use React Navigation
       // navigation.goBack();
-      console.warn('Mobile navigation not implemented');
     }
   }
 
@@ -121,7 +111,6 @@ export class Navigation {
     } else {
       // Mobile environment - would use React Navigation
       // navigation.replace(route, params);
-      console.warn('Mobile navigation not implemented');
     }
   }
 }
@@ -142,7 +131,6 @@ export class Alert {
     } else {
       // Mobile environment - would use React Native Alert
       // Alert.alert('CRM App', message);
-      console.warn('Mobile alert not implemented:', message);
     }
   }
 
@@ -160,7 +148,6 @@ export class Alert {
       //   { text: 'Cancel', onPress: onCancel },
       //   { text: 'OK', onPress: onConfirm }
       // ]);
-      console.warn('Mobile confirm not implemented');
     }
   }
 }

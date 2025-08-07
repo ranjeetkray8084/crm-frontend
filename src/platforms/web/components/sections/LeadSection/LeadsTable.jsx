@@ -12,6 +12,8 @@ const LeadsTable = ({
     onAssign,
     onUnassign,
     onUpdate,
+    onAddFollowUp,
+    onViewFollowUps,
     companyId
 }) => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -109,6 +111,8 @@ const LeadsTable = ({
                             onAssign={onAssign}
                             onUnassign={onUnassign}
                             onUpdate={onUpdate}
+                            onAddFollowUp={onAddFollowUp}
+                            onViewFollowUps={onViewFollowUps}
                             companyId={companyId}
                         />
                     ))}

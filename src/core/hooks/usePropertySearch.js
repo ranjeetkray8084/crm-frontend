@@ -84,7 +84,6 @@ export const usePropertySearch = () => {
 
   const applySearch = useCallback(() => {
     // Trigger a search by updating the trigger state
-    console.log('applySearch called - triggering search');
     setSearchTrigger(prev => prev + 1);
   }, []);
 
