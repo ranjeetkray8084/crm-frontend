@@ -311,11 +311,13 @@ const UsersSection = () => {
                           </button>
                           {isDirector && (
                             <button
-                              onClick={() =>
-                                hasAdmin
-                                  ? unassignAdmin(user.userId)
-                                  : setAssigningUser(user)
-                              }
+                              onClick={() => {
+                                if (hasAdmin) {
+                                  unassignAdmin(user.userId);
+                                } else {
+                                  setAssigningUser(user);
+                                }
+                              }}
                               className={`w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white ${hasAdmin
                                 ? "bg-orange-600 hover:bg-orange-700 focus:ring-orange-500"
                                 : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"

@@ -7,7 +7,7 @@ const AssignAdminModal = ({ user, userId, onClose, onAssigned }) => {
   // Support both user object and userId prop
   const actualUserId = userId || user?.userId;
   const { user: currentUser } = useAuth();
-  const { admins, loading, assignAdmin } = useAdmins(currentUser?.companyId);
+  const { admins, loading, assignAdmin } = useAdmins(currentUser?.companyId, currentUser?.role, currentUser?.userId || currentUser?.id);
   const [selectedAdminId, setSelectedAdminId] = useState("");
 
   const handleAssign = async () => {
@@ -37,6 +37,8 @@ const AssignAdminModal = ({ user, userId, onClose, onAssigned }) => {
         <label className="block mb-2">Select Admin:</label>
         {loading ? (
           <div className="w-full border p-2 rounded mb-4 text-gray-500">Loading admins...</div>
+        ) : admins.length === 0 ? (
+          <div className="w-full border p-2 rounded mb-4 text-red-500">No admins found. Please check if there are any admin users in your company.</div>
         ) : (
           <select
             className="w-full border p-2 rounded mb-4"
@@ -51,6 +53,7 @@ const AssignAdminModal = ({ user, userId, onClose, onAssigned }) => {
             ))}
           </select>
         )}
+
 
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"

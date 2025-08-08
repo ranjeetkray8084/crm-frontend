@@ -76,11 +76,11 @@ export class DashboardService {
   }
 
   /**
-   * Get new and contacted leads count.
+   * Get new and contacted leads count using COUNT_SUMMARY endpoint.
    */
-  static async getNewContactedLeadsCount(companyId) {
+  static async getNewContactedLeadsCount(companyId, userId) {
     try {
-      const apiUrl = API_ENDPOINTS.LEADS.COUNT_NEW_CONTACTED(companyId);
+      const apiUrl = API_ENDPOINTS.LEADS.COUNT_SUMMARY(companyId, userId);
       const response = await axios.get(apiUrl);
       return {
         success: true,
@@ -102,16 +102,31 @@ export class DashboardService {
   }
 
   /**
-   * Get deals close count with breakdown.
+   * Get deals close count with breakdown using closed leads count.
    */
-  static async getDealsCloseCount(companyId) {
+  static async getDealsCloseCount(companyId, userId, role) {
     try {
-      const apiUrl = API_ENDPOINTS.LEADS.COUNT_DEALS_CLOSE(companyId);
-      const response = await axios.get(apiUrl);
+      let closedCount = 0;
+      
+      if (role === 'ADMIN') {
+        const response = await this.getClosedLeadsCountByAdmin(companyId, userId);
+        closedCount = response.success ? response.data : 0;
+      } else if (role === 'USER') {
+        const response = await this.getLeadsCountForUser(companyId, userId);
+        closedCount = response.success ? (response.data?.closedCount || 0) : 0;
+      } else {
+        const response = await this.getClosedLeadsCount(companyId);
+        closedCount = response.success ? response.data : 0;
+      }
+      
       return {
         success: true,
-        data: response?.data,
-        message: response?.data?.message || 'Operation successful'
+        data: {
+          "total close": closedCount,
+          "closed": closedCount,
+          "dropped": 0
+        },
+        message: 'Operation successful'
       };
     } catch (error) {
       // Return fallback data instead of throwing error
@@ -120,7 +135,7 @@ export class DashboardService {
         data: {
           "total close": 0,
           "closed": 0,
-          "droped": 0
+          "dropped": 0
         },
         message: 'Using fallback data'
       };
@@ -228,17 +243,24 @@ export class DashboardService {
   /**
    * Get users and admins overview.
    */
-  static async getUsersAndAdminsOverview(companyId) {
+  static async getUsersAndAdminsOverview(companyId, userId) {
     try {
-      const apiUrl = API_ENDPOINTS.USERS.USERS_AND_ADMINS_OVERVIEW(companyId);
+      console.log('🔍 DashboardService: Function called with companyId:', companyId, 'userId:', userId);
+      
+      // Temporary fix: Hardcode the URL to bypass cache issues
+      const apiUrl = `/api/users/count-summary/${companyId}/${userId}`;
+      console.log('🔍 DashboardService: Generated API URL:', apiUrl);
+      console.log('🔍 DashboardService: Making API call to:', apiUrl);
+      
       const response = await axios.get(apiUrl);
+      console.log('✅ DashboardService: API call successful');
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-  
+      console.error('❌ DashboardService: API call failed:', error);
       // Don't throw error - return fallback data to prevent logout
       return {
         success: true,

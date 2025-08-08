@@ -78,7 +78,7 @@ const DashboardStats = () => {
         const parsedUser = JSON.parse(storedUser);
         localUserId = parsedUser.userId || parsedUser.id;
       }
-    } catch {}
+    } catch { }
 
     const filteredFollowUps = (todayFollowUps || []).filter(fu => fu.userId === localUserId);
 
@@ -277,71 +277,122 @@ const UsersAdminsOverviewCard = ({ usersOverview }) => {
     );
   }
 
-  // Safe access with default values
-  const {
-    totalUsers = 0,
-    activeNormalUsers = 0,
-    activeAdmins = 0,
-    totalNormalUsers = 0,
-    totalAdmins = 0
-  } = usersOverview;
+  // Check if this is admin data (has totalAssignedUsers) or director data (has totalUsers)
+  const isAdminData = usersOverview.hasOwnProperty('totalAssignedUsers');
 
-  return (
-    <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-purple-100">Users & Admins</h3>
-        <Users size={32} className="text-purple-200" />
-      </div>
+  if (isAdminData) {
+    // Admin data structure
+    const {
+      totalAssignedUsers = 0,
+      activeAssignedUsers = 0,
+      deactiveAssignedUsers = 0
+    } = usersOverview;
 
-      {/* Total Users */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-purple-400">
-        <div className="flex items-center gap-2">
-          <Users size={18} className="text-purple-200" />
-          <span className="text-base font-medium text-purple-100">Total Users</span>
-        </div>
-        <span className="text-3xl font-bold">{totalUsers}</span>
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Active Users */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <UserCheck size={14} className="text-purple-200" />
-            <span className="text-xs font-medium text-purple-100">Active Users</span>
-          </div>
-          <span className="text-xl font-bold">{activeNormalUsers}</span>
+    return (
+      <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-purple-100">Assigned Users</h3>
+          <Users size={32} className="text-purple-200" />
         </div>
 
-        {/* Active Admins */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <Shield size={14} className="text-purple-200" />
-            <span className="text-xs font-medium text-purple-100">Active Admins</span>
+        {/* Total Assigned Users */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-purple-400">
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-purple-200" />
+            <span className="text-base font-medium text-purple-100">Total Assigned</span>
           </div>
-          <span className="text-xl font-bold">{activeAdmins}</span>
+          <span className="text-3xl font-bold">{totalAssignedUsers}</span>
         </div>
 
-        {/* Total Normal Users */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <Users size={14} className="text-purple-200" />
-            <span className="text-xs font-medium text-purple-100">Normal Users</span>
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Active Assigned Users */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <UserCheck size={14} className="text-purple-200" />
+              <span className="text-xs font-medium text-purple-100">Active Users</span>
+            </div>
+            <span className="text-xl font-bold">{activeAssignedUsers}</span>
           </div>
-          <span className="text-xl font-bold">{totalNormalUsers}</span>
-        </div>
 
-        {/* Total Admins */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <Shield size={14} className="text-purple-200" />
-            <span className="text-xs font-medium text-purple-100">Total Admins</span>
+          {/* Deactive Assigned Users */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <XCircle size={14} className="text-purple-200" />
+              <span className="text-xs font-medium text-purple-100">Inactive Users</span>
+            </div>
+            <span className="text-xl font-bold">{deactiveAssignedUsers}</span>
           </div>
-          <span className="text-xl font-bold">{totalAdmins}</span>
         </div>
       </div>
-    </div>
-  );
+    );
+  } else {
+    // Director data structure (original)
+    const {
+      totalUsers = 0,
+      activeNormalUsers = 0,
+      activeAdmins = 0,
+      totalNormalUsers = 0,
+      totalAdmins = 0
+    } = usersOverview;
+
+    return (
+      <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-purple-100">Users & Admins</h3>
+          <Users size={32} className="text-purple-200" />
+        </div>
+
+        {/* Total Users */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-purple-400">
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-purple-200" />
+            <span className="text-base font-medium text-purple-100">Total Users</span>
+          </div>
+          <span className="text-3xl font-bold">{totalUsers}</span>
+        </div>
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Active Users */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <UserCheck size={14} className="text-purple-200" />
+              <span className="text-xs font-medium text-purple-100">Active Users</span>
+            </div>
+            <span className="text-xl font-bold">{activeNormalUsers}</span>
+          </div>
+
+          {/* Active Admins */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Shield size={14} className="text-purple-200" />
+              <span className="text-xs font-medium text-purple-100">Active Admins</span>
+            </div>
+            <span className="text-xl font-bold">{activeAdmins}</span>
+          </div>
+
+          {/* Total Normal Users */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Users size={14} className="text-purple-200" />
+              <span className="text-xs font-medium text-purple-100">Normal Users</span>
+            </div>
+            <span className="text-xl font-bold">{totalNormalUsers}</span>
+          </div>
+
+          {/* Total Admins */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Shield size={14} className="text-purple-200" />
+              <span className="text-xs font-medium text-purple-100">Total Admins</span>
+            </div>
+            <span className="text-xl font-bold">{totalAdmins}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 };
 
 const DealsClosedCard = ({ dealsOverview }) => {
@@ -350,7 +401,7 @@ const DealsClosedCard = ({ dealsOverview }) => {
     return (
       <div className="bg-gradient-to-r from-violet-500 to-violet-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white-100">Deals Closed</h3>
+          <h3 className="text-lg font-semibold text-white-100">Deals Overview</h3>
           <TrendingUp size={32} className="text-white/80" />
         </div>
         <div className="text-center py-8">
@@ -370,36 +421,37 @@ const DealsClosedCard = ({ dealsOverview }) => {
   return (
     <div className="bg-gradient-to-r from-violet-500 to-violet-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white-100">Deals Closed</h3>
+        <h3 className="text-lg font-semibold text-white-100">Deals Overview</h3>
         <TrendingUp size={32} className="text-white/80" />
       </div>
 
-      <div className="space-y-4">
-        {/* Total Closed */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={16} className="text-white-200" />
-            <span className="text-sm font-medium text-white/90">Total</span>
+      {/* Total Deals */}
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-violet-400">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={18} className="text-white/80" />
+          <span className="text-base font-medium text-white/90">Total Deals</span>
+        </div>
+        <span className="text-3xl font-bold">{totalClose}</span>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Closed Deals */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <CheckCircle size={14} className="text-white/80" />
+            <span className="text-xs font-medium text-white/90">Closed</span>
           </div>
-          <span className="text-2xl font-bold">{totalClose}</span>
+          <span className="text-xl font-bold">{closed}</span>
         </div>
 
-        {/* Closed */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle size={16} className="text-white/80" />
-            <span className="text-sm font-medium text-white/90">Closed</span>
+        {/* Dropped Deals */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <XCircle size={14} className="text-white/80" />
+            <span className="text-xs font-medium text-white/90">Dropped</span>
           </div>
-          <span className="text-xl font-semibold">{closed}</span>
-        </div>
-
-        {/* Dropped */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <XCircle size={16} className="text-white-200" />
-            <span className="text-sm font-medium text-white-100">Dropped</span>
-          </div>
-          <span className="text-xl font-semibold">{dropped}</span>
+          <span className="text-xl font-bold">{dropped}</span>
         </div>
       </div>
     </div>

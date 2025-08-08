@@ -210,19 +210,12 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
           </>
         )}
 
-        {!loading && !error && pagination && (
-          <div>
-            <div className="text-xs text-gray-500 mb-2">
-              Debug: totalPages={pagination.totalPages}, totalElements={pagination.totalElements}, page={pagination.page}, size={pagination.size}
-            </div>
-            {pagination.totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                pagination={pagination}
-                onPageChange={setCurrentPage}
-              />
-            )}
-          </div>
+        {!loading && !error && pagination && pagination.totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            pagination={pagination}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 

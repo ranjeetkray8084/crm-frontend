@@ -69,7 +69,7 @@ export const useDashboardStats = (companyId, userId, role) => {
 
       let newContactedResult;
       try {
-        newContactedResult = await DashboardService.getNewContactedLeadsCount(companyId);
+        newContactedResult = await DashboardService.getNewContactedLeadsCount(companyId, userId);
       } catch {
         const fallback = await DashboardService.getLeadsCount(companyId);
         newContactedResult = {
@@ -83,7 +83,7 @@ export const useDashboardStats = (companyId, userId, role) => {
 
       let dealsCloseResult;
       try {
-        dealsCloseResult = await DashboardService.getDealsCloseCount(companyId);
+        dealsCloseResult = await DashboardService.getDealsCloseCount(companyId, userId, role);
       } catch {
         dealsCloseResult = {
           data: {
@@ -97,9 +97,11 @@ export const useDashboardStats = (companyId, userId, role) => {
       // Users overview API call
       let usersOverviewResult;
       try {
-        usersOverviewResult = await DashboardService.getUsersAndAdminsOverview(companyId);
+        console.log('🔍 useDashboardStats: Calling getUsersAndAdminsOverview with:', { companyId, userId });
+        usersOverviewResult = await DashboardService.getUsersAndAdminsOverview(companyId, userId);
+        console.log('✅ useDashboardStats: getUsersAndAdminsOverview successful');
       } catch (err) {
-        console.warn('Users overview API failed:', err);
+        console.warn('❌ useDashboardStats: Users overview API failed:', err);
         usersOverviewResult = {
           data: {
             totalNormalUsers: 0,
@@ -117,6 +119,8 @@ export const useDashboardStats = (companyId, userId, role) => {
         totalLeads: newContactedResult.data?.totalLeads || 0,
         newLeads: newContactedResult.data?.newLeads || 0,
         contactedLeads: newContactedResult.data?.contactedLeads || 0,
+        closedLeads: newContactedResult.data?.closedLeads || 0,
+        droppedLeads: newContactedResult.data?.droppedLeads || 0,
         totalProperties: propertiesResult.data || 0,
         propertyOverview: {
           totalProperties: propertiesOverviewResult.data?.totalProperties || 0,
@@ -126,9 +130,9 @@ export const useDashboardStats = (companyId, userId, role) => {
           'rent out': propertiesOverviewResult.data?.['rent out'] || 0,
         },
         dealsOverview: {
-          'total close': dealsCloseResult.data?.['total close'] || closedLeadsResult.data || 0,
-          closed: dealsCloseResult.data?.closed || 0,
-          dropped: dealsCloseResult.data?.dropped || 0,
+          'total close': newContactedResult.data?.totalClose || newContactedResult.data?.closedLeads || 0,
+          closed: newContactedResult.data?.closedLeads || 0,
+          dropped: newContactedResult.data?.droppedLeads || 0,
         },
         usersOverview: usersOverviewResult.data,
       });
