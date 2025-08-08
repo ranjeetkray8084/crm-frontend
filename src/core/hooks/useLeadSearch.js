@@ -224,7 +224,10 @@ export const useLeadSearch = () => {
     }
 
     if (filters.assignedTo) {
-      summary.push(`Assigned: ${filters.assignedTo}`);
+      const assignedLabel = filters.assignedTo === 'assigned' ? 'Assigned' : 
+                           filters.assignedTo === 'unassigned' ? 'Unassigned' : 
+                           filters.assignedTo;
+      summary.push(`Assignment: ${assignedLabel}`);
     }
 
     if (filters.createdBy) {

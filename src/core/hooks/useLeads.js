@@ -41,11 +41,21 @@ export const useLeads = (companyId, userId, userRole) => {
         search: searchParams?.query,
         status: searchParams?.status,
         source: searchParams?.source,
-        action: searchParams?.action,
         createdBy: searchParams?.createdBy,
         minBudget: searchParams?.budget?.split('-')[0],
         maxBudget: searchParams?.budget?.split('-')[1],
       };
+
+      // Map assignedTo filter to action parameter
+      if (searchParams?.assignedTo) {
+        if (searchParams.assignedTo === 'assigned') {
+          backendSearchParams.action = 'ASSIGNED';
+        } else if (searchParams.assignedTo === 'unassigned') {
+          backendSearchParams.action = 'UNASSIGNED';
+        }
+      } else if (searchParams?.action) {
+        backendSearchParams.action = searchParams.action;
+      }
 
       Object.keys(backendSearchParams).forEach(key => backendSearchParams[key] === undefined && delete backendSearchParams[key]);
 
