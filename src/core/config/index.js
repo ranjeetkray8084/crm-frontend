@@ -2,7 +2,7 @@
 export const config = {
   // API Configuration
   api: {
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+    baseURL: process.env.REACT_APP_API_URL || 'https://backend.leadstracker.in/api',
     timeout: 30000,
     retries: 3
   },
@@ -62,7 +62,7 @@ export const config = {
 export const environments = {
   development: {
     api: {
-      baseURL: 'http://localhost:8080/api'
+      baseURL: 'https://backend.leadstracker.in/api'
     },
     debug: true
   },

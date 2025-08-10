@@ -12,6 +12,44 @@ export const useDashboardStats = (companyId, userId, role) => {
       return;
     }
 
+    // Special handling for DEVELOPER role
+    if (role === 'DEVELOPER') {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // For developers, we need to get global stats across all companies
+        const [companiesResult, usersResult, adminsResult, directorsResult] = await Promise.allSettled([
+          DashboardService.getTotalCompaniesCount(),
+          DashboardService.getTotalUsersCount(),
+          DashboardService.getTotalAdminsCount(),
+          DashboardService.getTotalDirectorsCount()
+        ]);
+
+        const finalStats = {
+          totalCompanies: companiesResult.status === 'fulfilled' ? companiesResult.value.data || 0 : 0,
+          totalUsers: usersResult.status === 'fulfilled' ? usersResult.value.data || 0 : 0,
+          totalAdmins: adminsResult.status === 'fulfilled' ? adminsResult.value.data || 0 : 0,
+          totalDirectors: directorsResult.status === 'fulfilled' ? directorsResult.value.data || 0 : 0,
+        };
+
+        console.log('🔍 useDashboardStats: Developer stats:', finalStats);
+        setStats(finalStats);
+      } catch (err) {
+        console.error('❌ useDashboardStats: Developer stats failed:', err);
+        setStats({
+          totalCompanies: 0,
+          totalUsers: 0,
+          totalAdmins: 0,
+          totalDirectors: 0,
+        });
+        setError(err.message || 'Failed to load developer stats');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!companyId) {
       setStats({
         totalLeads: 0,

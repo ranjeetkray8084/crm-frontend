@@ -108,7 +108,34 @@ const DashboardStats = () => {
     return (
       <div className="space-y-6">
         {/* Stats Cards */}
-        {role === 'USER' ? (
+        {role === 'DEVELOPER' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <DeveloperStatsCard
+              title="Total Companies"
+              count={stats?.totalCompanies || 0}
+              icon={Building}
+              color="blue"
+            />
+            <DeveloperStatsCard
+              title="Total Users"
+              count={stats?.totalUsers || 0}
+              icon={Users}
+              color="green"
+            />
+            <DeveloperStatsCard
+              title="Total Admins"
+              count={stats?.totalAdmins || 0}
+              icon={Shield}
+              color="purple"
+            />
+            <DeveloperStatsCard
+              title="Total Directors"
+              count={stats?.totalDirectors || 0}
+              icon={UserCheck}
+              color="orange"
+            />
+          </div>
+        ) : role === 'USER' ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <LeadsCard
               totalLeads={stats?.totalLeads}
@@ -569,6 +596,45 @@ const PropertyOverviewCard = ({ propertyOverview }) => {
             <span className="text-xl font-bold">{rentOut}</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const DeveloperStatsCard = ({ title, count, icon: Icon, color }) => {
+  const colorClasses = {
+    blue: {
+      bg: 'from-blue-500 to-blue-600',
+      text: 'text-blue-100',
+      icon: 'text-blue-200'
+    },
+    green: {
+      bg: 'from-green-500 to-green-600',
+      text: 'text-green-100',
+      icon: 'text-green-200'
+    },
+    purple: {
+      bg: 'from-purple-500 to-purple-600',
+      text: 'text-purple-100',
+      icon: 'text-purple-200'
+    },
+    orange: {
+      bg: 'from-orange-500 to-orange-600',
+      text: 'text-orange-100',
+      icon: 'text-orange-200'
+    }
+  };
+
+  const colors = colorClasses[color] || colorClasses.blue;
+
+  return (
+    <div className={`bg-gradient-to-r ${colors.bg} text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className={`text-sm font-medium ${colors.text} mb-2`}>{title}</h3>
+          <div className="text-3xl font-bold">{count}</div>
+        </div>
+        <Icon size={32} className={colors.icon} />
       </div>
     </div>
   );

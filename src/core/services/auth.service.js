@@ -18,7 +18,7 @@ export class AuthService {
   static async login(credentials) {
     try {
       const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-      
+
       // Extract token and user data
       const token = response.data.accessToken || response.data.token;
       const user = {
@@ -38,10 +38,19 @@ export class AuthService {
         };
       }
 
-      if (!user.userId || !user.role || !user.companyId) {
+      // Validate essential user data
+      if (!user.userId || !user.role) {
         return {
           success: false,
           error: 'Incomplete user data received from server'
+        };
+      }
+
+      // For non-DEVELOPER roles, companyId should be present
+      if (user.role !== 'DEVELOPER' && !user.companyId) {
+        return {
+          success: false,
+          error: 'Company information missing for user'
         };
       }
 
@@ -65,20 +74,20 @@ export class AuthService {
       };
     } catch (error) {
       let errorMessage = 'Login failed';
-      
+
       if (error.response?.data) {
         const errorData = error.response.data;
-        errorMessage = 
-          errorData.message || 
-          errorData.error || 
-          errorData.msg || 
-          errorData.detail || 
+        errorMessage =
+          errorData.message ||
+          errorData.error ||
+          errorData.msg ||
+          errorData.detail ||
           errorData.description ||
           (typeof errorData === 'string' ? errorData : 'Login failed');
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       return {
         success: false,
         error: errorMessage
@@ -96,7 +105,7 @@ export class AuthService {
       const response = await axios.post(API_ENDPOINTS.AUTH.SEND_OTP, null, {
         params: { email }
       });
-      
+
       return {
         success: true,
         data: response.data,
@@ -121,7 +130,7 @@ export class AuthService {
       const response = await axios.post(API_ENDPOINTS.AUTH.VERIFY_OTP, null, {
         params: { email, otp }
       });
-      
+
       return {
         success: true,
         data: response.data,
@@ -146,7 +155,7 @@ export class AuthService {
       const response = await axios.post(API_ENDPOINTS.AUTH.RESET_PASSWORD_WITH_OTP, null, {
         params: { email, newPassword }
       });
-      
+
       return {
         success: true,
         data: response.data,
@@ -253,15 +262,15 @@ export class AuthService {
       if (!userData) {
         return;
       }
-      
+
       if (!token) {
         return;
       }
-      
+
       localStorage.setItem(this.SESSION_KEYS.USER, JSON.stringify(userData));
       localStorage.setItem(this.SESSION_KEYS.TOKEN, token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
     } catch (error) {
       // console.error('❌ saveSession: Error saving session data:', error);
     }

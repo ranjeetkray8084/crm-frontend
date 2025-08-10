@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // ✅ Backend API base URL
-const BASE_URL = "http://localhost:8080/";
+const BASE_URL = "https://backend.leadstracker.in/";
 
 // ✅ Create an Axios instance
 const axiosInstance = axios.create({

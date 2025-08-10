@@ -321,4 +321,44 @@ export class DashboardService {
       'Failed to load admin visible leads count'
     );
   }
+
+  /**
+   * Get total companies count (for DEVELOPER role).
+   */
+  static getTotalCompaniesCount() {
+    return this._request(
+      () => axios.get('/api/companies/count'),
+      'Failed to load total companies count'
+    );
+  }
+
+  /**
+   * Get total users count across all companies (for DEVELOPER role).
+   */
+  static getTotalUsersCount() {
+    return this._request(
+      () => axios.get('/api/users/total-count'),
+      'Failed to load total users count'
+    );
+  }
+
+  /**
+   * Get total admins count across all companies (for DEVELOPER role).
+   */
+  static getTotalAdminsCount() {
+    return this._request(
+      () => axios.get('/api/users/admins/total-count'),
+      'Failed to load total admins count'
+    );
+  }
+
+  /**
+   * Get total directors count across all companies (for DEVELOPER role).
+   */
+  static getTotalDirectorsCount() {
+    return this._request(
+      () => axios.get('/api/users/directors/total-count'),
+      'Failed to load total directors count'
+    );
+  }
 }

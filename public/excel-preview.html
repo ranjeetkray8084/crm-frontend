@@ -325,7 +325,7 @@
 
             for (const port of ports) {
                 try {
-                    const apiUrl = `http://localhost:${port}/api/task-files/${taskId}/preview?companyId=${companyId}`;
+                    const apiUrl = `https://backend.leadstracker.in/api/task-files/${taskId}/preview?companyId=${companyId}`;
 
                     const response = await fetch(apiUrl, {
                         method: 'GET',
@@ -556,7 +556,7 @@
 
             let apiUrl;
             if (window.location.port === '5173') {
-                apiUrl = `http://localhost:8080${endpoint}`;
+                apiUrl = `https://backend.leadstracker.in${endpoint}`;
             } else {
                 apiUrl = endpoint;
             }
