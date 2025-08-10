@@ -51,7 +51,8 @@ export const useDashboardStats = (companyId, userId, role) => {
       let propertiesResult, propertiesOverviewResult;
       if (role === 'USER') {
         propertiesResult = await DashboardService.getPropertiesCountByUser(companyId, userId);
-        propertiesOverviewResult = { data: {} };
+        // Show the same property overview as Director/Admin (company-wide)
+        propertiesOverviewResult = await DashboardService.getPropertiesOverview(companyId);
       } else {
         propertiesResult = await DashboardService.getPropertiesCount(companyId);
         propertiesOverviewResult = await DashboardService.getPropertiesOverview(companyId);
@@ -69,8 +70,11 @@ export const useDashboardStats = (companyId, userId, role) => {
 
       let newContactedResult;
       try {
+        console.log('🔍 useDashboardStats: Calling getNewContactedLeadsCount with:', { companyId, userId });
         newContactedResult = await DashboardService.getNewContactedLeadsCount(companyId, userId);
-      } catch {
+        console.log('✅ useDashboardStats: getNewContactedLeadsCount result:', newContactedResult);
+      } catch (error) {
+        console.error('❌ useDashboardStats: getNewContactedLeadsCount failed, using fallback:', error);
         const fallback = await DashboardService.getLeadsCount(companyId);
         newContactedResult = {
           data: {
@@ -115,7 +119,7 @@ export const useDashboardStats = (companyId, userId, role) => {
         };
       }
 
-      setStats({
+      const finalStats = {
         totalLeads: newContactedResult.data?.totalLeads || 0,
         newLeads: newContactedResult.data?.newLeads || 0,
         contactedLeads: newContactedResult.data?.contactedLeads || 0,
@@ -130,12 +134,15 @@ export const useDashboardStats = (companyId, userId, role) => {
           'rent out': propertiesOverviewResult.data?.['rent out'] || 0,
         },
         dealsOverview: {
-          'total close': newContactedResult.data?.totalClose || newContactedResult.data?.closedLeads || 0,
-          closed: newContactedResult.data?.closedLeads || 0,
-          dropped: newContactedResult.data?.droppedLeads || 0,
+          'total close': dealsCloseResult.data?.['total close'] || 0,
+          closed: dealsCloseResult.data?.closed || 0,
+          dropped: dealsCloseResult.data?.dropped || 0,
         },
         usersOverview: usersOverviewResult.data,
-      });
+      };
+      
+      console.log('🔍 useDashboardStats: Final stats object:', finalStats);
+      setStats(finalStats);
     } catch (err) {
       setError(err.message || 'Failed to load dashboard stats');
     } finally {

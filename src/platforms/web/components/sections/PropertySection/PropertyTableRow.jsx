@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MoreVertical, Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
+import ThreeDotMenu from '../../common/ThreeDotMenu';
 
 const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange }) => {
   const [showActions, setShowActions] = useState(false);
@@ -94,36 +95,22 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
         {property.ownerContact || property.ownerNumber || 'N/A'}
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-        {formatDate(property.createdAt)}
-        {property.createdBy?.name && <div className="text-xs text-gray-400">by {property.createdBy.name}</div>}
+        <div className="text-sm text-gray-900">{formatDate(property.createdAt)}</div>
+        <div className="text-xs text-gray-500">
+          by {property.createdBy?.name || property.createdByName || 'Unknown'}
+        </div>
       </td>
 
-      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-        <button
-          onClick={() => setShowActions(!showActions)}
-          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-        >
-          <MoreVertical size={16} />
-        </button>
-
-        {showActions && (
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-            <div className="py-1">
-              <button onClick={() => { onUpdate(property); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                <Edit size={14} /> Update Property
-              </button>
-              <button onClick={() => { onAddRemark(property); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                <MessageSquare size={14} /> Add Remark
-              </button>
-              <button onClick={() => { onViewRemarks(property); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                <Eye size={14} /> View Remarks
-              </button>
-              <button onClick={() => { onDelete(property.propertyId || property.id); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
-                <Trash2 size={14} /> Delete Property
-              </button>
-            </div>
-          </div>
-        )}
+      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <ThreeDotMenu
+          item={property}
+          actions={[
+            { label: 'Update Property', icon: <Edit size={14} />, onClick: () => onUpdate(property) },
+            { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(property) },
+            { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onViewRemarks(property) },
+            { label: 'Delete Property', icon: <Trash2 size={14} />, onClick: () => onDelete(property.propertyId || property.id), danger: true }
+          ]}
+        />
       </td>
     </tr>
   );

@@ -49,7 +49,13 @@ export const useProperties = (companyId, userId, userRole) => {
           role: userInfo.role
         };
 
-        if (searchParams && Object.keys(searchParams).some(key => searchParams[key])) {
+        // Check if we have search parameters or filters
+        const hasSearchParams = searchParams && Object.keys(searchParams).some(key => {
+          const value = searchParams[key];
+          return value && value.toString().trim() !== '';
+        });
+
+        if (hasSearchParams) {
           // Use search API if filters are applied
           result = await PropertyService.searchProperties(
             userInfo.companyId,

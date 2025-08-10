@@ -40,7 +40,7 @@ export const API_ENDPOINTS = {
     ASSIGN_ADMIN: (userId) => `/api/users/${userId}/assign-admin`,
     UNASSIGN_ADMIN: (userId) => `/api/users/${userId}/unassign-admin`,
     COUNT_BY_ADMIN: (adminId) => `/api/users/count-by-admin/${adminId}`,
-    USERS_AND_ADMINS_OVERVIEW: (companyId) => `/api/users/count-summary/${companyId}`,
+    USERS_AND_ADMINS_OVERVIEW: (companyId, userId) => `/api/users/count-summary/${companyId}/${userId}`,
     CHECK_SESSION: '/api/users/check-session'
   },
 
@@ -70,52 +70,37 @@ export const API_ENDPOINTS = {
     UPDATE: (companyId) => `/api/${companyId}/followups`,
     DELETE: (companyId, id) => `/api/${companyId}/followups/${id}`
   },
-
+  
 
   // Lead Management Endpoints (LeadController)
   LEADS: {
-    // Basic CRUD Operations
     GET_ALL: (companyId) => `/api/companies/${companyId}/leads`,
     GET_BY_ID: (companyId, id) => `/api/companies/${companyId}/leads/${id}`,
     CREATE: (companyId) => `/api/companies/${companyId}/leads`,
     UPDATE: (companyId, leadId) => `/api/companies/${companyId}/leads/${leadId}`,
     DELETE: (companyId, id) => `/api/companies/${companyId}/leads/${id}`,
-
-    // Status Management
     UPDATE_STATUS: (companyId, id) => `/api/companies/${companyId}/leads/${id}/status`,
-
-    // Lead Filtering & Retrieval
     GET_BY_SOURCE: (companyId, source) => `/api/companies/${companyId}/leads/source/${source}`,
     GET_BY_ASSIGNED_USER: (companyId, userId) => `/api/companies/${companyId}/leads/assigned-to/${userId}`,
-    GET_BY_CREATED_BY: (companyId, userId) => `/api/companies/${companyId}/leads/created-by/${userId}`,
-    GET_CREATED_OR_ASSIGNED: (companyId, userId) => `/api/companies/${companyId}/leads/created-or-assigned/${userId}`,
-
-    // Remarks Management
-    ADD_REMARK: (leadId) => `/api/companies/{companyId}/leads/${leadId}/remarks`,
-    GET_REMARKS: (leadId) => `/api/companies/{companyId}/leads/${leadId}/remarks`,
-
-    // Lead Assignment
+    ADD_REMARK: (companyId, leadId) => `/api/companies/${companyId}/leads/${leadId}/remarks`,
+    GET_REMARKS: (companyId, leadId) => `/api/companies/${companyId}/leads/${leadId}/remarks`,
     ASSIGN: (companyId, leadId, userId) => `/api/companies/${companyId}/leads/${leadId}/assign/${userId}`,
     UNASSIGN: (companyId, leadId) => `/api/companies/${companyId}/leads/${leadId}/unassign`,
-
-    // Lead Information
+    GET_BY_CREATED_BY: (companyId, userId) => `/api/companies/${companyId}/leads/created-by/${userId}`,
     GET_NAME: (companyId, id) => `/api/companies/${companyId}/leads/${id}/name`,
-
-    // Counting & Analytics
     GET_COUNT: (companyId) => `/api/companies/${companyId}/leads/count`,
     GET_CLOSED_COUNT: (companyId) => `/api/companies/${companyId}/leads/count/closed`,
+    GET_CREATED_OR_ASSIGNED: (companyId, userId) => `/api/companies/${companyId}/leads/created-or-assigned/${userId}`,
     COUNT_FOR_USER: (companyId, userId) => `/api/companies/${companyId}/leads/count-for-user/${userId}`,
-    COUNT_VISIBLE_TO_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/count-visible-to-admin/${adminId}`,
-    COUNT_CLOSED_BY_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/count/closed-droped?companyId=${companyId}&adminId=${adminId}`,
-    COUNT_SUMMARY: (companyId, userId) => `/api/companies/${companyId}/leads/count/summary/${userId}`,
-
-    // Search & Advanced Filtering
     SEARCH: (companyId) => `/api/companies/${companyId}/leads/search`,
     SEARCH_CREATED_OR_ASSIGNED: (companyId, userId) => `/api/companies/${companyId}/leads/created-or-assigned/${userId}/search`,
     SEARCH_VISIBLE_TO_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/visible-to-admin/${adminId}/search`,
-
-    // Admin-specific Views
-    GET_ADMIN_VISIBLE: (companyId, adminId) => `/api/companies/${companyId}/leads/admin-visible/${adminId}`
+    GET_ADMIN_VISIBLE: (companyId, adminId) => `/api/companies/${companyId}/leads/admin-visible/${adminId}`,
+    COUNT_VISIBLE_TO_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/count-visible-to-admin/${adminId}`,
+    COUNT_CLOSED_BY_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/count/closed-droped?adminId=${adminId}`,
+    COUNT_NEW_CONTACTED: (companyId) => `/api/companies/${companyId}/leads/count/new-contacted`,
+    COUNT_DEALS_CLOSE: (companyId) => `/api/companies/${companyId}/leads/count/deals-close`,
+    COUNT_SUMMARY: (companyId, userId) => `/api/companies/${companyId}/leads/count/summary/${userId}`
   },
 
   // Note Management Endpoints (NoteController)

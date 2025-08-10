@@ -37,13 +37,10 @@ const LeadFilters = ({
     ],
     source: [
       { value: "", label: "All Sources" },
-      { value: "FACEBOOK", label: "Facebook" },
       { value: "INSTAGRAM", label: "Instagram" },
+      { value: "FACEBOOK", label: "Facebook" },
       { value: "YOUTUBE", label: "YouTube" },
-      { value: "GOOGLE", label: "Google" },
-      { value: "REFERRAL", label: "Referral" },
-      { value: "WEBSITE", label: "Website" },
-      { value: "OTHER", label: "Other" }
+      { value: "REFERENCE", label: "Reference" }
     ],
     assignedTo: [
       { value: "", label: "All Assignments" },

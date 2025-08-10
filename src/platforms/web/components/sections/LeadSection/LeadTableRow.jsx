@@ -3,6 +3,7 @@ import {
     MoreVertical, Edit, Trash2, MessageSquare, Eye,
     UserPlus, UserMinus, ChevronDown, Calendar, Clock
 } from 'lucide-react';
+import ThreeDotMenu from '../../common/ThreeDotMenu';
 
 const LeadTableRow = ({
     lead,
@@ -167,31 +168,21 @@ const LeadTableRow = ({
                     </span>
                 )}
             </td>
-            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                <button
-                    onClick={() => setShowActions(!showActions)}
-                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-                >
-                    <MoreVertical size={16} />
-                </button>
-
-                {showActions && (
-                    <div ref={actionsRef} className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                        <div className="py-1">
-                            <button onClick={handleUpdateClick} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"><Edit size={14} /> Update Lead</button>
-                            <button onClick={handleAddRemarkClick} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"><MessageSquare size={14} /> Add Remark</button>
-                            <button onClick={handleAddFollowUpClick} className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"><Calendar size={14} /> Add Follow-Up</button>
-                            <button onClick={handleViewFollowUpsClick} className="flex items-center gap-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"><Clock size={14} /> View Follow-ups</button>
-                            <button onClick={handleViewRemarksClick} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"><Eye size={14} /> View Remarks</button>
-                            {isAssigned ? (
-                                <button onClick={() => { onUnassign(leadId); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left"><UserMinus size={14} /> Unassign Lead</button>
-                            ) : (
-                                <button onClick={() => { onAssign(leadId); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"><UserPlus size={14} /> Assign Lead</button>
-                            )}
-                            <button onClick={() => { onDelete(leadId); setShowActions(false); }} className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"><Trash2 size={14} /> Delete Lead</button>
-                        </div>
-                    </div>
-                )}
+            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <ThreeDotMenu
+                    item={lead}
+                    actions={[
+                        { label: 'Update Lead', icon: <Edit size={14} />, onClick: () => onUpdate(lead) },
+                        { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(lead) },
+                        { label: 'Add Follow-Up', icon: <Calendar size={14} />, onClick: () => onAddFollowUp(lead) },
+                        { label: 'View Follow-ups', icon: <Clock size={14} />, onClick: () => onViewFollowUps(lead) },
+                        { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onGetRemarks(lead) },
+                        isAssigned 
+                            ? { label: 'Unassign Lead', icon: <UserMinus size={14} />, onClick: () => onUnassign(leadId) }
+                            : { label: 'Assign Lead', icon: <UserPlus size={14} />, onClick: () => onAssign(leadId) },
+                        { label: 'Delete Lead', icon: <Trash2 size={14} />, onClick: () => onDelete(leadId), danger: true }
+                    ]}
+                />
             </td>
         </tr>
     );

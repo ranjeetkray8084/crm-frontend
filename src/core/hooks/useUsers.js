@@ -9,33 +9,37 @@ export const useUsers = (companyId, role, userId) => {
 
   // --- Primary Data Loading ---
   const loadUsers = useCallback(async () => {
-    if (!companyId) {
+    if (!companyId && role !== 'DEVELOPER') {
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
-      let data = [];
+      let result;
+
       if (role === 'ADMIN') {
-        const res = await UserService.getUsersByAdmin(companyId, userId);
-        data = res.data;
+        result = await UserService.getUsersByAdmin(userId);
       } else if (role === 'DIRECTOR') {
-        const res = await UserService.getAllUsersByCompany(companyId);
-        data = res.data;
+        result = await UserService.getAllUsersByCompany(companyId);
       } else if (role === 'DEVELOPER') {
-        const res = await UserService.getUsersWithUserRole();
-        data = res.data;
-      }
-      else {
+        result = await UserService.getUsersWithUserRole();
+      } else {
         // If no role is provided or unsupported role, load all company users
-        const res = await UserService.getAllUsersByCompany(companyId);
-        data = res.data;
+        result = await UserService.getAllUsersByCompany(companyId);
       }
 
-      setUsers(data);
+      if (result.success) {
+        setUsers(result.data || []);
+      } else {
+        setError(result.error);
+        customAlert('❌ ' + result.error);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to load users');
+      const errorMsg = 'Failed to load users';
+      setError(errorMsg);
+      customAlert('❌ ' + errorMsg);
     } finally {
       setLoading(false);
     }
@@ -69,74 +73,112 @@ export const useUsers = (companyId, role, userId) => {
 
   // --- Action Methods ---
 
-  const getAllUsersByCompany = () =>
-    fetchUserData(() => UserService.getAllUsersByCompany(companyId), 'Failed to load all company users');
+  const getAllUsersByCompany = useCallback(async () => {
+    try {
+      const result = await UserService.getAllUsersByCompany(companyId);
+      if (result.success) {
+        setUsers(result.data || []);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: 'Failed to load all company users' };
+    }
+  }, [companyId]);
 
-  const createUser = (data) =>
-    executeUserAction(() => UserService.createUser(data), 'User created successfully', 'Failed to create user');
+  const createUser = useCallback((data) =>
+    executeUserAction(() => UserService.createUser(data), 'User created successfully', 'Failed to create user'), [executeUserAction]);
 
-  const updateUser = (id, data) =>
-    executeUserAction(() => UserService.updateProfile(id, data), 'User updated successfully', 'Failed to update user');
+  const updateUser = useCallback((id, data) =>
+    executeUserAction(() => UserService.updateProfile(id, data), 'User updated successfully', 'Failed to update user'), [executeUserAction]);
 
-  const deleteUser = (id) =>
-    executeUserAction(() => UserService.deleteUser(id), 'User deleted successfully', 'Failed to delete user');
+  const deleteUser = useCallback((id) =>
+    executeUserAction(() => UserService.deleteUser(id), 'User deleted successfully', 'Failed to delete user'), [executeUserAction]);
 
-  const activateUser = (id) =>
-    executeUserAction(() => UserService.unrevokeUser(id), 'User activated successfully', 'Failed to activate user');
+  const activateUser = useCallback((id) =>
+    executeUserAction(() => UserService.unrevokeUser(id), 'User activated successfully', 'Failed to activate user'), [executeUserAction]);
 
-  const deactivateUser = (id) =>
-    executeUserAction(() => UserService.revokeUser(id), 'User deactivated successfully', 'Failed to deactivate user');
+  const deactivateUser = useCallback((id) =>
+    executeUserAction(() => UserService.revokeUser(id), 'User deactivated successfully', 'Failed to deactivate user'), [executeUserAction]);
 
-  const assignAdmin = (userId, adminId) =>
-    executeUserAction(() => UserService.assignAdmin(userId, adminId), 'Admin assigned successfully', 'Failed to assign admin');
+  const assignAdmin = useCallback((userId, adminId) =>
+    executeUserAction(() => UserService.assignAdmin(userId, adminId), 'Admin assigned successfully', 'Failed to assign admin'), [executeUserAction]);
 
-  const unassignAdmin = (userId) =>
-    executeUserAction(() => UserService.unassignAdmin(userId), 'Admin unassigned successfully', 'Failed to unassign admin');
+  const unassignAdmin = useCallback((userId) =>
+    executeUserAction(() => UserService.unassignAdmin(userId), 'Admin unassigned successfully', 'Failed to unassign admin'), [executeUserAction]);
 
-  const uploadAvatar = (userId, file, name = 'avatar') =>
-    executeUserAction(() => UserService.uploadAvatar(userId, file, name), 'Avatar uploaded', 'Avatar upload failed', false);
+  const uploadAvatar = useCallback((userId, file, name = 'avatar') =>
+    executeUserAction(() => UserService.uploadAvatar(userId, file, name), 'Avatar uploaded', 'Avatar upload failed', false), [executeUserAction]);
 
-  const getUserAvatar = (userId) =>
-    fetchUserData(() => UserService.getAvatar(userId), 'Failed to load avatar');
+  const getUserAvatar = useCallback((userId) =>
+    fetchUserData(() => UserService.getAvatar(userId), 'Failed to load avatar'), [fetchUserData]);
 
-  const logout = () =>
-    fetchUserData(() => UserService.logout(), 'Logout failed');
+  const logout = useCallback(() =>
+    fetchUserData(() => UserService.logout(), 'Logout failed'), [fetchUserData]);
 
-  const checkSession = () =>
-    fetchUserData(() => UserService.checkSession(), 'Session invalid');
+  const checkSession = useCallback(() =>
+    fetchUserData(() => UserService.checkSession(), 'Session invalid'), [fetchUserData]);
 
   // --- Lookup & Fetch Methods (no UI reload) ---
-  const getUserById = (id) =>
-    fetchUserData(() => UserService.getUserById(id), 'Failed to load user');
+  const getUserById = useCallback((id) =>
+    fetchUserData(() => UserService.getUserById(id), 'Failed to load user'), [fetchUserData]);
 
-  const getUsernameById = (id) =>
-    fetchUserData(() => UserService.getUsernameById(id), 'Failed to load username');
+  const getUsernameById = useCallback((id) =>
+    fetchUserData(() => UserService.getUsernameById(id), 'Failed to load username'), [fetchUserData]);
 
-  const getUsersWithRole = (role) =>
-    fetchUserData(() => UserService.getUsersByRole(role), `Failed to load ${role}s`);
+  const getUsersWithRole = useCallback((role) =>
+    fetchUserData(() => UserService.getUsersByRole(role), `Failed to load ${role}s`), [fetchUserData]);
 
-  const getUsersWithUserRole = () =>
-    fetchUserData(() => UserService.getUsersWithUserRole(), 'Failed to load users');
+  const getUsersWithUserRole = useCallback(async () => {
+    try {
+      const result = await UserService.getUsersWithUserRole();
+      if (result.success) {
+        setUsers(result.data || []);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: 'Failed to load users' };
+    }
+  }, []);
 
-  const getUsersByRoleAndCompany = (role) =>
-    fetchUserData(() => UserService.getUsersByRoleAndCompany(companyId, role), `Failed to load ${role}s`);
+  const getUsersByRoleAndCompany = useCallback(async (role) => {
+    try {
+      const result = await UserService.getUsersByRoleAndCompany(companyId, role);
+      if (result.success) {
+        setUsers(result.data || []);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: `Failed to load ${role}s` };
+    }
+  }, [companyId]);
 
-  const getUsersByAdmin = (adminId) =>
-    fetchUserData(() => UserService.getUsersByAdmin(adminId), 'Failed to load users');
+  const getUsersByAdmin = useCallback(async (adminId) => {
+    try {
+      const result = await UserService.getUsersByAdmin(adminId);
+      if (result.success) {
+        setUsers(result.data || []);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: 'Failed to load users' };
+    }
+  }, []);
 
-  const getUserByAdmin = (adminId, userId) =>
-    fetchUserData(() => UserService.getUserByAdmin(adminId, userId), 'Failed to load user');
+  const getUserByAdmin = useCallback((adminId, userId) =>
+    fetchUserData(() => UserService.getUserByAdmin(adminId, userId), 'Failed to load user'), [fetchUserData]);
 
-  const countUsersByAdmin = (adminId) =>
-    fetchUserData(() => UserService.countUsersByAdmin(adminId, companyId), 'Failed to count users');
+  const countUsersByAdmin = useCallback((adminId) =>
+    fetchUserData(() => UserService.countUsersByAdmin(adminId, companyId), 'Failed to count users'), [fetchUserData, companyId]);
 
-  const getAdminsByCompany = () =>
-    fetchUserData(() => UserService.getAdminsByCompany(companyId), 'Failed to load admins');
+  const getAdminsByCompany = useCallback(() =>
+    fetchUserData(() => UserService.getAdminsByCompany(companyId), 'Failed to load admins'), [fetchUserData, companyId]);
 
   // --- Effect ---
   useEffect(() => {
-    if (companyId) loadUsers();
-  }, [companyId, loadUsers]);
+    if (companyId || role === 'DEVELOPER') {
+      loadUsers();
+    }
+  }, [loadUsers]);
 
   // --- Return All Methods & States ---
   return {

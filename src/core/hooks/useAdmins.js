@@ -40,7 +40,7 @@ export const useAdmins = (companyId, role, userId) => {
       }
 
       if (result.success) {
-        setAdmins(result.data);
+        setAdmins(result.data || []);
       } else {
         setError(result.error);
         customAlert('❌ ' + result.error);
@@ -85,52 +85,60 @@ export const useAdmins = (companyId, role, userId) => {
 
 
   // STEP 2: All the exported functions are now clean, one-line calls to the helper.
-  const activateAdmin = (adminId) =>
+  const activateAdmin = useCallback((adminId) =>
     executeAdminAction(
       () => AdminService.activateAdmin(adminId),
       'Admin activated successfully',
       'Failed to activate admin'
-    );
+    ), [executeAdminAction]);
 
-  const revokeAdmin = (adminId) =>
+  const revokeAdmin = useCallback((adminId) =>
     executeAdminAction(
       () => AdminService.revokeAdmin(adminId),
       'Admin deactivated successfully',
       'Failed to deactivate admin'
-    );
+    ), [executeAdminAction]);
 
-  const assignAdmin = (userId, adminId) =>
+  const assignAdmin = useCallback((userId, adminId) =>
     executeAdminAction(
       () => AdminService.assignAdmin(userId, adminId),
       'Admin assigned successfully',
       'Failed to assign admin',
       true // We ensure the list reloads for consistency.
-    );
+    ), [executeAdminAction]);
 
-  const unassignAdmin = (userId) =>
+  const unassignAdmin = useCallback((userId) =>
     executeAdminAction(
       () => AdminService.unassignAdmin(userId),
       'Admin unassigned successfully',
       'Failed to unassign admin',
       true // We ensure the list reloads for consistency.
-    );
+    ), [executeAdminAction]);
 
   // Add role-based methods like useUsers hook
-  const getAllAdmins = async () => {
+  const getAllAdmins = useCallback(async () => {
     try {
-      return await AdminService.getAllAdmins();
+      const result = await AdminService.getAllAdmins();
+      if (result.success) {
+        setAdmins(result.data || []);
+      }
+      return result;
     } catch (error) {
       return { success: false, error: 'Failed to load all admins' };
     }
-  };
+  }, []);
 
-  const getAdminsByRoleAndCompany = async () => {
+  const getAdminsByRoleAndCompany = useCallback(async () => {
     try {
-      return await AdminService.getAdminRoleByCompany(companyId);
+      const result = await AdminService.getAdminRoleByCompany(companyId);
+      if (result.success) {
+        setAdmins(result.data || []);
+      }
+      return result;
     } catch (error) {
       return { success: false, error: 'Failed to load company admins' };
     }
-  };
+  }, [companyId]);
 
   return {
     admins,

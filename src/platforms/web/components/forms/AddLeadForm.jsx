@@ -34,7 +34,7 @@ const AddLeadForm = ({ onSuccess }) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (name === 'source') {
-      setShowReferenceField(value === 'Reference');
+      setShowReferenceField(value === 'REFERENCE');
     }
   };
 
@@ -66,7 +66,7 @@ const AddLeadForm = ({ onSuccess }) => {
         email: formData.email.trim() || null,
         phone: formData.phone.trim(),
         source: formData.source,
-        referenceName: formData.source === 'Reference' ? formData.referenceName.trim() : null,
+        referenceName: formData.source === 'REFERENCE' ? formData.referenceName.trim() : null,
         status: formData.status,
         budget: formData.budget.trim() || null,
         location: formData.location.trim() || null,
@@ -127,7 +127,7 @@ const AddLeadForm = ({ onSuccess }) => {
                 <option value="INSTAGRAM">Instagram</option>
                 <option value="FACEBOOK">Facebook</option>
                 <option value="YOUTUBE">YouTube</option>
-                <option value="Reference">Reference</option>
+                <option value="REFERENCE">Reference</option>
               </select>
             </div>
 

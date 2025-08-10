@@ -1,44 +1,54 @@
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../../../../core/hooks';
+import { useAuth } from '../../../../shared/contexts/AuthContext';
 
 const NotificationDropdown = ({ onSectionChange }) => {
-    // Get user data from localStorage
-    const getUserData = () => {
+    // Use AuthContext for user data like NotificationsSection does
+    const { user } = useAuth();
+    const userId = user?.userId || user?.id;
+    const companyId = user?.companyId;
+
+    // Use the notifications hook to get unread count and markAllAsRead function
+    const { unreadCount, markAllAsRead, loading, error } = useNotifications(userId, companyId);
+
+    const handleNotificationClick = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem("user") || "{}");
-            const userId = user?.userId || user?.id;
-            const companyId = parseInt(localStorage.getItem("companyId"), 10);
-            return { userId, companyId };
-        } catch {
-            return { userId: null, companyId: null };
-        }
-    };
-
-    const { userId, companyId } = getUserData();
-
-    // Use the notifications hook to get unread count
-    const { unreadCount } = useNotifications(userId, companyId);
-
-    const handleNotificationClick = () => {
-        // Navigate to notifications section
-        if (onSectionChange) {
-            onSectionChange('ViewNotification');
+            // Mark all notifications as read when bell icon is clicked
+            if (unreadCount > 0) {
+                const result = await markAllAsRead();
+                if (!result.success) {
+                    console.error('Failed to mark all as read:', result.error);
+                }
+            }
+            
+            // Navigate to notifications section
+            if (onSectionChange) {
+                onSectionChange('ViewNotification');
+            }
+        } catch (error) {
+            console.error('Error in notification click handler:', error);
         }
     };
 
     return (
-        <button
-            onClick={handleNotificationClick}
-            className="p-2 hover:bg-blue-600 rounded-full transition-colors relative"
-            title="View Notifications"
-        >
-            <Bell size={20} className="text-yellow-300" />
+        <div className="relative">
+            <button
+                onClick={handleNotificationClick}
+                className="p-2 hover:bg-blue-600 rounded-full transition-colors relative"
+                title={`View Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+                disabled={loading}
+            >
+                <Bell size={20} className="text-yellow-300" />
             {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                <span 
+                    className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold z-10"
+                    style={{ minWidth: '20px', minHeight: '20px' }}
+                >
                     {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
             )}
-        </button>
+            </button>
+        </div>
     );
 };
 

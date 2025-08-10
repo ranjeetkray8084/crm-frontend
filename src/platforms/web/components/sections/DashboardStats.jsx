@@ -2,6 +2,7 @@ import { BarChart3, Building, TrendingUp, Calendar, Users, Phone, Home, Shopping
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import { useDashboardStats, useTodayEvents } from '../../../../core/hooks/useDashboardStats';
 import { useTodayFollowUps } from '../../../../core/hooks/useTodayFollowUps';
+import { DashboardService } from '../../../../core/services/dashboard.service';
 
 const DashboardStats = () => {
   try {
@@ -10,6 +11,19 @@ const DashboardStats = () => {
     const userId = user?.userId || user?.id;
     const role = user?.role;
 
+    // Test function to manually check API
+    const testAPI = async () => {
+      try {
+        console.log('🧪 Testing API with:', { companyId, userId });
+        const result = await DashboardService.getNewContactedLeadsCount(companyId, userId);
+        console.log('🧪 API Test Result:', result);
+        alert(`API Test Result: ${JSON.stringify(result, null, 2)}`);
+      } catch (error) {
+        console.error('🧪 API Test Error:', error);
+        alert(`API Test Error: ${error.message}`);
+      }
+    };
+
     // Check if we have valid user data before making API calls
     if (!user || !userId || !role) {
       return (
@@ -17,6 +31,12 @@ const DashboardStats = () => {
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">Authentication Required</h3>
             <p className="text-yellow-700">Please log in to view dashboard statistics.</p>
+            <button 
+              onClick={testAPI}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Test API
+            </button>
           </div>
         </div>
       );
@@ -32,6 +52,9 @@ const DashboardStats = () => {
       loading: statsLoading,
       error: statsError
     } = useDashboardStats(companyId, userId, role);
+    
+    console.log('🔍 DashboardStats: Received stats:', stats);
+    console.log('🔍 DashboardStats: User info:', { companyId, userId, role });
 
     const {
       todayEvents,
@@ -153,9 +176,14 @@ const DashboardStats = () => {
 
           {/* Today's Follow-ups */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-4">
-              <Clock className="text-green-600 mr-3" size={24} />
-              <h3 className="text-xl font-semibold text-gray-900">Today's Follow-ups</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Clock className="text-green-600 mr-3" size={24} />
+                <h3 className="text-xl font-semibold text-gray-900">Today's Follow-ups</h3>
+              </div>
+              <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                🔔 Auto Notifications
+              </div>
             </div>
 
             {!todayFollowUps || todayFollowUps.length === 0 ? (
@@ -218,9 +246,11 @@ const DashboardStats = () => {
 
 const LeadsCard = ({ totalLeads, newLeads, contactedLeads }) => {
   // Add null checks and default values
-  const safeTotalLeads = totalLeads || 0;
   const safeNewLeads = newLeads || 0;
   const safeContactedLeads = contactedLeads || 0;
+  
+  // Calculate total as sum of new + contacted leads
+  const calculatedTotal = safeNewLeads + safeContactedLeads;
 
   return (
     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
@@ -236,7 +266,7 @@ const LeadsCard = ({ totalLeads, newLeads, contactedLeads }) => {
             <BarChart3 size={16} className="text-blue-200" />
             <span className="text-sm font-medium text-blue-100">Total</span>
           </div>
-          <span className="text-2xl font-bold">{safeTotalLeads}</span>
+          <span className="text-2xl font-bold">{calculatedTotal}</span>
         </div>
 
         {/* New Leads */}

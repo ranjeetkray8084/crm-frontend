@@ -9,6 +9,7 @@ const AssignAdminModal = ({ user, userId, onClose, onAssigned }) => {
   const { user: currentUser } = useAuth();
   const { admins, loading, assignAdmin } = useAdmins(currentUser?.companyId, currentUser?.role, currentUser?.userId || currentUser?.id);
   const [selectedAdminId, setSelectedAdminId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleAssign = async () => {
     if (!selectedAdminId) {
@@ -16,10 +17,20 @@ const AssignAdminModal = ({ user, userId, onClose, onAssigned }) => {
       return;
     }
 
-    const result = await assignAdmin(actualUserId, selectedAdminId);
-    if (result.success) {
-      onAssigned?.(); // Notify parent
-      onClose?.();    // Close modal
+    setSubmitting(true);
+    try {
+      const result = await assignAdmin(actualUserId, selectedAdminId);
+      if (result.success) {
+        customAlert('✅ Admin assigned successfully');
+        onAssigned?.(); // Notify parent to reload
+        onClose?.();    // Close modal
+      } else {
+        customAlert('❌ Failed to assign admin');
+      }
+    } catch (error) {
+      customAlert('❌ Failed to assign admin');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -54,12 +65,12 @@ const AssignAdminModal = ({ user, userId, onClose, onAssigned }) => {
           </select>
         )}
 
-
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded w-full"
           onClick={handleAssign}
+          disabled={submitting || !selectedAdminId}
         >
-          Assign
+          {submitting ? 'Assigning...' : 'Assign'}
         </button>
       </div>
     </div>

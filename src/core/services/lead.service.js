@@ -422,9 +422,95 @@ export class LeadService {
    */
   static async searchLeads(companyId, searchParams, pageable = {}) {
     try {
-      const response = await axios.get(API_ENDPOINTS.LEADS.SEARCH(companyId), {
-        params: { ...searchParams, ...pageable }
+      // Check if token exists
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return {
+          success: false,
+          error: 'Authentication required. Please login again.'
+        };
+      }
+
+      const params = {
+        // Add pagination
+        page: pageable.page || 0,
+        size: pageable.size || 10
+      };
+      
+      // Handle multiple keywords - send each keyword as a separate parameter
+      if (searchParams.search && searchParams.search.trim()) {
+        const keywords = searchParams.search.trim().split(/\s+/);
+        keywords.forEach(keyword => {
+          if (keyword.trim()) {
+            // Add each keyword as a separate parameter using URLSearchParams
+            if (!params.keywords) {
+              params.keywords = [];
+            }
+            params.keywords.push(keyword.trim());
+          }
+        });
+      }
+      
+      // Handle budget range - improved parsing
+      if (searchParams.minBudget) {
+        params.minBudget = searchParams.minBudget;
+      }
+      
+      if (searchParams.maxBudget) {
+        params.maxBudget = searchParams.maxBudget;
+      }
+      
+      // Add other filters with proper validation
+      if (searchParams.status && searchParams.status.trim()) {
+        params.status = searchParams.status.trim();
+      }
+      
+      if (searchParams.source && searchParams.source.trim()) {
+        params.source = searchParams.source.trim();
+      }
+      
+      if (searchParams.createdBy && searchParams.createdBy.trim()) {
+        params.createdBy = searchParams.createdBy.trim();
+      }
+      
+      if (searchParams.action && searchParams.action.trim()) {
+        params.action = searchParams.action.trim();
+      }
+
+      // Remove any undefined or null values
+      Object.keys(params).forEach(key => {
+        if (params[key] === undefined || params[key] === null || params[key] === '') {
+          delete params[key];
+        }
       });
+
+      // Build URL with multiple keywords as separate parameters
+      let url = API_ENDPOINTS.LEADS.SEARCH(companyId);
+      const urlParams = new URLSearchParams();
+      
+      // Add all parameters except keywords
+      Object.keys(params).forEach(key => {
+        if (key !== 'keywords') {
+          urlParams.append(key, params[key]);
+        }
+      });
+      
+      // Add keywords as separate parameters
+      if (params.keywords && Array.isArray(params.keywords)) {
+        params.keywords.forEach(keyword => {
+          urlParams.append('keywords', keyword);
+        });
+      }
+      
+      // Construct final URL
+      const finalUrl = `${url}?${urlParams.toString()}`;
+      
+      // Debug: Log the final URL to verify format
+      console.log('🔍 Final Lead Search API URL:', finalUrl);
+      
+      // Use the constructed URL directly
+      const response = await axios.get(finalUrl);
       return {
         success: true,
         data: response.data
@@ -447,9 +533,91 @@ export class LeadService {
    */
   static async searchLeadsCreatedOrAssigned(companyId, userId, searchParams, pageable = {}) {
     try {
-      const response = await axios.get(API_ENDPOINTS.LEADS.SEARCH_CREATED_OR_ASSIGNED(companyId, userId), {
-        params: { ...searchParams, ...pageable }
+      // Check if token exists
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return {
+          success: false,
+          error: 'Authentication required. Please login again.'
+        };
+      }
+
+      const params = {
+        // Add pagination
+        page: pageable.page || 0,
+        size: pageable.size || 10
+      };
+      
+      // Handle multiple keywords - send each keyword as a separate parameter
+      if (searchParams.search && searchParams.search.trim()) {
+        const keywords = searchParams.search.trim().split(/\s+/);
+        keywords.forEach(keyword => {
+          if (keyword.trim()) {
+            // Add each keyword as a separate parameter using URLSearchParams
+            if (!params.keywords) {
+              params.keywords = [];
+            }
+            params.keywords.push(keyword.trim());
+          }
+        });
+      }
+      
+      // Handle budget range - improved parsing
+      if (searchParams.minBudget) {
+        params.minBudget = searchParams.minBudget;
+      }
+      
+      if (searchParams.maxBudget) {
+        params.maxBudget = searchParams.maxBudget;
+      }
+      
+      // Add other filters with proper validation
+      if (searchParams.status && searchParams.status.trim()) {
+        params.status = searchParams.status.trim();
+      }
+      
+      if (searchParams.source && searchParams.source.trim()) {
+        params.source = searchParams.source.trim();
+      }
+      
+      if (searchParams.action && searchParams.action.trim()) {
+        params.action = searchParams.action.trim();
+      }
+
+      // Remove any undefined or null values
+      Object.keys(params).forEach(key => {
+        if (params[key] === undefined || params[key] === null || params[key] === '') {
+          delete params[key];
+        }
       });
+
+      // Build URL with multiple keywords as separate parameters
+      let url = API_ENDPOINTS.LEADS.SEARCH_CREATED_OR_ASSIGNED(companyId, userId);
+      const urlParams = new URLSearchParams();
+      
+      // Add all parameters except keywords
+      Object.keys(params).forEach(key => {
+        if (key !== 'keywords') {
+          urlParams.append(key, params[key]);
+        }
+      });
+      
+      // Add keywords as separate parameters
+      if (params.keywords && Array.isArray(params.keywords)) {
+        params.keywords.forEach(keyword => {
+          urlParams.append('keywords', keyword);
+        });
+      }
+      
+      // Construct final URL
+      const finalUrl = `${url}?${urlParams.toString()}`;
+      
+      // Debug: Log the final URL to verify format
+      console.log('🔍 Final Lead Search Created/Assigned API URL:', finalUrl);
+      
+      // Use the constructed URL directly
+      const response = await axios.get(finalUrl);
       return {
         success: true,
         data: response.data
@@ -472,9 +640,95 @@ export class LeadService {
    */
   static async searchLeadsVisibleToAdmin(companyId, adminId, searchParams, pageable = {}) {
     try {
-      const response = await axios.get(API_ENDPOINTS.LEADS.SEARCH_VISIBLE_TO_ADMIN(companyId, adminId), {
-        params: { ...searchParams, ...pageable }
+      // Check if token exists
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return {
+          success: false,
+          error: 'Authentication required. Please login again.'
+        };
+      }
+
+      const params = {
+        // Add pagination
+        page: pageable.page || 0,
+        size: pageable.size || 10
+      };
+      
+      // Handle multiple keywords - send each keyword as a separate parameter
+      if (searchParams.search && searchParams.search.trim()) {
+        const keywords = searchParams.search.trim().split(/\s+/);
+        keywords.forEach(keyword => {
+          if (keyword.trim()) {
+            // Add each keyword as a separate parameter using URLSearchParams
+            if (!params.keywords) {
+              params.keywords = [];
+            }
+            params.keywords.push(keyword.trim());
+          }
+        });
+      }
+      
+      // Handle budget range - improved parsing
+      if (searchParams.minBudget) {
+        params.minBudget = searchParams.minBudget;
+      }
+      
+      if (searchParams.maxBudget) {
+        params.maxBudget = searchParams.maxBudget;
+      }
+      
+      // Add other filters with proper validation
+      if (searchParams.status && searchParams.status.trim()) {
+        params.status = searchParams.status.trim();
+      }
+      
+      if (searchParams.source && searchParams.source.trim()) {
+        params.source = searchParams.source.trim();
+      }
+      
+      if (searchParams.createdBy && searchParams.createdBy.trim()) {
+        params.createdBy = searchParams.createdBy.trim();
+      }
+      
+      if (searchParams.action && searchParams.action.trim()) {
+        params.action = searchParams.action.trim();
+      }
+
+      // Remove any undefined or null values
+      Object.keys(params).forEach(key => {
+        if (params[key] === undefined || params[key] === null || params[key] === '') {
+          delete params[key];
+        }
       });
+
+      // Build URL with multiple keywords as separate parameters
+      let url = API_ENDPOINTS.LEADS.SEARCH_VISIBLE_TO_ADMIN(companyId, adminId);
+      const urlParams = new URLSearchParams();
+      
+      // Add all parameters except keywords
+      Object.keys(params).forEach(key => {
+        if (key !== 'keywords') {
+          urlParams.append(key, params[key]);
+        }
+      });
+      
+      // Add keywords as separate parameters
+      if (params.keywords && Array.isArray(params.keywords)) {
+        params.keywords.forEach(keyword => {
+          urlParams.append('keywords', keyword);
+        });
+      }
+      
+      // Construct final URL
+      const finalUrl = `${url}?${urlParams.toString()}`;
+      
+      // Debug: Log the final URL to verify format
+      console.log('🔍 Final Lead Search Visible to Admin API URL:', finalUrl);
+      
+      // Use the constructed URL directly
+      const response = await axios.get(finalUrl);
       return {
         success: true,
         data: response.data

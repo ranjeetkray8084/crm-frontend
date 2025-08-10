@@ -1,7 +1,8 @@
 import { Search, Plus, ChevronDown, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import NotificationDropdown from './NotificationDropdown';
+import { UserService } from '../../../../core/services';
 
 function Topbar({
   onAddAction = () => {},
@@ -12,6 +13,7 @@ function Topbar({
   onSectionChange = () => {}
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('https://via.placeholder.com/44x44/6B7280/FFFFFF?text=U');
   const timeoutRef = useRef(null);
 
   const getAddOptions = () => {
@@ -55,6 +57,29 @@ function Topbar({
   };
 
   const addOptions = getAddOptions();
+
+  // Fetch user avatar
+  const fetchAvatar = async () => {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = localUser.userId || localUser.id;
+      
+      if (userId) {
+        const result = await UserService.getAvatar(userId);
+        if (result.success && result.data) {
+          setAvatarUrl(result.data);
+        } else {
+          setAvatarUrl(`https://via.placeholder.com/44x44/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`);
+        }
+      }
+    } catch (error) {
+      setAvatarUrl(`https://via.placeholder.com/44x44/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`);
+    }
+  };
+
+  useEffect(() => {
+    fetchAvatar();
+  }, [userName]); // Re-fetch when userName changes
 
   return (
     <header className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-5 rounded-lg shadow mb-6">
@@ -136,10 +161,13 @@ function Topbar({
               <div className="font-medium">{userName || 'User Name'}</div>
               <div className="text-sm text-blue-100">{userRole || 'User'}</div>
             </div>
-            <div className="w-11 h-11 rounded-full border-2 border-white bg-gray-300 flex items-center justify-center">
-              <span className="text-gray-600 text-sm font-medium">
-                {userName ? userName.charAt(0).toUpperCase() : 'U'}
-              </span>
+            <div className="w-11 h-11 rounded-full border-2 border-white overflow-hidden bg-gray-300 flex items-center justify-center">
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={() => setAvatarUrl(`https://via.placeholder.com/44x44/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`)}
+              />
             </div>
           </div>
         </div>

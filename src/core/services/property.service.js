@@ -139,6 +139,16 @@ export class PropertyService {
 
   static async searchProperties(companyId, searchParams = {}, pageable = {}) {
     try {
+      // Check if token exists
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return {
+          success: false,
+          error: 'Authentication required. Please login again.'
+        };
+      }
+      
       const params = {
         // Add pagination
         page: pageable.page || 0,
@@ -149,27 +159,82 @@ export class PropertyService {
         userId: searchParams.userId
       };
       
-      // Handle keywords search - split by space and add multiple keywords
+      // Handle multiple keywords - send each keyword as a separate parameter
       if (searchParams.keywords && searchParams.keywords.trim()) {
-        params.keywords = searchParams.keywords.trim();
+        const keywords = searchParams.keywords.trim().split(/\s+/);
+        keywords.forEach(keyword => {
+          if (keyword.trim()) {
+            // Add each keyword as a separate parameter using URLSearchParams
+            if (!params.keywords) {
+              params.keywords = [];
+            }
+            params.keywords.push(keyword.trim());
+          }
+        });
       }
       
-      // Handle budget range
+      // Handle budget range - improved parsing
       if (searchParams.budgetRange) {
         const [minPrice, maxPrice] = searchParams.budgetRange.split('-').map(Number);
         if (!isNaN(minPrice)) params.minPrice = minPrice;
         if (!isNaN(maxPrice)) params.maxPrice = maxPrice;
       }
       
-      // Add other filters
-      if (searchParams.status) params.status = searchParams.status;
-      if (searchParams.type) params.type = searchParams.type;
-      if (searchParams.bhk) params.bhk = searchParams.bhk;
-      if (searchParams.source) params.source = searchParams.source;
-      if (searchParams.createdBy) params.createdByName = searchParams.createdBy;
+      // Add other filters with proper validation
+      if (searchParams.status && searchParams.status.trim()) {
+        params.status = searchParams.status.trim();
+      }
+      
+      if (searchParams.type && searchParams.type.trim()) {
+        params.type = searchParams.type.trim();
+      }
+      
+      if (searchParams.bhk && searchParams.bhk.trim()) {
+        params.bhk = searchParams.bhk.trim();
+      }
+      
+      if (searchParams.source && searchParams.source.trim()) {
+        params.source = searchParams.source.trim();
+      }
+      
+      // Handle createdBy filter - map to createdByName for API
+      if (searchParams.createdBy && searchParams.createdBy.trim()) {
+        params.createdByName = searchParams.createdBy.trim();
+      }
 
-      // Use the existing search-paged endpoint with role and userId parameters
-      const response = await axios.get(API_ENDPOINTS.PROPERTIES.SEARCH_PAGED(companyId), { params });
+      // Remove any undefined or null values
+      Object.keys(params).forEach(key => {
+        if (params[key] === undefined || params[key] === null || params[key] === '') {
+          delete params[key];
+        }
+      });
+
+      // Build URL with multiple keywords as separate parameters
+      let url = API_ENDPOINTS.PROPERTIES.SEARCH_PAGED(companyId);
+      const urlParams = new URLSearchParams();
+      
+      // Add all parameters except keywords
+      Object.keys(params).forEach(key => {
+        if (key !== 'keywords') {
+          urlParams.append(key, params[key]);
+        }
+      });
+      
+      // Add keywords as separate parameters
+      if (params.keywords && Array.isArray(params.keywords)) {
+        params.keywords.forEach(keyword => {
+          urlParams.append('keywords', keyword);
+        });
+      }
+      
+      // Construct final URL
+      const finalUrl = `${url}?${urlParams.toString()}`;
+      
+      // Debug: Log the final URL to verify format
+      console.log('🔍 Final API URL:', finalUrl);
+      
+      // Use the constructed URL directly
+      const response = await axios.get(finalUrl);
       return { success: true, data: response.data };
   
     } catch (error) {

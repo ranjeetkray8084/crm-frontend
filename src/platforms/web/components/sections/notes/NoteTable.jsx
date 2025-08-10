@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import NoteActions from './NoteActions';
 
 const NoteTable = ({
@@ -10,8 +11,7 @@ const NoteTable = ({
     onAddRemark,
     onViewRemarks
 }) => {
-    const [sortField, setSortField] = useState('createdAt');
-    const [sortDirection, setSortDirection] = useState('desc');
+    const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
     const [showContentModal, setShowContentModal] = useState(false);
     const [selectedContent, setSelectedContent] = useState('');
     const [showAlert, setShowAlert] = useState(false);
@@ -24,38 +24,41 @@ const NoteTable = ({
         showCancel: false
     });
 
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
     // Sorting logic
     const sortedNotes = [...notes].sort((a, b) => {
-        let aValue = a[sortField];
-        let bValue = b[sortField];
+        if (!sortConfig.key) return 0;
+        
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
 
-        if (sortField === 'createdBy') {
+        if (sortConfig.key === 'createdBy') {
             aValue = a.createdBy?.name || 'Unknown';
             bValue = b.createdBy?.name || 'Unknown';
         }
 
-        if (sortField === 'createdAt' || sortField === 'dateTime') {
+        if (sortConfig.key === 'createdAt' || sortConfig.key === 'dateTime') {
             aValue = new Date(aValue || 0);
             bValue = new Date(bValue || 0);
         }
 
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
     });
 
-    const handleSort = (field) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('asc');
-        }
-    };
-
-    const SortIcon = ({ field }) => {
-        if (sortField !== field) return <span className="text-gray-400">↕</span>;
-        return sortDirection === 'asc' ? <span className="text-blue-600">↑</span> : <span className="text-blue-600">↓</span>;
+    const getSortIcon = (columnKey) => {
+        if (sortConfig.key !== columnKey) return null;
+        return sortConfig.direction === 'asc'
+            ? <ArrowUp className="h-4 w-4 ml-1 inline" />
+            : <ArrowDown className="h-4 w-4 ml-1 inline" />;
     };
 
     const truncateContent = (content, wordLimit = 10) => {
@@ -213,55 +216,37 @@ const NoteTable = ({
         );
     };
 
-    const getPriorityClass = (priority) => {
+    const getStatusStyles = (status) => {
+        switch (status) {
+            case 'NEW':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200 focus:ring-yellow-500';
+            case 'PROCESSING':
+                return 'bg-blue-100 text-blue-800 border-blue-200 focus:ring-blue-500';
+            case 'COMPLETED':
+                return 'bg-green-100 text-green-800 border-green-200 focus:ring-green-500';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200 focus:ring-gray-500';
+        }
+    };
+
+    const getPriorityStyles = (priority) => {
         switch (priority) {
-            case 'PRIORITY_A': return 'text-white';
-            case 'PRIORITY_B': return 'text-white';
-            case 'PRIORITY_C': return 'text-white';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'PRIORITY_A':
+                return 'bg-red-100 text-red-800 border-red-200 focus:ring-red-500';
+            case 'PRIORITY_B':
+                return 'bg-orange-100 text-orange-800 border-orange-200 focus:ring-orange-500';
+            case 'PRIORITY_C':
+                return 'bg-green-100 text-green-800 border-green-200 focus:ring-green-500';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200 focus:ring-gray-500';
         }
     };
 
-    const getPriorityBg = (priority) => {
-        switch (priority) {
-            case 'PRIORITY_A': return '#f44336'; // Red
-            case 'PRIORITY_B': return '#ff9800'; // Orange
-            case 'PRIORITY_C': return '#4caf50'; // Green
-            default: return '#777';
-        }
-    };
-
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'NEW': return 'text-white';
-            case 'PROCESSING': return 'text-white';
-            case 'COMPLETED': return 'text-white';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatusBg = (status) => {
-        switch (status) {
-            case 'NEW': return '#f0ad4e'; // Yellow/Orange
-            case 'PROCESSING': return '#5bc0de'; // Light Blue
-            case 'COMPLETED': return '#d9534f'; // Red
-            default: return '#ccc';
-        }
-    };
-
-    const getRowBg = (status) => {
-        switch (status) {
-            case 'NEW': return '#fff8e1'; // Light yellow
-            case 'PROCESSING': return '#e0f7fa'; // Light cyan
-            case 'COMPLETED': return '#f8d7da'; // Light red
-            default: return 'transparent';
-        }
-    };
-
-    const formatDateTime = (datetime) => {
-        if (!datetime) return 'N/A';
-        const date = new Date(datetime);
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
     };
 
     const formatCreatedFor = (note) => {
@@ -287,167 +272,134 @@ const NoteTable = ({
         }
     };
 
+    const SortableHeader = ({ columnKey, title, className = "" }) => (
+        <th
+            className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap ${className}`}
+            onClick={() => handleSort(columnKey)}
+        >
+            {title}
+            {getSortIcon(columnKey)}
+        </th>
+    );
+
     return (
-        <div className="bg-white rounded-lg shadow relative z-10 h-[600px] w-[1200px] border">
-            <div className="h-full overflow-auto">
-                <table className="w-full border-collapse table-fixed">
-                    <thead className="bg-gray-50 sticky top-0 z-10">
-                        <tr className="border-b border-gray-200">
-                            <th
-                                className="w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('content')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Content <SortIcon field="content" />
-                                </div>
-                            </th>
-                            <th
-                                className="w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('status')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Status <SortIcon field="status" />
-                                </div>
-                            </th>
-                            <th
-                                className="w-[140px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('priority')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Priority <SortIcon field="priority" />
-                                </div>
-                            </th>
-                            <th
-                                className="w-[70px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('typeStr')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Type <SortIcon field="typeStr" />
-                                </div>
-                            </th>
-                            <th
-                                className="w-[160px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('createdBy')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Created By <SortIcon field="createdBy" />
-                                </div>
-                            </th>
-                            <th className="w-[140px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap border-r border-gray-200">Created For</th>
-                            <th
-                                className="w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('createdAt')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Created At <SortIcon field="createdAt" />
-                                </div>
-                            </th>
-                            <th
-                                className="w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap border-r border-gray-200"
-                                onClick={() => handleSort('dateTime')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Scheduled <SortIcon field="dateTime" />
-                                </div>
-                            </th>
-                            <th className="w-[114px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
+        <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
+                <thead className="bg-gray-50">
+                    <tr>
+                        <SortableHeader columnKey="content" title="Content" />
+                        <SortableHeader columnKey="status" title="Status" />
+                        <SortableHeader columnKey="priority" title="Priority" />
+                        <SortableHeader columnKey="typeStr" title="Type" />
+                        <SortableHeader columnKey="createdBy" title="Created By" />
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created For
+                        </th>
+                        <SortableHeader columnKey="createdAt" title="Created At" />
+                        <SortableHeader columnKey="dateTime" title="Scheduled" />
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                    {sortedNotes.length === 0 ? (
+                        <tr>
+                            <td colSpan="9" className="text-center py-6 text-gray-400">No notes found.</td>
                         </tr>
-                    </thead>
-                    <tbody className="bg-white">
-                        {sortedNotes.length === 0 ? (
-                            <tr>
-                                <td colSpan="9" className="text-center py-6 text-gray-400">No notes found.</td>
+                    ) : (
+                        sortedNotes.map((note) => (
+                            <tr key={note.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-4 whitespace-nowrap">
+                                    <div
+                                        className="text-sm text-gray-900 cursor-pointer hover:text-blue-600 hover:underline max-w-xs truncate"
+                                        onClick={() => handleContentClick(note.content)}
+                                        title="Click to view full content"
+                                    >
+                                        {truncateContent(note.content)}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap">
+                                    <select
+                                        value={note.status || 'NEW'}
+                                        onChange={(e) => {
+                                            const newStatus = e.target.value;
+                                            if (newStatus === 'COMPLETED') {
+                                                customAlert({
+                                                    title: 'Confirm Status Change',
+                                                    message: `Are you sure you want to mark this note as ${newStatus}?`,
+                                                    type: 'warning',
+                                                    showCancel: true,
+                                                    onConfirm: () => {
+                                                        onUpdateStatus(note.id, newStatus);
+                                                        customAlert({
+                                                            title: 'Success',
+                                                            message: 'Note status updated successfully!',
+                                                            type: 'success'
+                                                        });
+                                                    },
+                                                    onCancel: () => {
+                                                        e.target.value = note.status || 'NEW';
+                                                    }
+                                                });
+                                            } else {
+                                                onUpdateStatus(note.id, newStatus);
+                                            }
+                                        }}
+                                        className={`px-2 py-1 border rounded-full text-xs font-semibold appearance-none focus:outline-none focus:ring-2 ${getStatusStyles(note.status)}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <option value="NEW">NEW</option>
+                                        <option value="PROCESSING">PROCESSING</option>
+                                        <option value="COMPLETED">COMPLETED</option>
+                                    </select>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap">
+                                    <select
+                                        value={note.priority || 'PRIORITY_C'}
+                                        onChange={(e) => onUpdatePriority(note.id, e.target.value)}
+                                        className={`px-2 py-1 border rounded-full text-xs font-semibold appearance-none focus:outline-none focus:ring-2 ${getPriorityStyles(note.priority)}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <option value="PRIORITY_A">Priority A</option>
+                                        <option value="PRIORITY_B">Priority B</option>
+                                        <option value="PRIORITY_C">Priority C</option>
+                                    </select>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        {note.typeStr || 'Note'}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {note.createdBy?.name || note.createdBy?.username || 'Unknown'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {formatCreatedFor(note)}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div className="text-sm text-gray-900">{formatDate(note.createdAt)}</div>
+                                    {note.createdBy?.name && <div className="text-xs text-gray-400">by {note.createdBy.name}</div>}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {formatDate(note.dateTime)}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    {note.id && (
+                                        <NoteActions
+                                            note={note}
+                                            onEdit={onEdit}
+                                            onDelete={onDelete}
+                                            onAddRemark={onAddRemark}
+                                            onViewRemarks={onViewRemarks}
+                                        />
+                                    )}
+                                </td>
                             </tr>
-                        ) : (
-                            sortedNotes.map((note) => (
-                                <tr key={note.id} className="border-b border-gray-200 hover:bg-gray-50" style={{ backgroundColor: getRowBg(note.status) }}>
-                                    <td className="w-[200px] px-4 py-4 whitespace-nowrap border-r border-gray-200">
-                                        <div
-                                            className="text-sm text-gray-900 break-words cursor-pointer hover:text-blue-600 hover:underline overflow-hidden text-ellipsis"
-                                            onClick={() => handleContentClick(note.content)}
-                                            title="Click to view full content"
-                                        >
-                                            {truncateContent(note.content)}
-                                        </div>
-                                    </td>
-                                    <td className="w-[120px] px-4 py-4 whitespace-nowrap border-r border-gray-200">
-                                        <select
-                                            value={note.status || 'NEW'}
-                                            onChange={(e) => {
-                                                const newStatus = e.target.value;
-                                                if (newStatus === 'COMPLETED') {
-                                                    customAlert({
-                                                        title: 'Confirm Status Change',
-                                                        message: `Are you sure you want to mark this note as ${newStatus}?`,
-                                                        type: 'warning',
-                                                        showCancel: true,
-                                                        onConfirm: () => {
-                                                            onUpdateStatus(note.id, newStatus);
-                                                            customAlert({
-                                                                title: 'Success',
-                                                                message: 'Note status updated successfully!',
-                                                                type: 'success'
-                                                            });
-                                                        },
-                                                        onCancel: () => {
-                                                            // Reset select to previous value
-                                                            e.target.value = note.status || 'NEW';
-                                                        }
-                                                    });
-                                                } else {
-                                                    onUpdateStatus(note.id, newStatus);
-                                                }
-                                            }}
-                                            className={`w-full p-2 rounded text-sm border-none ${getStatusClass(note.status)}`}
-                                            style={{ backgroundColor: getStatusBg(note.status) }}
-                                        >
-                                            <option value="NEW">NEW</option>
-                                            <option value="PROCESSING">PROCESSING</option>
-                                            <option value="COMPLETED">COMPLETED</option>
-                                        </select>
-                                    </td>
-                                    <td className="w-[140px] px-4 py-4 whitespace-nowrap border-r border-gray-200">
-                                        <select
-                                            value={note.priority || 'PRIORITY_C'}
-                                            onChange={(e) => onUpdatePriority(note.id, e.target.value)}
-                                            className={`w-full p-2 rounded text-sm border-none ${getPriorityClass(note.priority)}`}
-                                            style={{ backgroundColor: getPriorityBg(note.priority) }}
-                                        >
-                                            <option value="PRIORITY_A">Priority A</option>
-                                            <option value="PRIORITY_B">Priority B</option>
-                                            <option value="PRIORITY_C">Priority C</option>
-                                        </select>
-                                    </td>
-                                    <td className="w-[70px] px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-gray-200">{note.typeStr || 'Note'}</td>
-                                    <td className="w-[160px] px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-gray-200">
-                                        {note.createdBy?.name || note.createdBy?.username || 'Unknown'}
-                                    </td>
-                                    <td className="w-[140px] px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-gray-200">
-                                        {formatCreatedFor(note)}
-                                    </td>
-                                    <td className="w-[150px] px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-gray-200">
-                                        {formatDateTime(note.createdAt)}
-                                    </td>
-                                    <td className="w-[120px] px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-gray-200">
-                                        {formatDateTime(note.dateTime)}
-                                    </td>
-                                    <td className="w-[114px] px-4 py-4 whitespace-nowrap text-sm font-medium">
-                                        {note.id && (
-                                            <NoteActions
-                                                note={note}
-                                                onEdit={onEdit}
-                                                onDelete={onDelete}
-                                                onAddRemark={onAddRemark}
-                                                onViewRemarks={onViewRemarks}
-                                            />
-                                        )}
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                        ))
+                    )}
+                </tbody>
+            </table>
 
             {/* Content Modal */}
             <ContentModal />

@@ -9,9 +9,10 @@ const UserAssignmentModal = ({
   taskId,
   companyId,
   currentUserRole,
+  currentUserId,
   loading = false
 }) => {
-  const { getAllUsersByCompany } = useUsers(companyId);
+  const { getAllUsersByCompany, getUsersByAdmin } = useUsers(companyId);
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,7 +23,7 @@ const UserAssignmentModal = ({
     if (isOpen && companyId) {
       fetchUsers();
     }
-  }, [isOpen, companyId]);
+  }, [isOpen, companyId, currentUserId, currentUserRole]);
 
   useEffect(() => {
     // Filter users based on search term (search by name)
@@ -37,35 +38,48 @@ const UserAssignmentModal = ({
     setError('');
 
     try {
-      const result = await getAllUsersByCompany();
+      let usersToSet = [];
 
-      if (result.success) {
-        const allUsers = result.data || [];
-        let filteredUsers = [];
-
-        // Role-based filtering logic
-        if (currentUserRole === 'DIRECTOR') {
-          // Director can assign to ADMIN and USER roles
-          filteredUsers = allUsers.filter(user =>
-            user.role === 'ADMIN' || user.role === 'USER'
-          );
-        } else if (currentUserRole === 'ADMIN') {
-          // Admin can assign only to USER role
-          filteredUsers = allUsers.filter(user => user.role === 'USER');
+      if (currentUserRole === 'ADMIN' && currentUserId) {
+        // For ADMIN role, get only users assigned to this admin
+        const result = await getUsersByAdmin(currentUserId);
+        if (result.success) {
+          usersToSet = result.data || [];
         } else {
-          // USER role cannot assign tasks (this shouldn't happen)
-          filteredUsers = [];
+          setError(result.error || 'Failed to load users assigned to you');
+          usersToSet = [];
         }
-
-        if (filteredUsers.length === 0) {
-          setError('No users available for assignment');
-        }
-
-        setUsers(filteredUsers);
-        setFilteredUsers(filteredUsers);
       } else {
-        setError(result.error || 'Failed to load users');
+        // For other roles, get all users and filter based on role
+        const result = await getAllUsersByCompany();
+        if (result.success) {
+          const allUsers = result.data || [];
+          
+          // Role-based filtering logic
+          if (currentUserRole === 'DIRECTOR') {
+            // Director can assign to ADMIN and USER roles
+            usersToSet = allUsers.filter(user =>
+              user.role === 'ADMIN' || user.role === 'USER'
+            );
+          } else if (currentUserRole === 'ADMIN') {
+            // Admin can assign only to USER role (fallback if getUsersByAdmin fails)
+            usersToSet = allUsers.filter(user => user.role === 'USER');
+          } else {
+            // USER role cannot assign tasks (this shouldn't happen)
+            usersToSet = [];
+          }
+        } else {
+          setError(result.error || 'Failed to load users');
+          usersToSet = [];
+        }
       }
+
+      if (usersToSet.length === 0) {
+        setError('No users available for assignment');
+      }
+
+      setUsers(usersToSet);
+      setFilteredUsers(usersToSet);
     } catch (err) {
       setError('Failed to load users');
     } finally {

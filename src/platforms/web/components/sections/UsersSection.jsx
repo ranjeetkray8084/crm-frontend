@@ -16,6 +16,10 @@ const UsersSection = () => {
   // Use useUsers hook for user management actions
   // For DEVELOPER role, we don't need companyId since they see all users across companies
   const {
+    users,
+    loading,
+    error,
+    loadUsers,
     activateUser,
     deactivateUser,
     unassignAdmin,
@@ -28,8 +32,6 @@ const UsersSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [assigningUser, setAssigningUser] = useState(null);
-  const [userRoleUsers, setUserRoleUsers] = useState([]);
-  const [userLoading, setUserLoading] = useState(false);
 
   // Load users based on current user's role
   const loadUserRoleUsers = async () => {
@@ -45,35 +47,19 @@ const UsersSection = () => {
       }
     }
 
-    setUserLoading(true);
     try {
-      let result;
-
       if (role === 'DEVELOPER') {
         // Developer can see all USER role users across all companies using specific endpoint
-        result = await getUsersWithUserRole();
+        await getUsersWithUserRole();
       } else if (role === 'DIRECTOR') {
         // Director can see all USER role users in the company
-        result = await getUsersByRoleAndCompany('USER');
+        await getUsersByRoleAndCompany('USER');
       } else if (role === 'ADMIN') {
         // Admin can see only users assigned to them
-        result = await getUsersByAdmin(userId);
-      } else {
-        // For other roles, show no users
-        setUserRoleUsers([]);
-        setUserLoading(false);
-        return;
-      }
-
-      if (result.success) {
-        setUserRoleUsers(result.data || []);
-      } else {
-        setUserRoleUsers([]);
+        await getUsersByAdmin(userId);
       }
     } catch (error) {
-      setUserRoleUsers([]);
-    } finally {
-      setUserLoading(false);
+      console.error('Error loading users:', error);
     }
   };
 
@@ -81,8 +67,46 @@ const UsersSection = () => {
     loadUserRoleUsers();
   }, [companyId, role, userId]);
 
+  // Handle user operations with reload
+  const handleActivateUser = async (userId) => {
+    const result = await activateUser(userId);
+    if (result.success) {
+      // Table will automatically reload due to useUsers hook
+    }
+  };
+
+  const handleDeactivateUser = async (userId) => {
+    const result = await deactivateUser(userId);
+    if (result.success) {
+      // Table will automatically reload due to useUsers hook
+    }
+  };
+
+  const handleUnassignAdmin = async (userId) => {
+    const result = await unassignAdmin(userId);
+    if (result.success) {
+      // Table will automatically reload due to useUsers hook
+    }
+  };
+
+  // Handle modal close with reload
+  const handleUpdateModalClose = () => {
+    setSelectedUser(null);
+    // Reload users after modal closes
+    loadUserRoleUsers();
+  };
+
+  const handleAssignAdminModalClose = () => {
+    setAssigningUser(null);
+  };
+
+  const handleAssignAdminSuccess = () => {
+    // Reload users after admin assignment
+    loadUserRoleUsers();
+  };
+
   // Different filtering based on role
-  const filteredUsers = userRoleUsers.filter((user) => {
+  const filteredUsers = users.filter((user) => {
     const search = searchQuery.toLowerCase();
     
     if (role === 'DEVELOPER') {
@@ -161,7 +185,7 @@ const UsersSection = () => {
         </div>
       )}
 
-      {userLoading ? (
+      {loading ? (
         renderSkeleton()
       ) : (
         <>
@@ -229,10 +253,10 @@ const UsersSection = () => {
                           user={user}
                           searchTerm={searchQuery}
                           onUpdate={setSelectedUser}
-                          onActivate={activateUser}
-                          onDeactivate={deactivateUser}
+                          onActivate={handleActivateUser}
+                          onDeactivate={handleDeactivateUser}
                           onAssignAdmin={setAssigningUser}
-                          onUnassignAdmin={unassignAdmin}
+                          onUnassignAdmin={handleUnassignAdmin}
                           isDirector={isDirector}
                           isDeveloper={role === 'DEVELOPER'}
                           showCompanyColumn={false}
@@ -299,8 +323,8 @@ const UsersSection = () => {
                           <button
                             onClick={() =>
                               isActive
-                                ? deactivateUser(user.userId)
-                                : activateUser(user.userId)
+                                ? handleDeactivateUser(user.userId)
+                                : handleActivateUser(user.userId)
                             }
                             className={`w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white ${isActive
                               ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
@@ -313,7 +337,7 @@ const UsersSection = () => {
                             <button
                               onClick={() => {
                                 if (hasAdmin) {
-                                  unassignAdmin(user.userId);
+                                  handleUnassignAdmin(user.userId);
                                 } else {
                                   setAssigningUser(user);
                                 }
@@ -341,10 +365,7 @@ const UsersSection = () => {
       {selectedUser && role === 'DIRECTOR' && (
         <UpdateUserModal
           user={selectedUser}
-          onClose={() => {
-            setSelectedUser(null);
-            loadUserRoleUsers();
-          }}
+          onClose={handleUpdateModalClose}
         />
       )}
 
@@ -352,8 +373,8 @@ const UsersSection = () => {
       {assigningUser && role === 'DIRECTOR' && (
         <AssignAdminModal
           user={assigningUser}
-          onClose={() => setAssigningUser(null)}
-          onAssigned={() => loadUserRoleUsers()}
+          onClose={handleAssignAdminModalClose}
+          onAssigned={handleAssignAdminSuccess}
         />
       )}
     </motion.div>

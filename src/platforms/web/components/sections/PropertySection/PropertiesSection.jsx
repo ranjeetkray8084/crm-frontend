@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useProperties } from "../../../../../core/hooks/useProperties";
 import { usePropertySearch } from "../../../../../core/hooks/usePropertySearch";
 import { useUsers } from "../../../../../core/hooks/useUsers";
+import { customAlert } from "../../../../../core/utils/alertUtils";
+import { exportProperties } from "../../../../../core/utils/excelExport";
 
 // Import all necessary components
 import PropertyToolbar from './PropertyToolbar';
@@ -19,7 +21,7 @@ import UpdatePropertyModal from './action/UpdatePropertyModal';
 const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [autoSearch] = useState(false);
+  const [autoSearch] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [editingProperty, setEditingProperty] = useState(null);
@@ -82,6 +84,23 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     }
   }, [companyId, isSearchActive, activeSearchParams, currentPage, searchProperties, searchTrigger, loadProperties, pageSize]);
 
+  // Auto-search when filters change (if autoSearch is enabled)
+  useEffect(() => {
+    if (autoSearch && companyId && hasActiveFilters) {
+      const timeoutId = setTimeout(() => {
+        applySearch();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [autoSearch, companyId, filters, hasActiveFilters, applySearch]);
+
+  // Manual search trigger
+  const handleManualSearch = useCallback(() => {
+    if (companyId && (searchTags.length > 0 || hasActiveFilters || searchTerm.trim())) {
+      applySearch();
+    }
+  }, [companyId, searchTags.length, hasActiveFilters, searchTerm, applySearch]);
+
   const handleUpdateProperty = (property) => setEditingProperty(property);
 
   const handleConfirmUpdate = async (updatedPropertyData) => {
@@ -119,12 +138,30 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     );
   };
 
+  const handleOutOfBox = (property) => {
+    // Handle Out of Box action
+    console.log('Out of Box action for property:', property);
+    // You can implement any custom logic here
+    // For example, show a modal, navigate to a special page, etc.
+    customAlert(`🚀 Out of Box action triggered for: ${property.propertyName || property.name}`);
+  };
+
   const showConfirmModal = (title, message, onConfirm) => {
     setConfirmModal({ isOpen: true, title, message, onConfirm });
   };
 
   const handleExport = () => {
-    // Export functionality to be implemented
+    if (!properties || properties.length === 0) {
+      customAlert('❌ No properties to export');
+      return;
+    }
+    
+    const result = exportProperties(properties);
+    if (result.success) {
+      customAlert(`✅ ${result.message}`);
+    } else {
+      customAlert(`❌ ${result.message}`);
+    }
   };
 
   const actionHandlers = {
@@ -133,6 +170,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     onUpdate: handleUpdateProperty,
     onAddRemark: handleAddRemark,
     onViewRemarks: handleGetRemarks,
+    onOutOfBox: handleOutOfBox,
     companyId: companyId
   };
 
@@ -147,7 +185,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
           onSearchTermChange={setSearchTerm}
           onSearchEnter={handleSearchEnter}
           onRemoveSearchTag={removeSearchTag}
-          onSearch={applySearch}
+          onSearch={handleManualSearch}
           onExport={handleExport}
           onRefresh={handleRefresh}
           onClearSearch={clearSearch}
@@ -165,9 +203,10 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
             onClearFilters={handleClearAll}
             isMobile={false}
             hasActiveFilters={hasActiveFilters}
-            activeFiltersSummary={getActiveFiltersSummary()}
+            activeFiltersSummary={getActiveFiltersSummary(userId, filterUsers)}
             autoApply={autoSearch}
             companyId={companyId}
+            userId={userId}
             availableUsers={filterUsers}
           />
         </div>
@@ -181,9 +220,10 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
               onClearFilters={handleClearAll}
               isMobile={true}
               hasActiveFilters={hasActiveFilters}
-              activeFiltersSummary={getActiveFiltersSummary()}
+              activeFiltersSummary={getActiveFiltersSummary(userId, filterUsers)}
               autoApply={autoSearch}
               companyId={companyId}
+              userId={userId}
               availableUsers={filterUsers}
             />
           </div>

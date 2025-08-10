@@ -36,6 +36,15 @@ const PropertyToolbar = ({
     onClearSearch();
   };
 
+  const handleSearchClick = () => {
+    // If there's a search term, add it as tags first, then search
+    if (searchTerm.trim()) {
+      onSearchEnter();
+    }
+    // Then trigger the search
+    onSearch();
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-3 mb-4">
       {/* Search Input and Tags */}
@@ -66,7 +75,7 @@ const PropertyToolbar = ({
             placeholder={
               searchTags.length > 0
                 ? "Add more search terms..."
-                : "Search by property name, location, owner contact... (Press Enter to add as tag)"
+                : "Search by property name, location, owner contact... (Press Enter to add multiple keywords)"
             }
             value={searchTerm}
             onChange={handleSearchChange}
@@ -92,9 +101,9 @@ const PropertyToolbar = ({
       </div>
 
       {/* Search Button */}
-      {!autoSearch && (
+      {(!autoSearch || (searchTerm || searchTags.length > 0)) && (
         <button 
-          onClick={onSearch} 
+          onClick={handleSearchClick} 
           disabled={isLoading}
           className="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >

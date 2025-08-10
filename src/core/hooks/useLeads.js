@@ -57,7 +57,12 @@ export const useLeads = (companyId, userId, userRole) => {
         backendSearchParams.action = searchParams.action;
       }
 
-      Object.keys(backendSearchParams).forEach(key => backendSearchParams[key] === undefined && delete backendSearchParams[key]);
+      // Remove any undefined or null values
+      Object.keys(backendSearchParams).forEach(key => {
+        if (backendSearchParams[key] === undefined || backendSearchParams[key] === null || backendSearchParams[key] === '') {
+          delete backendSearchParams[key];
+        }
+      });
 
       const isBackendSearching = Object.keys(backendSearchParams).length > 0;
 

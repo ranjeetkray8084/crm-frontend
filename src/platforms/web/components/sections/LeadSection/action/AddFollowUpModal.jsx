@@ -56,9 +56,17 @@ const AddFollowUpModal = ({ isOpen, onClose, onAddFollowUp, lead }) => {
       const result = await FollowUpService.createFollowUp(companyId, followUpData);
       
       if (result.success) {
-        // Show success alert with lead name
+        // Show success alert with lead name and notification info
         const leadName = lead?.name || 'Lead';
-        customAlert(`✅ Follow-up created successfully for ${leadName}!`);
+        const followUpDate = new Date(followUpData.followUpDate);
+        const formattedDate = followUpDate.toLocaleDateString('en-IN');
+        const formattedTime = followUpDate.toLocaleTimeString('en-IN', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+        
+        customAlert(`✅ Follow-up created successfully for ${leadName}!\n📅 Scheduled for: ${formattedDate} at ${formattedTime}\n🔔 Notification will be sent on the scheduled date.`);
         
         // Call the parent's onAddFollowUp callback if provided
         if (onAddFollowUp) {

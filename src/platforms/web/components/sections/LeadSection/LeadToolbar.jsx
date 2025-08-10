@@ -66,7 +66,7 @@ const LeadToolbar = ({
             placeholder={
               searchTags.length > 0
                 ? "Add more search terms..."
-                : "Search by name, phone, requirement, location... (Press Enter to add as tag)"
+                : "Search by name, phone, email, location, requirement, reference, source, status, budget, assigned user... (Press Enter to add as tag)"
             }
             value={searchTerm}
             onChange={handleSearchChange}
@@ -114,33 +114,26 @@ const LeadToolbar = ({
         Refresh
       </button>
 
-      {/* Export */}
+      {/* Export Button */}
       <button 
         onClick={onExport} 
-        className="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700 transition-colors flex items-center gap-2"
-        title="Export to Excel"
+        disabled={isLoading}
+        className="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        title="Export leads"
       >
         <Download size={14} />
         Export
       </button>
 
-      {/* Toggle Mobile Filters */}
+      {/* Mobile Filters Toggle */}
       <button 
-        onClick={onToggleMobileFilters} 
-        className="bg-gray-200 md:hidden px-3 py-2 rounded text-sm hover:bg-gray-300 transition-colors flex items-center gap-2"
-        title="Show filters"
+        onClick={onToggleMobileFilters}
+        className="md:hidden bg-gray-500 text-white px-4 py-2 text-sm rounded hover:bg-gray-600 transition-colors flex items-center gap-2"
+        title="Toggle filters"
       >
         <Funnel size={14} />
         Filters
       </button>
-
-      {/* Auto-search badge */}
-      {autoSearch && (
-        <div className="hidden md:flex items-center text-xs text-gray-500">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-          Auto-search
-        </div>
-      )}
     </div>
   );
 };

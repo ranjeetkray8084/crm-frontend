@@ -61,7 +61,10 @@ const UpdateUserModal = ({ user, onClose }) => {
 
     const result = await updateUser(formData.userId, userData);
     if (result.success) {
+      customAlert('✅ User updated successfully');
       onClose();
+    } else {
+      customAlert('❌ Failed to update user');
     }
     
     setLoading(false);
@@ -81,46 +84,56 @@ const UpdateUserModal = ({ user, onClose }) => {
 
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Update User</h2>
 
-        <form onSubmit={handleSubmit} id="updateUserForm" className="space-y-4">
-          <input type="hidden" id="updateUserId" />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="hidden" name="userId" value={formData.userId} />
 
           <input
-            id="updateName"
+            name="name"
             type="text"
             placeholder="Name"
+            value={formData.name}
+            onChange={handleInputChange}
             className="w-full border px-3 py-2 rounded"
             required
           />
 
           <input
-            id="updateEmail"
+            name="email"
             type="email"
             placeholder="Email"
+            value={formData.email}
+            onChange={handleInputChange}
             className="w-full border px-3 py-2 rounded"
             required
           />
 
           <input
-            id="updatePhone"
+            name="phone"
             type="text"
             placeholder="Phone"
+            value={formData.phone}
+            onChange={handleInputChange}
             className="w-full border px-3 py-2 rounded"
             required
           />
 
           <input
-            id="updatePassword"
+            name="password"
             type="password"
             placeholder="New Password (optional)"
+            value={formData.password}
+            onChange={handleInputChange}
             className="w-full border px-3 py-2 rounded"
           />
 
           <div>
-            <label htmlFor="updateRole" className="block font-medium mb-1">
+            <label htmlFor="role" className="block font-medium mb-1">
               Role:
             </label>
             <select
-              id="updateRole"
+              name="role"
+              value={formData.role}
+              onChange={handleInputChange}
               className="w-full border px-3 py-2 rounded"
               required
             >
@@ -131,9 +144,10 @@ const UpdateUserModal = ({ user, onClose }) => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 rounded"
           >
-            Update
+            {loading ? 'Updating...' : 'Update'}
           </button>
         </form>
       </div>

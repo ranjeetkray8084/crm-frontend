@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     MoreVertical, Edit, UserCheck, UserX, UserPlus, UserMinus
 } from 'lucide-react';
+import ThreeDotMenu from '../common/ThreeDotMenu';
 
 const UserTableRow = ({
     user,
@@ -95,65 +96,24 @@ const UserTableRow = ({
             <td className="px-6 py-4 text-gray-600">
                 {user.adminName || 'No Admin'}
             </td>
-            <td className="px-6 py-4 text-center relative">
+            <td className="px-6 py-4 text-center">
                 {isDeveloper ? (
                     <span className="text-gray-400 text-sm">View Only</span>
                 ) : (
-                    <>
-                        <button
-                            onClick={() => setShowActions(!showActions)}
-                            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-                        >
-                            <MoreVertical size={16} />
-                        </button>
-
-                        {showActions && (
-                            <div ref={actionsRef} className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                <div className="py-1">
-                                    <button
-                                        onClick={handleUpdateClick}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                    >
-                                        <Edit size={14} /> Update User
-                                    </button>
-
-                                    {isActive ? (
-                                        <button
-                                            onClick={handleDeactivateClick}
-                                            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                                        >
-                                            <UserX size={14} /> Deactivate
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={handleActivateClick}
-                                            className="flex items-center gap-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
-                                        >
-                                            <UserCheck size={14} /> Activate
-                                        </button>
-                                    )}
-
-                                    {isDirector && (
-                                        hasAdmin ? (
-                                            <button
-                                                onClick={handleUnassignAdminClick}
-                                                className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left"
-                                            >
-                                                <UserMinus size={14} /> Unassign Admin
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={handleAssignAdminClick}
-                                                className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"
-                                            >
-                                                <UserPlus size={14} /> Assign Admin
-                                            </button>
-                                        )
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </>
+                    <ThreeDotMenu
+                        item={user}
+                        actions={[
+                            { label: 'Update User', icon: <Edit size={14} />, onClick: () => onUpdate(user) },
+                            isActive 
+                                ? { label: 'Deactivate', icon: <UserX size={14} />, onClick: () => onDeactivate(user.userId), danger: true }
+                                : { label: 'Activate', icon: <UserCheck size={14} />, onClick: () => onActivate(user.userId) },
+                            ...(isDirector ? [
+                                hasAdmin 
+                                    ? { label: 'Unassign Admin', icon: <UserMinus size={14} />, onClick: () => onUnassignAdmin(user.userId) }
+                                    : { label: 'Assign Admin', icon: <UserPlus size={14} />, onClick: () => onAssignAdmin(user) }
+                            ] : [])
+                        ]}
+                    />
                 )}
             </td>
         </tr>

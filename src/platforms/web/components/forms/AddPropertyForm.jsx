@@ -61,7 +61,7 @@ const AddPropertyForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (form.source === 'Reference' && !form.referenceName.trim()) {
       alert('Please enter the reference name');
       return;
@@ -179,7 +179,7 @@ const AddPropertyForm = () => {
             />
           </div>
           <div className="w-32">
-            <label className="block mb-1 font-medium">Unit</label>
+            <label className="block mb-1 font-medium">. </label>
             <select
               name="sizeUnit"
               value={form.sizeUnit}

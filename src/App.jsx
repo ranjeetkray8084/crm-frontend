@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./shared/contexts/AuthContext";
 import Dashboard from "./platforms/web/pages/Dashboard";
 import Login from "./platforms/web/pages/Login";
+import ExcelEditorPage from "./platforms/web/pages/ExcelEditorPage";
 
 import { useEffect, useState } from "react";
 import CustomAlert from "./platforms/web/components/common/CustomAlert";
@@ -21,6 +22,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/excel-preview/:taskId" element={<ExcelEditorPage />} />
         </Routes>
       </Router>
 

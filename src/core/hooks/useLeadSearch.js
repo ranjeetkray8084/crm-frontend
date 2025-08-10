@@ -1,5 +1,28 @@
 import { useState, useCallback, useMemo } from 'react';
 
+/**
+ * Enhanced Lead Search Hook with Multi-Key Search Capabilities
+ * 
+ * This hook provides comprehensive search functionality for leads across multiple fields:
+ * - Lead Name
+ * - Phone Number
+ * - Email Address
+ * - Location
+ * - Reference Name
+ * - Requirement/Description
+ * - Source (Instagram, Facebook, YouTube, Reference)
+ * - Status (NEW, CONTACTED, CLOSED, DROPED)
+ * - Action (ASSIGNED, UNASSIGNED, NEW)
+ * - Budget Amount
+ * - Created By User Name
+ * - Assigned To User Name
+ * 
+ * Features:
+ * - Tag-based search for complex queries
+ * - Auto-search with debouncing
+ * - Filter combinations
+ * - Search history and active state management
+ */
 export const useLeadSearch = () => {
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -200,51 +223,39 @@ export const useLeadSearch = () => {
   }, []);
 
   // Get active filters summary for display
-  const getActiveFiltersSummary = useCallback((currentUserId = null, availableUsers = []) => {
-    const summary = [];
-
+  const getActiveFiltersSummary = useCallback(() => {
+    const activeFilters = [];
+    
     if (searchTags.length > 0) {
-      summary.push(`Search Tags: ${searchTags.join(', ')}`);
+      activeFilters.push(`Search: ${searchTags.join(', ')}`);
     }
-
-    if (searchTerm.trim()) {
-      summary.push(`Search: "${searchTerm.trim()}"`);
-    }
-
-    if (filters.status) {
-      summary.push(`Status: ${filters.status}`);
-    }
-
-    if (filters.budget) {
-      summary.push(`Budget: ${getBudgetRangeText(filters.budget)}`);
-    }
-
-    if (filters.source) {
-      summary.push(`Source: ${filters.source}`);
-    }
-
-    if (filters.assignedTo) {
-      const assignedLabel = filters.assignedTo === 'assigned' ? 'Assigned' : 
-                           filters.assignedTo === 'unassigned' ? 'Unassigned' : 
-                           filters.assignedTo;
-      summary.push(`Assignment: ${assignedLabel}`);
-    }
-
-    if (filters.createdBy) {
-      let createdByLabel = filters.createdBy;
-      if (currentUserId && filters.createdBy === currentUserId.toString()) {
-        createdByLabel = "Me";
-      } else if (availableUsers.length > 0) {
-        const user = availableUsers.find(u => u.id?.toString() === filters.createdBy);
-        if (user) {
-          createdByLabel = user.name || user.username || `User ${user.id}`;
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value.trim()) {
+        switch(key) {
+          case 'budget':
+            activeFilters.push(`Budget: ${getBudgetRangeText(value)}`);
+            break;
+          case 'status':
+            activeFilters.push(`Status: ${value}`);
+            break;
+          case 'source':
+            activeFilters.push(`Source: ${value}`);
+            break;
+          case 'assignedTo':
+            activeFilters.push(`Assigned: ${value}`);
+            break;
+          case 'createdBy':
+            activeFilters.push(`Created By: ${value}`);
+            break;
+          default:
+            activeFilters.push(`${key}: ${value}`);
         }
       }
-      summary.push(`Created By: ${createdByLabel}`);
-    }
-
-    return summary;
-  }, [searchTerm, searchTags, filters, getBudgetRangeText]);
+    });
+    
+    return activeFilters;
+  }, [searchTags, filters, getBudgetRangeText]);
 
   return {
     // State
@@ -254,12 +265,8 @@ export const useLeadSearch = () => {
     isSearchActive,
     activeSearchParams,
     hasActiveFilters,
-
-    // Computed
     searchParams,
-    getActiveFiltersSummary,
-    getBudgetRangeText,
-
+    
     // Actions
     setSearchTerm,
     addSearchTag,
@@ -272,6 +279,10 @@ export const useLeadSearch = () => {
     clearFilters,
     applySearch,
     autoApplySearch,
-    applyQuickFilters
+    applyQuickFilters,
+    
+    // Utilities
+    getActiveFiltersSummary,
+    getBudgetRangeText
   };
 };

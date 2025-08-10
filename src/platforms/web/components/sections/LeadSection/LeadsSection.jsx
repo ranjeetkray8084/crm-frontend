@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLeads } from "../../../../../core/hooks/useLeads";
 import { useLeadSearch } from "../../../../../core/hooks/useLeadSearch";
 import { useUsers } from "../../../../../core/hooks/useUsers";
+import { exportLeads } from "../../../../../core/utils/excelExport";
 
 // Import all necessary components
 import LeadToolbar from './LeadToolbar';
@@ -155,7 +156,17 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   };
 
   const handleExport = () => {
-    // console.log('Export functionality to be implemented');
+    if (!leads || leads.length === 0) {
+      customAlert('❌ No leads to export');
+      return;
+    }
+    
+    const result = exportLeads(leads);
+    if (result.success) {
+      customAlert(`✅ ${result.message}`);
+    } else {
+      customAlert(`❌ ${result.message}`);
+    }
   };
 
   const actionHandlers = {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 export const usePropertySearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,30 +23,53 @@ export const usePropertySearch = () => {
   }, [searchTags.length, hasActiveFilters]);
 
   const searchParams = useMemo(() => {
+    const allKeywords = [...searchTags];
+    if (searchTerm.trim()) {
+      allKeywords.push(searchTerm.trim());
+    }
+    
     const params = {
-      keywords: searchTags.join(' '),
+      keywords: allKeywords.join(' '),
       ...filters
     };
-    
-    // Remove empty values
+
+    // Remove empty values and trim strings
     Object.keys(params).forEach(key => {
-      if (!params[key] || params[key].trim() === '') {
+      const value = params[key];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
         delete params[key];
+      } else if (typeof value === 'string') {
+        params[key] = value.trim();
       }
     });
-    
+
     return params;
-  }, [searchTags, filters]);
+  }, [searchTags, searchTerm, filters]);
 
   const activeSearchParams = useMemo(() => {
     return isSearchActive ? searchParams : null;
   }, [isSearchActive, searchParams]);
 
+  // Auto-trigger search when filters change
+  useEffect(() => {
+    if (hasActiveFilters || searchTags.length > 0) {
+      setSearchTrigger(prev => prev + 1);
+    }
+  }, [filters, searchTags, hasActiveFilters]);
+
   // Actions
   const handleSearchEnter = useCallback(() => {
-    if (searchTerm.trim() && !searchTags.includes(searchTerm.trim())) {
-      setSearchTags(prev => [...prev, searchTerm.trim()]);
-      setSearchTerm('');
+    if (searchTerm.trim()) {
+      // Split by spaces and add each word as a separate tag
+      const keywords = searchTerm.trim().split(/\s+/);
+      const newTags = keywords.filter(keyword => 
+        keyword.trim() && !searchTags.includes(keyword.trim())
+      );
+      
+      if (newTags.length > 0) {
+        setSearchTags(prev => [...prev, ...newTags]);
+        setSearchTerm('');
+      }
     }
   }, [searchTerm, searchTags]);
 
@@ -87,13 +110,13 @@ export const usePropertySearch = () => {
     setSearchTrigger(prev => prev + 1);
   }, []);
 
-  const getActiveFiltersSummary = useCallback(() => {
+  const getActiveFiltersSummary = useCallback((currentUserId = null, availableUsers = []) => {
     const activeFilters = [];
-    
+
     if (searchTags.length > 0) {
       activeFilters.push(`Keywords: ${searchTags.join(', ')}`);
     }
-    
+
     if (filters.budgetRange) {
       const [min, max] = filters.budgetRange.split('-');
       const formatPrice = (price) => {
@@ -104,7 +127,7 @@ export const usePropertySearch = () => {
       };
       activeFilters.push(`Budget: ${formatPrice(min)} - ${formatPrice(max)}`);
     }
-    
+
     if (filters.status) {
       const statusMap = {
         'AVAILABLE_FOR_SALE': 'For Sale',
@@ -114,23 +137,32 @@ export const usePropertySearch = () => {
       };
       activeFilters.push(`Status: ${statusMap[filters.status] || filters.status}`);
     }
-    
+
     if (filters.type) {
       activeFilters.push(`Type: ${filters.type}`);
     }
-    
+
     if (filters.bhk) {
       activeFilters.push(`BHK: ${filters.bhk}`);
     }
-    
+
     if (filters.source) {
       activeFilters.push(`Source: ${filters.source}`);
     }
-    
+
     if (filters.createdBy) {
-      activeFilters.push(`Created By: ${filters.createdBy}`);
+      let createdByLabel = filters.createdBy;
+      if (currentUserId && filters.createdBy === currentUserId.toString()) {
+        createdByLabel = "Me";
+      } else if (availableUsers.length > 0) {
+        const user = availableUsers.find(u => (u.id || u.userId)?.toString() === filters.createdBy);
+        if (user) {
+          createdByLabel = user.name || user.username || `User ${user.id || user.userId}`;
+        }
+      }
+      activeFilters.push(`Created By: ${createdByLabel}`);
     }
-    
+
     return activeFilters.join(', ');
   }, [searchTags, filters]);
 
@@ -144,7 +176,7 @@ export const usePropertySearch = () => {
     searchParams,
     activeSearchParams,
     searchTrigger,
-    
+
     // Actions
     setSearchTerm,
     handleSearchEnter,

@@ -15,6 +15,10 @@ const AdminSection = () => {
 
   // Use useAdmins hook for admin management actions
   const {
+    admins,
+    loading,
+    error,
+    loadAdmins,
     activateAdmin,
     revokeAdmin,
     getAdminsByRoleAndCompany,
@@ -24,11 +28,9 @@ const AdminSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [viewingAssignedUsers, setViewingAssignedUsers] = useState(null);
-  const [admins, setAdmins] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   // Load admins based on current user's role
-  const loadAdmins = async () => {
+  const loadAdminsData = async () => {
     // For DEVELOPER, we don't need companyId since they see all admins across companies
     if (role === 'DEVELOPER') {
       if (!role || !userId) {
@@ -41,38 +43,48 @@ const AdminSection = () => {
       }
     }
 
-    setLoading(true);
     try {
-      let result;
-
       if (role === 'DEVELOPER') {
         // Developer can see all ADMIN role users across all companies
-        result = await getAllAdmins();
+        await getAllAdmins();
       } else if (role === 'DIRECTOR') {
         // Director can see all ADMIN role users in the company
-        result = await getAdminsByRoleAndCompany();
-      } else {
-        // For other roles, show no admins
-        setAdmins([]);
-        setLoading(false);
-        return;
-      }
-
-      if (result.success) {
-        setAdmins(result.data || []);
-      } else {
-        setAdmins([]);
+        await getAdminsByRoleAndCompany();
       }
     } catch (error) {
-      setAdmins([]);
-    } finally {
-      setLoading(false);
+      console.error('Error loading admins:', error);
     }
   };
 
   useEffect(() => {
-    loadAdmins();
+    loadAdminsData();
   }, [companyId, role, userId]);
+
+  // Handle admin operations with reload
+  const handleActivateAdmin = async (adminId) => {
+    const result = await activateAdmin(adminId);
+    if (result.success) {
+      // Table will automatically reload due to useAdmins hook
+    }
+  };
+
+  const handleRevokeAdmin = async (adminId) => {
+    const result = await revokeAdmin(adminId);
+    if (result.success) {
+      // Table will automatically reload due to useAdmins hook
+    }
+  };
+
+  // Handle modal close with reload
+  const handleUpdateModalClose = () => {
+    setSelectedAdmin(null);
+    // Reload admins after modal closes
+    loadAdminsData();
+  };
+
+  const handleAssignedUsersModalClose = () => {
+    setViewingAssignedUsers(null);
+  };
 
   // Different filtering based on role
   const filteredAdmins = admins.filter((admin) => {
@@ -218,8 +230,8 @@ const AdminSection = () => {
                           admin={admin}
                           searchTerm={searchQuery}
                           onUpdate={setSelectedAdmin}
-                          onActivate={activateAdmin}
-                          onDeactivate={revokeAdmin}
+                          onActivate={handleActivateAdmin}
+                          onDeactivate={handleRevokeAdmin}
                           onViewAssignedUsers={setViewingAssignedUsers}
                         />
                       ))
@@ -284,8 +296,8 @@ const AdminSection = () => {
                           <button
                             onClick={() =>
                               isActive
-                                ? revokeAdmin(admin.userId)
-                                : activateAdmin(admin.userId)
+                                ? handleRevokeAdmin(admin.userId)
+                                : handleActivateAdmin(admin.userId)
                             }
                             className={`w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white ${isActive
                               ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
@@ -309,9 +321,7 @@ const AdminSection = () => {
       {selectedAdmin && role === 'DIRECTOR' && (
         <UpdateUserModal
           user={selectedAdmin}
-          onClose={() => {
-            setSelectedAdmin(null);
-          }}
+          onClose={handleUpdateModalClose}
         />
       )}
 
@@ -320,51 +330,7 @@ const AdminSection = () => {
         <AssignedUsersModal
           isOpen={!!viewingAssignedUsers}
           admin={viewingAssignedUsers}
-          onClose={() => {
-            setViewingAssignedUsers(null);
-          }}
-        />
-      )}
-
-      {/* Show Update Modal if selected */}
-      {selectedAdmin && (
-        <UpdateUserModal
-          user={selectedAdmin}
-          onClose={() => {
-            setSelectedAdmin(null);
-          }}
-        />
-      )}
-
-      {/* Show Assigned Users Modal if selected */}
-      {viewingAssignedUsers && (
-        <AssignedUsersModal
-          isOpen={!!viewingAssignedUsers}
-          admin={viewingAssignedUsers}
-          onClose={() => {
-            setViewingAssignedUsers(null);
-          }}
-        />
-      )}
-
-      {/* Show Update Modal if selected */}
-      {selectedAdmin && (
-        <UpdateUserModal
-          user={selectedAdmin}
-          onClose={() => {
-            setSelectedAdmin(null);
-          }}
-        />
-      )}
-
-      {/* Show Assigned Users Modal if selected */}
-      {viewingAssignedUsers && (
-        <AssignedUsersModal
-          isOpen={!!viewingAssignedUsers}
-          admin={viewingAssignedUsers}
-          onClose={() => {
-            setViewingAssignedUsers(null);
-          }}
+          onClose={handleAssignedUsersModalClose}
         />
       )}
     </motion.div>

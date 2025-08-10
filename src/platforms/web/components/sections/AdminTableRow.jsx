@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     MoreVertical, Edit, UserCheck, UserX
 } from 'lucide-react';
+import ThreeDotMenu from '../common/ThreeDotMenu';
 
 const AdminTableRow = ({
     admin,
@@ -81,42 +82,16 @@ const AdminTableRow = ({
                     {isActive ? "Active" : "Inactive"}
                 </span>
             </td>
-            <td className="px-6 py-4 text-center relative">
-                <button
-                    onClick={() => setShowActions(!showActions)}
-                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-                >
-                    <MoreVertical size={16} />
-                </button>
-
-                {showActions && (
-                    <div ref={actionsRef} className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                        <div className="py-1">
-                            <button 
-                                onClick={handleUpdateClick} 
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                            >
-                                <Edit size={14} /> Update Admin
-                            </button>
-                            
-                            {isActive ? (
-                                <button 
-                                    onClick={handleDeactivateClick} 
-                                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                                >
-                                    <UserX size={14} /> Deactivate
-                                </button>
-                            ) : (
-                                <button 
-                                    onClick={handleActivateClick} 
-                                    className="flex items-center gap-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
-                                >
-                                    <UserCheck size={14} /> Activate
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
+            <td className="px-6 py-4 text-center">
+                <ThreeDotMenu
+                    item={admin}
+                    actions={[
+                        { label: 'Update Admin', icon: <Edit size={14} />, onClick: () => onUpdate(admin) },
+                        isActive 
+                            ? { label: 'Deactivate', icon: <UserX size={14} />, onClick: () => onDeactivate(admin.userId), danger: true }
+                            : { label: 'Activate', icon: <UserCheck size={14} />, onClick: () => onActivate(admin.userId) }
+                    ]}
+                />
             </td>
         </tr>
     );

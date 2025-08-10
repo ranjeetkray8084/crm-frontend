@@ -14,6 +14,7 @@ import {
   Eye,
   Clock,
 } from 'lucide-react';
+import logoImg from '../../../../assets/img/logo.png';
 
 function Sidebar({ userRole, activeSection, onSectionChange, companyName, userName, userRoleDisplay }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -72,7 +73,7 @@ function Sidebar({ userRole, activeSection, onSectionChange, companyName, userNa
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center gap-3">
           <img
-            src="../assets/img/logo.png"
+            src={logoImg}
             alt="Logo"
             className="w-10 h-10 rounded-full object-cover"
           />

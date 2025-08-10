@@ -80,14 +80,20 @@ export class DashboardService {
    */
   static async getNewContactedLeadsCount(companyId, userId) {
     try {
+      console.log('🔍 DashboardService: getNewContactedLeadsCount called with:', { companyId, userId });
       const apiUrl = API_ENDPOINTS.LEADS.COUNT_SUMMARY(companyId, userId);
+      console.log('🔍 DashboardService: API URL:', apiUrl);
+      
       const response = await axios.get(apiUrl);
+      console.log('✅ DashboardService: getNewContactedLeadsCount successful:', response?.data);
+      
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
+      console.error('❌ DashboardService: getNewContactedLeadsCount failed:', error);
       // Return fallback data instead of throwing error
       return {
         success: true,
@@ -107,24 +113,51 @@ export class DashboardService {
   static async getDealsCloseCount(companyId, userId, role) {
     try {
       let closedCount = 0;
+      let droppedCount = 0;
       
-      if (role === 'ADMIN') {
-        const response = await this.getClosedLeadsCountByAdmin(companyId, userId);
-        closedCount = response.success ? response.data : 0;
-      } else if (role === 'USER') {
-        const response = await this.getLeadsCountForUser(companyId, userId);
-        closedCount = response.success ? (response.data?.closedCount || 0) : 0;
-      } else {
-        const response = await this.getClosedLeadsCount(companyId);
-        closedCount = response.success ? response.data : 0;
+      // Try to get the breakdown from count summary first
+      try {
+        const summaryResponse = await this.getNewContactedLeadsCount(companyId, userId);
+        if (summaryResponse.success) {
+          closedCount = summaryResponse.data?.closedLeads || 0;
+          droppedCount = summaryResponse.data?.droppedLeads || 0;
+        } else {
+          // Fallback to individual counts based on role
+          if (role === 'ADMIN') {
+            const response = await this.getClosedLeadsCountByAdmin(companyId, userId);
+            closedCount = response.success ? response.data : 0;
+          } else if (role === 'USER') {
+            const response = await this.getLeadsCountForUser(companyId, userId);
+            closedCount = response.success ? (response.data?.closedCount || 0) : 0;
+          } else {
+            // For DIRECTOR, use the combined count
+            const response = await this.getClosedLeadsCount(companyId);
+            closedCount = response.success ? response.data : 0;
+          }
+        }
+      } catch (error) {
+        // Fallback to individual counts based on role
+        if (role === 'ADMIN') {
+          const response = await this.getClosedLeadsCountByAdmin(companyId, userId);
+          closedCount = response.success ? response.data : 0;
+        } else if (role === 'USER') {
+          const response = await this.getLeadsCountForUser(companyId, userId);
+          closedCount = response.success ? (response.data?.closedCount || 0) : 0;
+        } else {
+          // For DIRECTOR, use the combined count
+          const response = await this.getClosedLeadsCount(companyId);
+          closedCount = response.success ? response.data : 0;
+        }
       }
+      
+      const totalClose = closedCount + droppedCount;
       
       return {
         success: true,
         data: {
-          "total close": closedCount,
+          "total close": totalClose,
           "closed": closedCount,
-          "dropped": 0
+          "dropped": droppedCount
         },
         message: 'Operation successful'
       };

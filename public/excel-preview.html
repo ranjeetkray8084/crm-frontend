@@ -80,7 +80,7 @@
         td {
             border: 1px solid #94a3b8;
             padding: 8px 12px;
-            text-align: center;
+            text-align: left;
             background-color: white;
             color: #1e293b;
             white-space: nowrap;
@@ -172,7 +172,7 @@
 
 <body>
     <div id="toolbar">
-        <button onclick="addNewColumn()">➕ Add Column</button>
+        <button onclick="addNewColumn()" id="addColumnBtn">➕ Add Column</button>
         <button onclick="deleteSelectedColumn()" id="deleteBtn" disabled>🗑️ Delete Column</button>
         <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
         <button onclick="scrollTableRight()">➡️ Scroll Right</button>
@@ -305,6 +305,15 @@
                 document.getElementById('scrollContainer').innerHTML =
                     '<div class="error">❌ Please login first to access Excel data. <br><br><button onclick="window.close()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button></div>';
                 return;
+            }
+
+            // Add event listener as fallback for add column button
+            const addColumnBtn = document.getElementById('addColumnBtn');
+            if (addColumnBtn) {
+                addColumnBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    addNewColumn();
+                });
             }
 
             // Load Excel data directly without role-based access validation
@@ -624,17 +633,56 @@
         }
 
         async function addNewColumn() {
-            // Add empty column to all rows
-            currentData.forEach(row => {
-                row.push('');
-            });
+            console.log('addNewColumn function called');
+            alert('Add Column button clicked!'); // Temporary alert for testing
+            
+            try {
+                // Get the current number of columns
+                const currentColCount = currentData.length > 0 ? Math.max(...currentData.map(row => row.length)) : 0;
+                console.log('Current column count:', currentColCount);
+                
+                // Add empty column to all rows locally first
+                currentData.forEach(row => {
+                    row.push('');
+                });
 
-            // If no data exists, create first row with empty column
-            if (currentData.length === 0) {
-                currentData.push(['']);
+                // If no data exists, create first row with empty column
+                if (currentData.length === 0) {
+                    currentData.push(['']);
+                }
+
+                console.log('Added column locally, currentData:', currentData);
+                
+                // Re-render the table immediately
+                renderTable();
+                
+                console.log('Table re-rendered');
+                
+                // Try to make API call to persist the column (but don't block if it fails)
+                try {
+                    const endpoint = `/api/task-files/${taskId}/add-column?companyId=${companyId}`;
+                    console.log('Making API call to:', endpoint);
+                    
+                    const response = await makeApiCall(endpoint, {
+                        method: "POST"
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.warn(`Backend API call failed: ${errorText || 'Unknown error'}`);
+                        // Don't show alert to user since column was added locally
+                    } else {
+                        console.log(`Successfully added new column ${getColumnLetter(currentColCount)}`);
+                    }
+                } catch (apiError) {
+                    console.warn('Backend API not available, column added locally only:', apiError.message);
+                    // Don't show alert to user since column was added locally
+                }
+                
+            } catch (e) {
+                console.error('Error in addNewColumn:', e);
+                alert(`Error adding column: ${e.message}`);
             }
-
-            renderTable();
         }
 
         async function deleteSelectedColumn() {

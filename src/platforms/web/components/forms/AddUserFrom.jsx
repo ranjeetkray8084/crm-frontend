@@ -3,6 +3,7 @@ import { UserPlus, ArrowLeft } from 'lucide-react'
 import { useUsers } from '../../../../core/hooks/useUsers'
 import { useAuth } from '../../../../shared/contexts/AuthContext'
 import { customAlert } from '../../../../core/utils/alertUtils'
+import { UserService } from '../../../../core/services/user.service'
 
 const AddUserForm = ({ onSuccess }) => {
   const { user } = useAuth()
@@ -49,35 +50,58 @@ const AddUserForm = ({ onSuccess }) => {
 
   const availableRoles = getAvailableRoles()
 
-  // Load admins when role is USER (for DIRECTOR only)
+  // Load admins for DIRECTOR users only
   const loadAdmins = useCallback(async () => {
     if (!companyId || userRole !== 'DIRECTOR') return;
 
+    console.log('Loading admins for company:', companyId, 'user role:', userRole);
     setLoadingAdmins(true);
     try {
-      const response = await fetch(`/api/users/admin-role/${companyId}`, {
-        credentials: 'include'
-      });
+      // Try the specific company admins endpoint first
+      console.log('Trying admin endpoint...');
+      const result = await UserService.getAdminRoleByCompany(companyId);
+      console.log('Admin endpoint result:', result);
 
-      if (response.ok) {
-        const adminsList = await response.json();
-        setAdmins(adminsList);
+      if (result.success && result.data && result.data.length > 0) {
+        console.log('Admins loaded successfully:', result.data);
+        setAdmins(result.data || []);
       } else {
-        setAdmins([]);
+        console.log('No admins found for company, trying fallback...');
+        // Fallback: try to get all users and filter for admins
+        const allUsersResult = await UserService.getAllUsersByCompany(companyId);
+        console.log('All users result:', allUsersResult);
+        if (allUsersResult.success) {
+          const adminUsers = allUsersResult.data.filter(user => user.role === 'ADMIN');
+          console.log('Admins found via fallback:', adminUsers);
+          setAdmins(adminUsers);
+        } else {
+          console.error('Failed to load admins via fallback:', allUsersResult.error);
+          setAdmins([]);
+        }
       }
     } catch (error) {
+      console.error('Error loading admins:', error);
       setAdmins([]);
     } finally {
       setLoadingAdmins(false);
     }
   }, [companyId, userRole]);
 
-  // Load admins when role changes to USER (for DIRECTOR)
+  // Load admins when role changes to USER (for DIRECTOR only)
   useEffect(() => {
     if (formData.role === 'USER' && userRole === 'DIRECTOR') {
       loadAdmins();
     }
   }, [formData.role, userRole, loadAdmins]);
+
+  // No need to load admins for ADMIN users (they auto-assign to themselves)
+
+  // Load admins on component mount for DIRECTOR users (so they can see all admins)
+  useEffect(() => {
+    if (userRole === 'DIRECTOR') {
+      loadAdmins();
+    }
+  }, [userRole, loadAdmins]);
 
   // Form validation
   const isFormValid = useCallback(() => {
@@ -97,28 +121,38 @@ const AddUserForm = ({ onSuccess }) => {
       return baseValid && formData.adminId;
     }
 
+    // For ADMIN creating USER, no admin selection needed (auto-assigned to themselves)
+    if (userRole === 'ADMIN' && formData.role === 'USER') {
+      return baseValid;
+    }
+
+    // For DIRECTOR creating ADMIN, no admin assignment needed
+    if (userRole === 'DIRECTOR' && formData.role === 'ADMIN') {
+      return baseValid; // No admin assignment for ADMIN role
+    }
+
     // For DEVELOPER, no additional validation needed (only creates DIRECTOR)
     return baseValid;
   }, [formData, companyId, availableRoles, userRole])
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-  
+
     if (!companyId) {
       customAlert('❌ Company ID not found. Please login again.');
       return;
     }
-  
+
     if (formData.password !== formData.confirmPassword) {
       customAlert('❌ Passwords do not match!');
       return;
     }
-  
+
     try {
       // Use the exact structure from your working JavaScript code
-      const role = userRole === 'ADMIN' ? 'USER' : 
-                   userRole === 'DEVELOPER' ? 'DIRECTOR' : 
-                   formData.role;
+      const role = userRole === 'ADMIN' ? 'USER' :
+        userRole === 'DEVELOPER' ? 'DIRECTOR' :
+          formData.role;
       const adminId = userRole === 'ADMIN' ? userId : formData.adminId;
 
       const user = {
@@ -134,9 +168,9 @@ const AddUserForm = ({ onSuccess }) => {
 
       // Remove confirmPassword before sending (backend validation)
       delete user.confirmPassword;
-  
+
       const result = await createUser(user);
-  
+
       if (result.success) {
         setFormData({
           name: '',
@@ -150,11 +184,11 @@ const AddUserForm = ({ onSuccess }) => {
         onSuccess?.();
       }
     } catch (error) {
-      
+
       customAlert('❌ Error adding user: ' + error.message);
     }
   }, [formData, companyId, createUser, onSuccess, userRole, userId]);
-  
+
 
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target
@@ -163,9 +197,17 @@ const AddUserForm = ({ onSuccess }) => {
       [name]: value
     }))
 
-    // Load admins when role changes to USER (for DIRECTOR)
+    // Load admins when role changes to USER (for DIRECTOR only)
     if (name === 'role' && value === 'USER' && userRole === 'DIRECTOR') {
       loadAdmins();
+    }
+
+    // Clear adminId when role changes to ADMIN (to avoid invalid assignments)
+    if (name === 'role' && value === 'ADMIN') {
+      setFormData(prev => ({
+        ...prev,
+        adminId: ''
+      }));
     }
   }, [userRole, loadAdmins])
 
@@ -198,6 +240,8 @@ const AddUserForm = ({ onSuccess }) => {
               ℹ️ As a Developer, you can only create Directors for companies.
             </div>
           )}
+
+
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -293,8 +337,8 @@ const AddUserForm = ({ onSuccess }) => {
                 </div>
               )}
 
-              {/* Admin selection - only for DIRECTOR when creating USER */}
-              {userRole === 'DIRECTOR' && formData.role === 'USER' && (
+              {/* Admin selection - only for DIRECTOR when creating USER role */}
+              {formData.role === 'USER' && userRole === 'DIRECTOR' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Admin *
@@ -317,12 +361,30 @@ const AddUserForm = ({ onSuccess }) => {
                     ))}
                   </select>
                   {admins.length === 0 && !loadingAdmins && (
-                    <p className="text-sm text-red-600 mt-1">
-                      No admins available. Please create an admin first.
+                    <div className="text-sm text-red-600 mt-1">
+                      <p>No admins available. Please create an admin first.</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Debug: Company ID: {companyId}, User Role: {userRole}
+                      </p>
+                    </div>
+                  )}
+                  {admins.length > 0 && !loadingAdmins && (
+                    <p className="text-sm text-green-600 mt-1">
+                      {admins.length} admin(s) available for assignment
                     </p>
                   )}
+                  <button
+                    type="button"
+                    onClick={loadAdmins}
+                    disabled={loadingAdmins}
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                  >
+                    {loadingAdmins ? 'Loading...' : 'Refresh Admins'}
+                  </button>
                 </div>
               )}
+
+
 
               {/* Info for ADMIN role */}
               {userRole === 'ADMIN' && (

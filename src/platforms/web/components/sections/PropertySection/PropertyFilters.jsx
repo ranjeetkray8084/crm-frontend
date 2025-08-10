@@ -5,6 +5,7 @@ const PropertyFilters = ({
   onFilterChange, 
   onClearFilters, 
   companyId,
+  userId,
   isMobile = false,
   hasActiveFilters = false,
   activeFiltersSummary = '',
@@ -142,11 +143,32 @@ const PropertyFilters = ({
           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Created By</option>
-          {(availableUsers.length > 0 ? availableUsers : filterUsers).map(user => (
-            <option key={user.id || user.userId} value={user.id || user.userId}>
-              {user.name || user.username || `User ${user.id || user.userId}`}
-            </option>
-          ))}
+          {(() => {
+            const users = availableUsers.length > 0 ? availableUsers : filterUsers;
+            const currentUser = users.find(user => {
+              const userIdValue = user.id || user.userId;
+              return userId && (userIdValue?.toString() === userId?.toString());
+            });
+            const otherUsers = users.filter(user => {
+              const userIdValue = user.id || user.userId;
+              return !(userId && (userIdValue?.toString() === userId?.toString()));
+            });
+            
+            // Put "Me" option first, then other users
+            const sortedUsers = currentUser ? [currentUser, ...otherUsers] : users;
+            
+            return sortedUsers.map(user => {
+              const userIdValue = user.id || user.userId;
+              const isCurrentUser = userId && (userIdValue?.toString() === userId?.toString());
+              const displayName = isCurrentUser ? 'Me' : (user.name || user.username || `User ${userIdValue}`);
+              
+              return (
+                <option key={userIdValue} value={userIdValue}>
+                  {displayName}
+                </option>
+              );
+            });
+          })()}
         </select>
 
         {/* Clear Filters Button */}

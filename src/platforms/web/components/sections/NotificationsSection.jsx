@@ -10,16 +10,13 @@ const NotificationsSection = () => {
   const companyId = user?.companyId;
 
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all'); // all, unread, read
+  const [typeFilter, setTypeFilter] = useState('all'); // all, follow-up, general
 
   // Use the notifications hook
   const {
     notifications,
-    unreadCount,
     loading,
     error,
-    markAsRead,
-    markAllAsRead,
     refreshNotifications,
     clearError
   } = useNotifications(userId, companyId);
@@ -30,12 +27,25 @@ const NotificationsSection = () => {
     refreshNotifications();
   };
 
-  const handleMarkAllAsRead = async () => {
-    await markAllAsRead();
+
+
+  // Helper function to check if notification is follow-up related
+  const isFollowUpNotification = (message) => {
+    return message && (
+      message.includes('📅') || 
+      message.includes('⏰') || 
+      message.includes('Follow-up') || 
+      message.includes('follow-up') ||
+      message.includes('scheduled for')
+    );
   };
 
-  const handleMarkAsRead = async (notificationId) => {
-    await markAsRead(notificationId);
+  // Helper function to get notification type
+  const getNotificationType = (message) => {
+    if (isFollowUpNotification(message)) {
+      return 'follow-up';
+    }
+    return 'general';
   };
 
   const formatDate = (dateString) => {
@@ -49,15 +59,17 @@ const NotificationsSection = () => {
     });
   };
 
-  // Filter notifications based on search and filter
+  // Filter notifications based on search and type
   const filteredNotifications = notifications.filter((notification) => {
     const matchesSearch = notification.message?.toLowerCase().includes(search);
-    const matchesFilter =
-      filter === 'all' ||
-      (filter === 'unread' && !notification.isRead) ||
-      (filter === 'read' && notification.isRead);
+    
+    const notificationType = getNotificationType(notification.message);
+    const matchesTypeFilter =
+      typeFilter === 'all' ||
+      (typeFilter === 'follow-up' && notificationType === 'follow-up') ||
+      (typeFilter === 'general' && notificationType === 'general');
 
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesTypeFilter;
   });
 
   return (
@@ -74,21 +86,10 @@ const NotificationsSection = () => {
             <Bell className="text-gray-500" size={32} />
             <div>
               <h2 className="text-xl font-semibold text-gray-800">Notifications</h2>
-              {unreadCount > 0 && (
-                <p className="text-sm text-blue-600">{unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}</p>
-              )}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-md transition-colors"
-              >
-                Mark All Read
-              </button>
-            )}
             <button
               onClick={handleRefresh}
               className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
@@ -112,16 +113,41 @@ const NotificationsSection = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           </div>
 
-          {/* Filter */}
+          {/* Type Filter */}
           <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Notifications</option>
-            <option value="unread">Unread Only</option>
-            <option value="read">Read Only</option>
+            <option value="all">All Types</option>
+            <option value="follow-up">📅 Follow-ups</option>
+            <option value="general">🔔 General</option>
           </select>
+        </div>
+      </div>
+
+      {/* Notification Summary */}
+      <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-700">Total:</span>
+            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+              {notifications.length}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-700">Follow-ups:</span>
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+              {notifications.filter(n => getNotificationType(n.message) === 'follow-up').length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-700">General:</span>
+            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
+              {notifications.filter(n => getNotificationType(n.message) === 'general').length}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -150,61 +176,51 @@ const NotificationsSection = () => {
               <table className="min-w-full table-auto border-collapse bg-white">
                 <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
                   <tr>
-                    <th className="border-b px-6 py-4 text-left font-semibold">Status</th>
+                    <th className="border-b px-6 py-4 text-left font-semibold">Type</th>
                     <th className="border-b px-6 py-4 text-left font-semibold">Message</th>
                     <th className="border-b px-6 py-4 text-left font-semibold">Date</th>
-                    <th className="border-b px-6 py-4 text-center font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredNotifications.length === 0 ? (
                     <tr>
-                      <td colSpan="4" className="text-center py-8 text-gray-500">
+                      <td colSpan="3" className="text-center py-8 text-gray-500">
                         <Bell size={24} className="mx-auto mb-2 text-gray-300" />
                         {search ? 'No notifications match your search.' : 'No notifications found.'}
                       </td>
                     </tr>
                   ) : (
-                    filteredNotifications.map((notification) => (
-                      <tr
-                        key={notification.id}
-                        className={`text-sm hover:bg-gray-50 transition-colors ${!notification.isRead ? 'bg-blue-50' : ''
-                          }`}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            {!notification.isRead ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-                                Unread
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Read
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-900">
-                          <div className={`${!notification.isRead ? 'font-medium' : ''}`}>
-                            {notification.message}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {formatDate(notification.createdAt)}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          {!notification.isRead && (
-                            <button
-                              onClick={() => handleMarkAsRead(notification.id)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                              Mark as Read
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                    filteredNotifications.map((notification) => {
+                      const notificationType = getNotificationType(notification.message);
+                      return (
+                        <tr
+                          key={notification.id}
+                          className={`text-sm hover:bg-gray-50 transition-colors ${notificationType === 'follow-up' ? 'border-l-4 border-l-green-500' : ''}`}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center">
+                              {notificationType === 'follow-up' ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  📅 Follow-up
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  🔔 General
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-900">
+                            <div>
+                              {notification.message}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500">
+                            {formatDate(notification.createdAt)}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -218,42 +234,35 @@ const NotificationsSection = () => {
                   {search ? 'No notifications match your search.' : 'No notifications found.'}
                 </div>
               ) : (
-                filteredNotifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-4 border border-gray-200 rounded-lg ${!notification.isRead ? 'bg-blue-50 border-blue-200' : 'bg-white'
-                      }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center">
-                        {!notification.isRead ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-                            Unread
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Read
-                          </span>
-                        )}
+                filteredNotifications.map((notification) => {
+                  const notificationType = getNotificationType(notification.message);
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`p-4 border border-gray-200 rounded-lg bg-white ${notificationType === 'follow-up' ? 'border-l-4 border-l-green-500' : ''}`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {notificationType === 'follow-up' ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              📅 Follow-up
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              🔔 General
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {!notification.isRead && (
-                        <button
-                          onClick={() => handleMarkAsRead(notification.id)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          Mark as Read
-                        </button>
-                      )}
+                      <div className="text-sm text-gray-900 mb-2">
+                        {notification.message}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {formatDate(notification.createdAt)}
+                      </div>
                     </div>
-                    <div className={`text-sm text-gray-900 mb-2 ${!notification.isRead ? 'font-medium' : ''}`}>
-                      {notification.message}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {formatDate(notification.createdAt)}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </>

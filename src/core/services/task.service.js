@@ -52,9 +52,6 @@ export class TaskService {
     }
   }
 
-  // Note: Add row/column functionality not implemented in backend controller
-  // These methods are removed to match actual backend capabilities
-
   // ✅ Delete single column (matching backend implementation)
   static async deleteColumn(taskId, companyId, colIndex) {
     try {
@@ -66,9 +63,6 @@ export class TaskService {
       return { success: false, error: error.response?.data?.message || 'Failed to delete column' };
     }
   }
-
-  // Note: Undo functionality not implemented in backend controller
-  // This method is removed to match actual backend capabilities
 
   // ✅ Update a specific Excel cell
   static async updateCell(taskId, companyId, row, col, newValue) {
