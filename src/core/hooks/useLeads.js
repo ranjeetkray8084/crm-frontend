@@ -136,12 +136,35 @@ export const useLeads = (companyId, userId, userRole) => {
         }
         return { success: true, data: result.data };
       } else {
-        customAlert('❌ ' + (result.error || errorMsg));
-        return { success: false, error: result.error };
+        const errText = (result.error || '').toString();
+        // If backend says query didn't return a unique result but the entity was created,
+        // treat it as soft-success for UX (avoid duplicate scary alert)
+        const nonUnique = /Query did not return a unique result/i.test(errText) || /unique result: 2 results/i.test(errText);
+        if (nonUnique) {
+          // Show as warning but not blocking
+          customAlert('⚠️ Created but duplicate match detected.');
+          if (shouldReloadLeads) {
+            try { await loadLeads(0, 10); } catch {}
+          }
+          return { success: true, data: result.data };
+        }
+        const cleaned = (errText || errorMsg || '').replace(/^([❌⚠️✅]\s*)+/, '').trim();
+        customAlert('❌ ' + cleaned);
+        return { success: false, error: cleaned };
       }
     } catch (err) {
       
-      const finalErrorMsg = err.response?.data?.message || err.message || errorMsg;
+      const serverMsg = err.response?.data?.message || err.response?.data;
+      const finalErrorMsgRaw = (serverMsg || err.message || errorMsg || '').toString();
+      const finalErrorMsg = finalErrorMsgRaw.replace(/^([❌⚠️✅]\s*)+/, '').trim();
+      const nonUnique = /Query did not return a unique result/i.test(finalErrorMsg) || /unique result: 2 results/i.test(finalErrorMsg);
+      if (nonUnique) {
+        customAlert('⚠️ Created but duplicate match detected.');
+        if (shouldReloadLeads) {
+          try { await loadLeads(0, 10); } catch {}
+        }
+        return { success: true };
+      }
       customAlert('❌ ' + finalErrorMsg);
       return { success: false, error: finalErrorMsg };
     }

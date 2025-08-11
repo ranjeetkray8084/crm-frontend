@@ -185,8 +185,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-4">
-      <div className="bg-white p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
+    <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
+      <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
         <h2 className="text-center text-xl p-2 font-bold text-gray-800">Property Management</h2>
 
         <PropertyToolbar

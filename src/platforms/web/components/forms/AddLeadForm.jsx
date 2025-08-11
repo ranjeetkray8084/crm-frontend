@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { UserPlus, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLeads } from '../../../../core/hooks/useLeads';
 import { customAlert } from '../../../../core/utils/alertUtils';
+import { useUsers } from '../../../../core/hooks/useUsers';
 
 const AddLeadForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -28,7 +29,25 @@ const AddLeadForm = ({ onSuccess }) => {
   const userRole = user.role;
 
   // Use the useLeads hook
-  const { createLead } = useLeads(companyId, userId, userRole);
+  const { createLead, assignLead } = useLeads(companyId, userId, userRole);
+
+  // Load users for assignment when role allows (DIRECTOR or ADMIN)
+  const { users: allUsers } = useUsers(companyId, userRole, userId);
+
+  const [assignToUserId, setAssignToUserId] = useState('');
+  const [assignToUserName, setAssignToUserName] = useState('');
+
+  const canAssign = userRole === 'DIRECTOR' || userRole === 'ADMIN';
+
+  const assignableUsers = useMemo(() => {
+    if (!canAssign || !Array.isArray(allUsers)) return [];
+    if (userRole === 'DIRECTOR') {
+      // Director can assign to ADMIN and USER
+      return allUsers.filter(u => u.role === 'ADMIN' || u.role === 'USER');
+    }
+    // Admin can assign only to USER
+    return allUsers.filter(u => u.role === 'USER');
+  }, [allUsers, canAssign, userRole]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -77,6 +96,13 @@ const AddLeadForm = ({ onSuccess }) => {
       const result = await createLead(leadData);
 
       if (result.success) {
+        // If assignTo is selected and role allows, assign immediately after create
+        if (canAssign && assignToUserId) {
+          const createdLeadId = result?.data?.leadId || result?.data?.id;
+          if (createdLeadId) {
+            await assignLead(createdLeadId, parseInt(assignToUserId, 10), assignToUserName || 'selected user');
+          }
+        }
         setFormData({
           name: '',
           email: '',
@@ -89,9 +115,9 @@ const AddLeadForm = ({ onSuccess }) => {
           requirements: [],
           customRequirement: '',
         });
+        setAssignToUserId('');
+        setAssignToUserName('');
         if (onSuccess) onSuccess();
-      } else {
-        customAlert('❌ ' + (result.error || 'Failed to create lead'));
       }
     } catch (err) {
       customAlert('❌ Error saving lead: ' + err.message);
@@ -171,6 +197,28 @@ const AddLeadForm = ({ onSuccess }) => {
               className="mt-3 w-full px-4 py-2 border rounded-lg"
             />
           </div>
+
+          {canAssign && (
+            <div className="pt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Assign To (optional)</label>
+              <select
+                value={assignToUserId}
+                onChange={(e) => {
+                  const selected = assignableUsers.find(u => (u.id?.toString() ?? u.userId?.toString()) === e.target.value);
+                  setAssignToUserId(e.target.value);
+                  setAssignToUserName(selected?.name || '');
+                }}
+                className="w-full px-4 py-3 border rounded-lg"
+              >
+                <option value="">-- Select user --</option>
+                {assignableUsers.map(u => (
+                  <option key={u.userId || u.id} value={(u.userId || u.id)?.toString()}>
+                    {u.name} ({u.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
             <button type="button" onClick={() => onSuccess?.()} className="flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">

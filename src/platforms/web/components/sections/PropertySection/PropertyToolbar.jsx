@@ -46,7 +46,7 @@ const PropertyToolbar = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-4">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
       {/* Search Input and Tags */}
       <div className="flex-1 min-w-[300px] relative">
         {searchTags.length > 0 && (
@@ -105,7 +105,7 @@ const PropertyToolbar = ({
         <button 
           onClick={handleSearchClick} 
           disabled={isLoading}
-          className="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="bg-blue-600 text-white px-3 sm:px-4 py-2 text-sm rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Search size={14} />
           {isLoading ? 'Searching...' : 'Search'}
@@ -116,7 +116,7 @@ const PropertyToolbar = ({
       <button 
         onClick={onRefresh} 
         disabled={isLoading}
-        className="bg-gray-600 text-white px-4 py-2 text-sm rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        className="bg-gray-600 text-white px-3 sm:px-4 py-2 text-sm rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         title="Refresh properties"
       >
         <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
@@ -126,7 +126,7 @@ const PropertyToolbar = ({
       {/* Export */}
       <button 
         onClick={onExport} 
-        className="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700 transition-colors flex items-center gap-2"
+        className="bg-green-600 text-white px-3 sm:px-4 py-2 text-sm rounded hover:bg-green-700 transition-colors flex items-center gap-2"
         title="Export to Excel"
       >
         <Download size={14} />

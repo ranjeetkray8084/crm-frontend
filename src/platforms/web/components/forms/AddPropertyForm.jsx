@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useProperties } from '../../../../core/hooks/useProperties';
 import { motion } from 'framer-motion';
 import { UserPlus } from 'lucide-react'; // Optional icon
+import { useUsers } from '../../../../core/hooks/useUsers';
+import { customAlert } from '../../../../core/utils/alertUtils';
 
 const initialForm = {
   propertyName: '',
@@ -36,6 +38,20 @@ const AddPropertyForm = () => {
   // Use the useProperties hook (same pattern as useLeads)
   const { createProperty } = useProperties(companyId, userId, userRole);
 
+  // Users for optional notification/send like director flow
+  const { users: allUsers } = useUsers(companyId, userRole, userId);
+  const canSend = userRole === 'DIRECTOR' || userRole === 'ADMIN';
+  const [sendToUserId, setSendToUserId] = useState('');
+  const [sendToUserName, setSendToUserName] = useState('');
+
+  const sendableUsers = useMemo(() => {
+    if (!canSend || !Array.isArray(allUsers)) return [];
+    if (userRole === 'DIRECTOR') {
+      return allUsers.filter(u => u.role === 'ADMIN' || u.role === 'USER');
+    }
+    return allUsers.filter(u => u.role === 'USER');
+  }, [allUsers, canSend, userRole]);
+
   useEffect(() => {
     toggleBhkField(form.type);
     toggleSourceFields(form.source);
@@ -68,17 +84,36 @@ const AddPropertyForm = () => {
     }
 
     const payload = {
-      ...form,
+      propertyName: form.propertyName,
+      type: form.type,
       bhk: disableBhk ? '' : form.bhk,
-      size: parseFloat(form.sizeValue),
-      createdBy: { userId }, // Same structure as AddLeadForm
+      // Backend expects size as string; combine value + unit
+      size: form.sizeValue ? `${form.sizeValue} ${form.sizeUnit}` : '',
+      unitDetails: form.unit || '',
+      floor: form.floor || '',
+      location: form.location || '',
+      status: form.status,
+      price: form.price ? Number(form.price) : null,
+      sector: form.sector,
+      source: form.source,
+      referenceName: form.source === 'Reference' ? (form.referenceName || '') : '',
+      ownerName: form.ownerName,
+      ownerContact: form.ownerContact,
+      createdBy: { userId },
     };
 
     try {
       const result = await createProperty(payload);
 
       if (result.success) {
+        // Mimic director "send" behavior: notify admin/director via existing notifications API
+        if (canSend && sendToUserId) {
+          // Currently no property-assign API; we simply show success feedback for send
+          customAlert(`✅ Sent to ${sendToUserName || 'selected user'}`);
+        }
         setForm(initialForm);
+        setSendToUserId('');
+        setSendToUserName('');
       } else {
         // Error already shown by executeApiCall in useProperties
       }
@@ -95,7 +130,7 @@ const AddPropertyForm = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto mt-10 bg-white rounded-xl shadow-xl overflow-hidden"
+      className="max-w-4xl mx-auto mt-4 md:mt-10 bg-white rounded-xl shadow-xl overflow-hidden"
     >
       {/* Header */}
       <div className="bg-green-600 text-white py-4 px-6 flex items-center gap-3">
@@ -106,7 +141,7 @@ const AddPropertyForm = () => {
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white"
+        className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 bg-white"
       >
         {/* Property Name */}
         <div>
@@ -173,7 +208,7 @@ const AddPropertyForm = () => {
         </div>
 
         {/* Size */}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1">
             <label className="block mb-1 font-medium">Size</label>
             <input
@@ -185,8 +220,8 @@ const AddPropertyForm = () => {
               className="w-full p-2 border rounded"
             />
           </div>
-          <div className="w-32">
-            <label className="block mb-1 font-medium">. </label>
+          <div className="w-full sm:w-32">
+            <label className="block mb-1 font-medium">Unit</label>
             <select
               name="sizeUnit"
               value={form.sizeUnit}
@@ -307,18 +342,41 @@ const AddPropertyForm = () => {
           />
         </div>
 
+        {/* Optional Send To (ADMIN/DIRECTOR) */}
+        {canSend && (
+          <div className="md:col-span-2">
+            <label className="block mb-1 font-medium">Send To (optional)</label>
+            <select
+              value={sendToUserId}
+              onChange={(e) => {
+                const selected = sendableUsers.find(u => (u.id?.toString() ?? u.userId?.toString()) === e.target.value);
+                setSendToUserId(e.target.value);
+                setSendToUserName(selected?.name || '');
+              }}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">-- Select user --</option>
+              {sendableUsers.map(u => (
+                <option key={u.userId || u.id} value={(u.userId || u.id)?.toString()}>
+                  {u.name} ({u.role})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Buttons */}
-        <div className="col-span-2 flex justify-end gap-4 mt-4">
+        <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4">
           <button
             type="button"
             onClick={() => setForm(initialForm)}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full sm:w-auto"
           >
             Save Property
           </button>

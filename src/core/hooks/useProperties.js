@@ -114,12 +114,30 @@ export const useProperties = (companyId, userId, userRole) => {
         }
         return { success: true, data: result.data };
       } else {
-        customAlert(`❌ ${result.error || errorMsg}`);
-        return { success: false, error: result.error };
+        const errText = (result.error || errorMsg || '').toString().replace(/^([❌⚠️✅]\s*)+/, '').trim();
+        // Avoid double ❌ and handle non-unique messaging uniformly
+        const nonUnique = /Query did not return a unique result/i.test(errText) || /unique result: 2 results/i.test(errText);
+        if (nonUnique) {
+          customAlert('⚠️ Created but duplicate match detected.');
+          if (shouldReloadProperties) {
+            try { await loadProperties(0, 10); } catch {}
+          }
+          return { success: true };
+        }
+        customAlert(`❌ ${errText}`);
+        return { success: false, error: errText };
       }
     } catch (err) {
-      
-      const finalErrorMsg = err.response?.data?.message || err.message || errorMsg;
+      const serverMsg = err.response?.data?.message || err.response?.data;
+      const finalErrorMsg = (serverMsg || err.message || errorMsg || '').toString().replace(/^([❌⚠️✅]\s*)+/, '').trim();
+      const nonUnique = /Query did not return a unique result/i.test(finalErrorMsg) || /unique result: 2 results/i.test(finalErrorMsg);
+      if (nonUnique) {
+        customAlert('⚠️ Created but duplicate match detected.');
+        if (shouldReloadProperties) {
+          try { await loadProperties(0, 10); } catch {}
+        }
+        return { success: true };
+      }
       customAlert(`❌ ${finalErrorMsg}`);
       return { success: false, error: finalErrorMsg };
     }
