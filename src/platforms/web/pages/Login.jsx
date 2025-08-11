@@ -77,10 +77,15 @@ const Login = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white font-sans">
+    <div className="flex min-h-screen bg-white font-sans flex-col md:flex-row">
+      {/* MOBILE HEADER */}
+      <div className="md:hidden flex flex-col items-center justify-center pt-8 pb-4 text-[#1c69ff]">
+        <h1 className="text-3xl font-extrabold tracking-wide uppercase">LEADS TRACKER</h1>
+        <p className="text-xs tracking-wider mt-1">Track Leads, Close Faster</p>
+      </div>
       {/* LEFT SECTION */}
       <motion.div
-        className="w-1/2 flex flex-col justify-center items-center text-[#1c69ff]"
+        className="hidden md:flex md:w-1/2 flex-col justify-center items-center text-[#1c69ff]"
         initial={{ opacity: 0, x: -100 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
@@ -89,25 +94,25 @@ const Login = () => {
           LEADS TRACKER
         </h1>
         <p className="text-sm tracking-wider mb-10">Track Leads, Close Faster</p>
-        <img src="/images/building-logo.jpeg" alt="Logo" className="w-[420px] h-auto" />
+        <img src="/images/building-logo.jpeg" alt="Logo" className="w-48 sm:w-72 md:w-[420px] h-auto" />
       </motion.div>
 
       {/* RIGHT SECTION with Flip Animation */}
-      <motion.div className="w-1/2 flex justify-center items-center perspective-[1200px]">
+      <motion.div className="w-full md:w-1/2 flex flex-1 justify-center items-center px-4 py-8 md:py-0 perspective-[1200px]">
         <motion.div
-          className="relative w-[500px] h-[600px] rounded-xl shadow-xl"
+          className="relative w-full max-w-[500px] min-h-[520px] md:h-[600px] rounded-xl shadow-xl"
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.8 }}
           style={{ transformStyle: "preserve-3d" }}
         >
           {/* Login Form */}
           <motion.div
-            className="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-xl p-10"
+            className="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-xl p-6 sm:p-8 md:p-10 overflow-y-auto"
             initial={{ opacity: 1 }}
             animate={{ opacity: isFlipped ? 0 : 1 }}
             style={{ backfaceVisibility: "hidden" }}
           >
-            <h2 className="text-3xl font-bold text-[#1c69ff] text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#1c69ff] text-center mb-8">
               Welcome Back!
             </h2>
 
@@ -191,7 +196,7 @@ const Login = () => {
 
           {/* Forget Password Component */}
           <motion.div
-            className="absolute w-full h-full bg-white border border-gray-200 rounded-xl p-10"
+            className="absolute w-full h-full bg-white border border-gray-200 rounded-xl p-6 sm:p-8 md:p-10 overflow-y-auto"
             style={{
               transform: "rotateY(180deg)",
               backfaceVisibility: "hidden",
