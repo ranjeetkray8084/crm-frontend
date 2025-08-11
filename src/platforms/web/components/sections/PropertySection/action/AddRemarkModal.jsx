@@ -26,7 +26,7 @@ const AddRemarkModal = ({ isOpen, onClose, property, onAddRemark }) => {
             setRemark('');
             onClose();
         } catch (error) {
-            // console.error('Error adding remark:', error);
+    
         } finally {
             setIsSubmitting(false);
         }

@@ -1,4 +1,6 @@
 import React from 'react';
+import { Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
+import ThreeDotMenu from '../../common/ThreeDotMenu';
 
 const NoteCard = ({
   note,
@@ -102,31 +104,16 @@ const NoteCard = ({
         <p>Scheduled: <span className="font-medium">{formatDateTime(note?.dateTime)}</span></p>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-sm">
-        <button
-          onClick={() => onEdit(note.id)}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(note.id)}
-          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-        >
-          Delete
-        </button>
-        <button
-          onClick={() => onAddRemark(note.id)}
-          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-        >
-          Add Remark
-        </button>
-        <button
-          onClick={() => onViewRemarks(note.id)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          View Remarks
-        </button>
+      <div className="flex justify-end">
+        <ThreeDotMenu
+          item={note}
+          actions={[
+            { label: 'Edit Note', icon: <Edit size={14} />, onClick: () => onEdit(note.id) },
+            { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(note.id) },
+            { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onViewRemarks(note.id) },
+            { label: 'Delete Note', icon: <Trash2 size={14} />, onClick: () => onDelete(note.id), danger: true }
+          ]}
+        />
       </div>
     </div>
   );

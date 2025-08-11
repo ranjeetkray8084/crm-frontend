@@ -3,52 +3,55 @@ import { Crown, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUsers } from '../../../../core/hooks/useUsers';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
+import UpdateUserModal from '../action/UpdateUserModal';
+import DirectorTableRow from './DirectorTableRow';
 
 const DirectorSection = () => {
   const { user } = useAuth();
+  const companyId = user?.companyId;
   const role = user?.role;
-  
-  // Use useUsers hook for director management
-  const { getUsersWithRole } = useUsers(null, role, user?.userId);
+  const userId = user?.userId || user?.id;
 
-  // Add method to get directors using specific endpoint
-  const getUsersWithDirectorRole = async () => {
-    try {
-      const { UserService } = await import('../../../../core/services/user.service');
-      return await UserService.getUsersWithDirectorRole();
-    } catch (error) {
-      return { success: false, error: 'Failed to load directors' };
-    }
-  };
+  // Use useUsers hook for director management actions
+  const {
+    users: directors,
+    loading,
+    error,
+    activateUser,
+    deactivateUser,
+    getUsersWithRole
+  } = useUsers(role === 'DEVELOPER' ? null : companyId, role, userId);
 
   const [search, setSearch] = useState('');
-  const [directors, setDirectors] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [selectedDirector, setSelectedDirector] = useState(null);
 
-  // Load all directors for Developer role
-  const loadDirectors = async () => {
-    if (role !== 'DEVELOPER') {
-      return;
+  // Load directors based on current user's role
+  const loadDirectorsData = async () => {
+    // For DEVELOPER, we don't need companyId since they see all directors across companies
+    if (role === 'DEVELOPER') {
+      if (!role || !userId) {
+        return;
+      }
+    } else {
+      // For other roles, we need companyId
+      if (!companyId || !role || !userId) {
+        return;
+      }
     }
 
-    setLoading(true);
     try {
-      const result = await getUsersWithDirectorRole();
-      if (result.success) {
-        setDirectors(result.data || []);
-      } else {
-        setDirectors([]);
+      if (role === 'DEVELOPER') {
+        // Developer can see all DIRECTOR role users across all companies
+        await getUsersWithRole('DIRECTOR');
       }
     } catch (error) {
-      setDirectors([]);
-    } finally {
-      setLoading(false);
+
     }
   };
 
   useEffect(() => {
-    loadDirectors();
-  }, [role]);
+    loadDirectorsData();
+  }, [companyId, role, userId]);
 
   const handleSearch = (e) => setSearch(e.target.value.toLowerCase());
 
@@ -75,6 +78,17 @@ const DirectorSection = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, type: 'spring' }}
     >
+      {/* Update Director Modal */}
+      {selectedDirector && (
+        <UpdateUserModal
+          user={selectedDirector}
+          onClose={() => setSelectedDirector(null)}
+          onUpdate={() => {
+            setSelectedDirector(null);
+            loadDirectorsData();
+          }}
+        />
+      )}
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white p-6 border-b border-gray-100 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
@@ -133,26 +147,15 @@ const DirectorSection = () => {
                   </tr>
                 ) : (
                   displayedDirectors.map((director) => (
-                    <tr key={director.userId} className="hover:bg-gray-50 transition-colors">
-                      <td className="border-b px-6 py-4">
-                        <div className="font-medium text-gray-900">{director.name}</div>
-                      </td>
-                      <td className="border-b px-6 py-4 text-gray-600">{director.email}</td>
-                      <td className="border-b px-6 py-4 text-gray-600">{director.phone}</td>
-                      <td className="border-b px-6 py-4 text-gray-600">{director.companyName || 'N/A'}</td>
-                      <td className="border-b px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          director.status === 'ACTIVE' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {director.status === 'ACTIVE' ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="border-b px-6 py-4 text-center">
-                        <span className="text-gray-400 text-sm">View Only</span>
-                      </td>
-                    </tr>
+                    <DirectorTableRow
+                      key={director.userId}
+                      director={director}
+                      searchTerm={search}
+                      onUpdate={setSelectedDirector}
+                      onActivate={activateUser}
+                      onDeactivate={deactivateUser}
+                      isDeveloper={role === 'DEVELOPER'}
+                    />
                   ))
                 )}
               </tbody>

@@ -17,7 +17,7 @@ const NotificationDropdown = ({ onSectionChange }) => {
             if (unreadCount > 0) {
                 const result = await markAllAsRead();
                 if (!result.success) {
-                    console.error('Failed to mark all as read:', result.error);
+              
                 }
             }
             
@@ -26,7 +26,7 @@ const NotificationDropdown = ({ onSectionChange }) => {
                 onSectionChange('ViewNotification');
             }
         } catch (error) {
-            console.error('Error in notification click handler:', error);
+      
         }
     };
 

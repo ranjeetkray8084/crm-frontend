@@ -90,6 +90,8 @@ const AddLeadForm = ({ onSuccess }) => {
           customRequirement: '',
         });
         if (onSuccess) onSuccess();
+      } else {
+        customAlert('❌ ' + (result.error || 'Failed to create lead'));
       }
     } catch (err) {
       customAlert('❌ Error saving lead: ' + err.message);

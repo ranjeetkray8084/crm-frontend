@@ -120,6 +120,14 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
                 </p>
               </div>
               <div>
+                <span className="text-xs text-gray-500">Owner/Broker</span>
+                <p className="text-sm font-medium">{property.ownerName || 'N/A'}</p>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">Contact</span>
+                <p className="text-sm font-medium">{property.ownerContact || 'N/A'}</p>
+              </div>
+              <div>
                 <span className="text-xs text-gray-500">Source</span>
                 <p className="text-sm font-medium">{property.source || 'N/A'}</p>
               </div>

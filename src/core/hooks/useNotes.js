@@ -26,6 +26,8 @@ export const useNotes = (companyId, userId, role) => {
           break;
         case 'DIRECTOR':
           notePromises.push(NoteService.getNotesVisibleToDirector(companyId, userId));
+          notePromises.push(NoteService.getNotesVisibleToUser(companyId, userId, false, true)); // isDirector = true
+          notePromises.push(NoteService.getPublicNotes(companyId));
           break;
         case 'USER':
           notePromises.push(NoteService.getNotesByUser(companyId, userId));

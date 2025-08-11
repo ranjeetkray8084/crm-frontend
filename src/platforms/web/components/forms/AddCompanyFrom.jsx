@@ -9,8 +9,8 @@ const AddCompanyForm = ({ onSuccess }) => {
     name: '',
     email: '',
     phone: '',
-    maxUser: '',
-    maxAdmin: '',
+    maxUsers: '',
+    maxAdmins: '',
   });
 
   const handleChange = (e) => {
@@ -23,18 +23,14 @@ const AddCompanyForm = ({ onSuccess }) => {
   const createCompany = async (e) => {
     e.preventDefault();
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const developerId = user.userId || user.id;
-
     const companyData = {
       ...formData,
-      maxUser: parseInt(formData.maxUser),
-      maxAdmin: parseInt(formData.maxAdmin),
-      developer: { userId: developerId },
+      maxUsers: parseInt(formData.maxUsers),
+      maxAdmins: parseInt(formData.maxAdmins),
     };
 
     try {
-      const result = await CompanyService.createCompany(companyData);
+      const result = await CompanyService.addCompany(companyData);
       
       if (result.success) {
         customAlert('✅ Company created successfully!');
@@ -42,8 +38,8 @@ const AddCompanyForm = ({ onSuccess }) => {
           name: '',
           email: '',
           phone: '',
-          maxUser: '',
-          maxAdmin: '',
+          maxUsers: '',
+          maxAdmins: '',
         });
         if (onSuccess) onSuccess();
       } else {
@@ -111,10 +107,10 @@ const AddCompanyForm = ({ onSuccess }) => {
             <label className="block text-gray-700 font-medium mb-1">Max Users</label>
             <input
               type="number"
-              name="maxUser"
+              name="maxUsers"
               required
               min="1"
-              value={formData.maxUser}
+              value={formData.maxUsers}
               onChange={handleChange}
               className="w-full border px-4 py-2 rounded-lg"
             />
@@ -124,10 +120,10 @@ const AddCompanyForm = ({ onSuccess }) => {
             <label className="block text-gray-700 font-medium mb-1">Max Admins</label>
             <input
               type="number"
-              name="maxAdmin"
+              name="maxAdmins"
               required
               min="1"
-              value={formData.maxAdmin}
+              value={formData.maxAdmins}
               onChange={handleChange}
               className="w-full border px-4 py-2 rounded-lg"
             />

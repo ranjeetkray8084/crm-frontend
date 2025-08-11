@@ -70,7 +70,7 @@ export const API_ENDPOINTS = {
     UPDATE: (companyId) => `/api/${companyId}/followups`,
     DELETE: (companyId, id) => `/api/${companyId}/followups/${id}`
   },
-  
+
 
   // Lead Management Endpoints (LeadController)
   LEADS: {

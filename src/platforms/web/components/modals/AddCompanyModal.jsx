@@ -29,7 +29,7 @@ const AddCompanyModal = ({ isOpen, onClose, onAdd }) => {
         onClose();
       }
     } catch (error) {
-      // console.error('Error adding company:', error);
+
     } finally {
       setLoading(false);
     }

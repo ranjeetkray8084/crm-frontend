@@ -31,7 +31,7 @@ export class CompanyService {
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      return this.handleError(error, fallbackErrorMessage);
+      return CompanyService.handleError(error, fallbackErrorMessage);
     }
   }
 
@@ -39,7 +39,7 @@ export class CompanyService {
    * Get all companies.
    */
   static getAllCompanies() {
-    return this._request(
+    return CompanyService._request(
       () => axios.get(API_ENDPOINTS.COMPANIES.GET_ALL),
       'Failed to load companies'
     );
@@ -49,7 +49,7 @@ export class CompanyService {
    * Get user's company.
    */
   static getMyCompany() {
-    return this._request(
+    return CompanyService._request(
       () => axios.get(API_ENDPOINTS.COMPANIES.GET_MY),
       'Failed to load company'
     );
@@ -59,7 +59,7 @@ export class CompanyService {
    * Add a new company.
    */
   static addCompany(companyData) {
-    return this._request(
+    return CompanyService._request(
       () => axios.post(API_ENDPOINTS.COMPANIES.ADD, companyData),
       'Failed to add company'
     );
@@ -69,7 +69,7 @@ export class CompanyService {
    * Delete a company.
    */
   static deleteCompany(companyId) {
-    return this._request(
+    return CompanyService._request(
       () => axios.delete(API_ENDPOINTS.COMPANIES.DELETE(companyId)),
       'Failed to delete company'
     );
@@ -79,7 +79,7 @@ export class CompanyService {
    * Revoke a company's access.
    */
   static revokeCompany(companyId) {
-    return this._request(
+    return CompanyService._request(
       () => axios.put(API_ENDPOINTS.COMPANIES.REVOKE(companyId)),
       'Failed to revoke company'
     );
@@ -89,7 +89,7 @@ export class CompanyService {
    * Unrevoke a company's access.
    */
   static unrevokeCompany(companyId) {
-    return this._request(
+    return CompanyService._request(
       () => axios.put(API_ENDPOINTS.COMPANIES.UNREVOKE(companyId)),
       'Failed to activate company'
     );
@@ -99,7 +99,7 @@ export class CompanyService {
    * Get company name by ID.
    */
   static getCompanyName(companyId) {
-    return this._request(
+    return CompanyService._request(
       () => axios.get(API_ENDPOINTS.COMPANIES.GET_NAME(companyId)),
       'Failed to get company name'
     );

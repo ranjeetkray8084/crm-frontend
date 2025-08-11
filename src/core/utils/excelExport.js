@@ -141,7 +141,7 @@ export const exportToExcel = (data, columns, filename) => {
     
     return { success: true, message: `Exported ${data.length} records to ${finalFilename}` };
   } catch (error) {
-    console.error('Export failed:', error);
+    
     return { success: false, message: `Export failed: ${error.message}` };
   }
 };

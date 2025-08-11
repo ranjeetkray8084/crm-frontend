@@ -80,12 +80,9 @@ export class DashboardService {
    */
   static async getNewContactedLeadsCount(companyId, userId) {
     try {
-      console.log('🔍 DashboardService: getNewContactedLeadsCount called with:', { companyId, userId });
       const apiUrl = API_ENDPOINTS.LEADS.COUNT_SUMMARY(companyId, userId);
-      console.log('🔍 DashboardService: API URL:', apiUrl);
       
       const response = await axios.get(apiUrl);
-      console.log('✅ DashboardService: getNewContactedLeadsCount successful:', response?.data);
       
       return {
         success: true,
@@ -93,7 +90,6 @@ export class DashboardService {
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      console.error('❌ DashboardService: getNewContactedLeadsCount failed:', error);
       // Return fallback data instead of throwing error
       return {
         success: true,
@@ -278,22 +274,16 @@ export class DashboardService {
    */
   static async getUsersAndAdminsOverview(companyId, userId) {
     try {
-      console.log('🔍 DashboardService: Function called with companyId:', companyId, 'userId:', userId);
-      
       // Temporary fix: Hardcode the URL to bypass cache issues
       const apiUrl = `/api/users/count-summary/${companyId}/${userId}`;
-      console.log('🔍 DashboardService: Generated API URL:', apiUrl);
-      console.log('🔍 DashboardService: Making API call to:', apiUrl);
       
       const response = await axios.get(apiUrl);
-      console.log('✅ DashboardService: API call successful');
       return {
         success: true,
         data: response?.data,
         message: response?.data?.message || 'Operation successful'
       };
     } catch (error) {
-      console.error('❌ DashboardService: API call failed:', error);
       // Don't throw error - return fallback data to prevent logout
       return {
         success: true,

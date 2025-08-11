@@ -74,9 +74,16 @@ const AddPropertyForm = () => {
       createdBy: { userId }, // Same structure as AddLeadForm
     };
 
-    const result = await createProperty(payload);
-    if (result.success) {
-      setForm(initialForm);
+    try {
+      const result = await createProperty(payload);
+
+      if (result.success) {
+        setForm(initialForm);
+      } else {
+        // Error already shown by executeApiCall in useProperties
+      }
+    } catch (err) {
+      // Error already handled by executeApiCall
     }
   };
 

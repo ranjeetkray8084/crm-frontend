@@ -88,6 +88,19 @@ export class AuthService {
         errorMessage = error.message;
       }
 
+      // Check if user is deactivated
+      if (error.response?.status === 403) {
+        const errorData = error.response.data;
+        if (errorData.message && errorData.message.includes('deactivated')) {
+          return {
+            success: false,
+            error: errorMessage,
+            isDeactivated: true,
+            userEmail: credentials.email
+          };
+        }
+      }
+
       return {
         success: false,
         error: errorMessage
@@ -222,6 +235,25 @@ export class AuthService {
   }
 
   /**
+   * Validate current token
+   * @returns {Promise<Object>} Result
+   */
+  static async validateToken() {
+    try {
+      const response = await axios.get('/api/auth/validate-token');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Token validation failed'
+      };
+    }
+  }
+
+  /**
    * Get current user from storage
    * @returns {Object|null} User data
    */
@@ -272,7 +304,7 @@ export class AuthService {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     } catch (error) {
-      // console.error('❌ saveSession: Error saving session data:', error);
+      
     }
   }
 }

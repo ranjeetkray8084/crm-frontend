@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Building2, Search, Plus, MoreVertical } from 'lucide-react';
+import { Building2, Search, Plus, MoreVertical, UserCheck, UserX } from 'lucide-react';
+import ThreeDotMenu from '../common/ThreeDotMenu';
 import { motion } from 'framer-motion';
 import { useCompany } from '../../../../core/hooks/useCompany';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
@@ -19,7 +20,7 @@ const CompaniesSection = () => {
     const handleSearch = (e) => setSearch(e.target.value.toLowerCase());
 
     const displayedCompanies = companies.filter((company) => {
-        const fields = [company.name, company.email, company.phone, company.address];
+        const fields = [company.name, company.email, company.phone];
         return fields.some((field) => field?.toString().toLowerCase().includes(search));
     });
 
@@ -34,7 +35,7 @@ const CompaniesSection = () => {
             }
             await loadAllCompanies(); // Refresh the list
         } catch (error) {
-            // console.error('Error toggling company status:', error);
+    
         } finally {
             setActionLoading(prev => ({ ...prev, [companyId]: false }));
         }
@@ -105,7 +106,8 @@ const CompaniesSection = () => {
                                     <th className="border-b px-6 py-4 text-left font-semibold">Company Name</th>
                                     <th className="border-b px-6 py-4 text-left font-semibold">Email</th>
                                     <th className="border-b px-6 py-4 text-left font-semibold">Phone</th>
-                                    <th className="border-b px-6 py-4 text-left font-semibold">Address</th>
+                                    <th className="border-b px-6 py-4 text-left font-semibold">Max Users</th>
+                                    <th className="border-b px-6 py-4 text-left font-semibold">Max Admins</th>
                                     <th className="border-b px-6 py-4 text-left font-semibold">Status</th>
                                     <th className="border-b px-6 py-4 text-center font-semibold">Actions</th>
                                 </tr>
@@ -113,7 +115,7 @@ const CompaniesSection = () => {
                             <tbody>
                                 {displayedCompanies.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="text-center py-8 text-gray-500">
+                                        <td colSpan="7" className="text-center py-8 text-gray-500">
                                             <Building2 size={48} className="mx-auto mb-4 text-gray-300" />
                                             <p>No companies found.</p>
                                         </td>
@@ -126,33 +128,34 @@ const CompaniesSection = () => {
                                             </td>
                                             <td className="border-b px-6 py-4 text-gray-600">{company.email}</td>
                                             <td className="border-b px-6 py-4 text-gray-600">{company.phone}</td>
-                                            <td className="border-b px-6 py-4 text-gray-600">
-                                                <div className="max-w-xs truncate">{company.address}</div>
-                                            </td>
+                                            <td className="border-b px-6 py-4 text-gray-600">{company.maxUsers || 'N/A'}</td>
+                                            <td className="border-b px-6 py-4 text-gray-600">{company.maxAdmins || 'N/A'}</td>
                                             <td className="border-b px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${company.status === 'ACTIVE'
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${company.status === 'active'
                                                     ? 'bg-green-100 text-green-800'
                                                     : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                    {company.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                                                    {company.status === 'active' ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
                                             <td className="border-b px-6 py-4 text-center">
-                                                <button
-                                                    onClick={() => handleToggleStatus(company.id, company.status === 'ACTIVE')}
-                                                    disabled={actionLoading[company.id]}
-                                                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${company.status === 'ACTIVE'
-                                                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                                        } ${actionLoading[company.id] ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                >
-                                                    {actionLoading[company.id]
-                                                        ? 'Processing...'
-                                                        : company.status === 'ACTIVE'
-                                                            ? 'Deactivate'
-                                                            : 'Activate'
-                                                    }
-                                                </button>
+                                                <ThreeDotMenu
+                                                    item={company}
+                                                    actions={[
+                                                        company.status === 'active'
+                                                            ? { 
+                                                                label: 'Deactivate Company', 
+                                                                icon: <UserX size={14} />, 
+                                                                onClick: () => handleToggleStatus(company.id, true),
+                                                                danger: true
+                                                              }
+                                                            : { 
+                                                                label: 'Activate Company', 
+                                                                icon: <UserCheck size={14} />, 
+                                                                onClick: () => handleToggleStatus(company.id, false)
+                                                              }
+                                                    ]}
+                                                />
                                             </td>
                                         </tr>
                                     ))

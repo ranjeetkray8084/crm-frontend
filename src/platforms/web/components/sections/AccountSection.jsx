@@ -37,10 +37,14 @@ const AccountSection = () => {
         localStorage.setItem('user', JSON.stringify(userData))
         await fetchAvatar(userId)
       } else {
-        customAlert('Error loading user info.')
+        // Display specific error message from backend
+        const errorMessage = result.error || 'Failed to load user'
+  
+        customAlert('❌ Error loading user info: ' + errorMessage)
       }
     } catch (error) {
-      customAlert('Error loading user info.')
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message || 'Connection error'
+      customAlert('❌ Error loading user info: ' + errorMessage)
     }
   }
 
@@ -116,12 +120,47 @@ const AccountSection = () => {
       if (result.success) {
         customAlert('✅ Account updated successfully!')
         setIsEditing(false)
-        await loadAccountInfo()
+        
+        // Get the updated user data from backend response
+        const updatedUserData = result.data.user || result.data
+        
+        // Update local storage with new data from backend
+        const updatedUser = { 
+          ...localUser, 
+          name: updatedUserData.name,
+          email: updatedUserData.email,
+          phone: updatedUserData.phone,
+          role: updatedUserData.role
+        }
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        
+        // Update form data with the new values
+        setFormData({
+          name: updatedUserData.name || updateData.name,
+          email: updatedUserData.email || updateData.email,
+          phone: updatedUserData.phone || updateData.phone,
+          role: updatedUserData.role || updateData.role
+        })
+        
+        // If token was updated (email changed), show additional message
+        if (result.data.tokenUpdated) {
+          customAlert('✅ Account and authentication updated successfully!')
+        }
+        
+        // Try to reload account info, but don't fail if it doesn't work
+        try {
+          await loadAccountInfo()
+        } catch (reloadError) {
+    
+        }
       } else {
-        customAlert('❌ Error updating account: ' + result.error)
+        // Display specific error message from backend
+        const errorMessage = result.error || 'Failed to update user'
+        customAlert('❌ Error updating account: ' + errorMessage)
       }
     } catch (error) {
-      customAlert('❌ An error occurred while saving.')
+      const errorMessage = error.response?.data || error.message || 'An error occurred while saving.'
+      customAlert('❌ ' + errorMessage)
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Plus, Search, Filter, RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Plus, Search, Filter, RefreshCw, CheckCircle, XCircle, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import ThreeDotMenu from '../common/ThreeDotMenu';
 import { useFollowUp } from '../../../../core/hooks/useFollowUp';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import AddFollowUpModal from './LeadSection/action/AddFollowUpModal';
@@ -43,7 +44,7 @@ const FollowUpSection = () => {
         });
       }
     } catch (error) {
-      // console.error('Error updating follow-up status:', error);
+      
     }
   };
 
@@ -52,7 +53,7 @@ const FollowUpSection = () => {
       try {
         await deleteFollowUp(followUpId);
       } catch (error) {
-        // console.error('Error deleting follow-up:', error);
+
       }
     }
   };
@@ -310,13 +311,13 @@ const FollowUpSection = () => {
                     )}
                   </div>
                   
-                  <button
-                    onClick={() => handleDelete(followUp.id)}
-                    className="text-gray-400 hover:text-red-600 transition-colors ml-4"
-                    title="Delete follow-up"
-                  >
-                    <XCircle size={20} />
-                  </button>
+                  <ThreeDotMenu
+                    item={followUp}
+                    actions={[
+                      { label: 'Edit Follow-up', icon: <Edit size={14} />, onClick: () => {/* Add edit functionality */} },
+                      { label: 'Delete Follow-up', icon: <Trash2 size={14} />, onClick: () => handleDelete(followUp.id), danger: true }
+                    ]}
+                  />
                 </div>
               </div>
             ))}

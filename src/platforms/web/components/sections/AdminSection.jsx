@@ -52,7 +52,7 @@ const AdminSection = () => {
         await getAdminsByRoleAndCompany();
       }
     } catch (error) {
-      console.error('Error loading admins:', error);
+
     }
   };
 

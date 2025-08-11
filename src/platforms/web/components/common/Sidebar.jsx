@@ -68,27 +68,26 @@ function Sidebar({ userRole, activeSection, onSectionChange, companyName, userNa
   const menuItems = getMenuItems();
 
   return (
-    <aside className={`bg-gray-800 text-white min-h-screen transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
+    <aside className={`bg-gray-800 text-white min-h-screen transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} lg:w-64`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-3 lg:p-4 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-3">
           <img
             src={logoImg}
             alt="Logo"
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover flex-shrink-0"
           />
           {!isCollapsed && (
-            <div>
-              <h2 className="text-lg font-semibold">LeadsTracker</h2>
-              <p className="text-xs text-gray-400">(By Smartprocare)</p>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base lg:text-lg font-semibold truncate">LeadsTracker</h2>
+              <p className="text-xs text-gray-400 truncate">(By Smartprocare)</p>
             </div>
           )}
-         
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="p-2">
+      <nav className="flex-1 p-2 overflow-y-auto">
         <ul className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -98,19 +97,27 @@ function Sidebar({ userRole, activeSection, onSectionChange, companyName, userNa
               <li key={item.id}>
                 <button
                   onClick={() => onSectionChange(item.id)}
-                  className={`sidebar-button w-full flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition ${
-                    isActive ? 'bg-gray-700 font-semibold' : ''
+                  className={`sidebar-button w-full flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200 text-sm lg:text-base ${
+                    isActive ? 'bg-gray-700 font-semibold text-white' : 'text-gray-300 hover:text-white'
                   } ${isCollapsed ? 'justify-center' : ''}`}
                   title={isCollapsed ? item.label : ''}
                 >
-                  <Icon size={20} />
-                  {!isCollapsed && <span>{item.label}</span>}
+                  <Icon size={18} className="lg:w-5 lg:h-5 flex-shrink-0" />
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </button>
               </li>
             );
           })}
         </ul>
       </nav>
+
+      {/* Footer - User Info (Mobile Only) */}
+      <div className="lg:hidden p-3 border-t border-gray-700 flex-shrink-0">
+        <div className="text-center">
+          <div className="text-sm font-medium text-white truncate">{userName || 'User'}</div>
+          <div className="text-xs text-gray-400">{userRole || 'Role'}</div>
+        </div>
+      </div>
     </aside>
   );
 }

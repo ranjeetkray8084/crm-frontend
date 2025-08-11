@@ -33,10 +33,8 @@ export const useDashboardStats = (companyId, userId, role) => {
           totalDirectors: directorsResult.status === 'fulfilled' ? directorsResult.value.data || 0 : 0,
         };
 
-        console.log('🔍 useDashboardStats: Developer stats:', finalStats);
         setStats(finalStats);
       } catch (err) {
-        console.error('❌ useDashboardStats: Developer stats failed:', err);
         setStats({
           totalCompanies: 0,
           totalUsers: 0,
@@ -108,11 +106,8 @@ export const useDashboardStats = (companyId, userId, role) => {
 
       let newContactedResult;
       try {
-        console.log('🔍 useDashboardStats: Calling getNewContactedLeadsCount with:', { companyId, userId });
         newContactedResult = await DashboardService.getNewContactedLeadsCount(companyId, userId);
-        console.log('✅ useDashboardStats: getNewContactedLeadsCount result:', newContactedResult);
       } catch (error) {
-        console.error('❌ useDashboardStats: getNewContactedLeadsCount failed, using fallback:', error);
         const fallback = await DashboardService.getLeadsCount(companyId);
         newContactedResult = {
           data: {
@@ -139,11 +134,8 @@ export const useDashboardStats = (companyId, userId, role) => {
       // Users overview API call
       let usersOverviewResult;
       try {
-        console.log('🔍 useDashboardStats: Calling getUsersAndAdminsOverview with:', { companyId, userId });
         usersOverviewResult = await DashboardService.getUsersAndAdminsOverview(companyId, userId);
-        console.log('✅ useDashboardStats: getUsersAndAdminsOverview successful');
       } catch (err) {
-        console.warn('❌ useDashboardStats: Users overview API failed:', err);
         usersOverviewResult = {
           data: {
             totalNormalUsers: 0,
@@ -179,7 +171,6 @@ export const useDashboardStats = (companyId, userId, role) => {
         usersOverview: usersOverviewResult.data,
       };
       
-      console.log('🔍 useDashboardStats: Final stats object:', finalStats);
       setStats(finalStats);
     } catch (err) {
       setError(err.message || 'Failed to load dashboard stats');

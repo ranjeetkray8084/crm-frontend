@@ -231,6 +231,15 @@ export class UserService {
   static async updateProfile(userId, userData) {
     try {
       const response = await axios.put(API_ENDPOINTS.USERS.UPDATE_PROFILE(userId), userData);
+      
+      // If backend returned a new token (email was changed), update it
+      if (response.data.newToken && response.data.tokenUpdated) {
+
+        localStorage.setItem('token', response.data.newToken);
+        // Update axios default header with new token
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.newToken}`;
+      }
+      
       return {
         success: true,
         data: response.data,
@@ -239,7 +248,7 @@ export class UserService {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Failed to update user'
+        error: error.response?.data?.message || error.response?.data || 'Failed to update user'
       };
     }
   }

@@ -2,7 +2,7 @@ import { BarChart3, Building, TrendingUp, Calendar, Users, Phone, Home, Shopping
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import { useDashboardStats, useTodayEvents } from '../../../../core/hooks/useDashboardStats';
 import { useTodayFollowUps } from '../../../../core/hooks/useTodayFollowUps';
-import { DashboardService } from '../../../../core/services/dashboard.service';
+
 
 const DashboardStats = () => {
   try {
@@ -11,18 +11,7 @@ const DashboardStats = () => {
     const userId = user?.userId || user?.id;
     const role = user?.role;
 
-    // Test function to manually check API
-    const testAPI = async () => {
-      try {
-        console.log('🧪 Testing API with:', { companyId, userId });
-        const result = await DashboardService.getNewContactedLeadsCount(companyId, userId);
-        console.log('🧪 API Test Result:', result);
-        alert(`API Test Result: ${JSON.stringify(result, null, 2)}`);
-      } catch (error) {
-        console.error('🧪 API Test Error:', error);
-        alert(`API Test Error: ${error.message}`);
-      }
-    };
+
 
     // Check if we have valid user data before making API calls
     if (!user || !userId || !role) {
@@ -31,12 +20,7 @@ const DashboardStats = () => {
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">Authentication Required</h3>
             <p className="text-yellow-700">Please log in to view dashboard statistics.</p>
-            <button 
-              onClick={testAPI}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Test API
-            </button>
+
           </div>
         </div>
       );
@@ -53,8 +37,7 @@ const DashboardStats = () => {
       error: statsError
     } = useDashboardStats(companyId, userId, role);
     
-    console.log('🔍 DashboardStats: Received stats:', stats);
-    console.log('🔍 DashboardStats: User info:', { companyId, userId, role });
+
 
     const {
       todayEvents,
@@ -106,10 +89,10 @@ const DashboardStats = () => {
     const filteredFollowUps = (todayFollowUps || []).filter(fu => fu.userId === localUserId);
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Stats Cards */}
         {role === 'DEVELOPER' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <DeveloperStatsCard
               title="Total Companies"
               count={stats?.totalCompanies || 0}
@@ -136,7 +119,7 @@ const DashboardStats = () => {
             />
           </div>
         ) : role === 'USER' ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             <LeadsCard
               totalLeads={stats?.totalLeads}
               newLeads={stats?.newLeads}
@@ -146,7 +129,7 @@ const DashboardStats = () => {
             <DealsClosedCard dealsOverview={stats?.dealsOverview} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
             <LeadsCard
               totalLeads={stats?.totalLeads}
               newLeads={stats?.newLeads}
@@ -159,104 +142,108 @@ const DashboardStats = () => {
         )}
 
 
-        {/* Today's Events and Follow-ups */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Today's Events */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-4">
-              <Calendar className="text-blue-600 mr-3" size={24} />
-              <h3 className="text-xl font-semibold text-gray-900">Your Events for Today</h3>
+        {/* Today's Events and Follow-ups - Hidden for DEVELOPER role */}
+        {role !== 'DEVELOPER' && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+            {/* Today's Events */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+              <div className="flex items-center mb-4">
+                <Calendar className="text-blue-600 mr-2 sm:mr-3 flex-shrink-0" size={20} />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Your Events for Today</h3>
+              </div>
+
+              {!todayEvents || todayEvents.length === 0 ? (
+                <EmptyEventMessage />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[500px]">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-gray-700 text-sm sm:text-base">Content</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-gray-700 text-sm sm:text-base">Time</th>
+                        <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-gray-700 text-sm sm:text-base hidden sm:table-cell">Created By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(todayEvents || []).map((event) => (
+                        <tr key={event?.id || Math.random()} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-sm sm:text-base">
+                            <div className="truncate max-w-[200px] sm:max-w-none">{event?.content || 'No content'}</div>
+                          </td>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-sm sm:text-base">
+                            {event?.dateTime ? new Date(event.dateTime).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false,
+                              timeZone: 'Asia/Kolkata',
+                            }) : 'No time'}
+                          </td>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-sm sm:text-base hidden sm:table-cell">{event?.username || 'Unknown'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            {!todayEvents || todayEvents.length === 0 ? (
-              <EmptyEventMessage />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Content</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Scheduled Time</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Created By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(todayEvents || []).map((event) => (
-                      <tr key={event?.id || Math.random()} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4">{event?.content || 'No content'}</td>
-                        <td className="py-3 px-4">
-                          {event?.dateTime ? new Date(event.dateTime).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                            timeZone: 'Asia/Kolkata',
-                          }) : 'No time'}
-                        </td>
-                        <td className="py-3 px-4">{event?.username || 'Unknown'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Today's Follow-ups */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 gap-2">
+                <div className="flex items-center min-w-0 flex-1">
+                  <Clock className="text-green-600 mr-2 sm:mr-3 flex-shrink-0" size={20} />
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Today's Follow-ups</h3>
+                </div>
+                <div className="text-xs sm:text-sm text-green-600 bg-green-50 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
+                  🔔 <span className="hidden sm:inline">Auto </span>Notifications
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Today's Follow-ups */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <Clock className="text-green-600 mr-3" size={24} />
-                <h3 className="text-xl font-semibold text-gray-900">Today's Follow-ups</h3>
-              </div>
-              <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                🔔 Auto Notifications
-              </div>
+              {!todayFollowUps || todayFollowUps.length === 0 ? (
+                <EmptyFollowUpMessage />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Lead</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Note</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredFollowUps.map((followUp) => (
+                        <tr key={followUp?.id || Math.random()} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">
+                              {followUp?.lead?.name || 'Unknown Lead'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {followUp?.lead?.phone || 'No phone'}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="max-w-xs truncate">
+                              {followUp?.note || 'No note'}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            {followUp?.followupDate ? new Date(followUp.followupDate).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false,
+                              timeZone: 'Asia/Kolkata',
+                            }) : 'No time'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-
-            {!todayFollowUps || todayFollowUps.length === 0 ? (
-              <EmptyFollowUpMessage />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Lead</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Note</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredFollowUps.map((followUp) => (
-                      <tr key={followUp?.id || Math.random()} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-gray-900">
-                            {followUp?.lead?.name || 'Unknown Lead'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {followUp?.lead?.phone || 'No phone'}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="max-w-xs truncate">
-                            {followUp?.note || 'No note'}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {followUp?.followupDate ? new Date(followUp.followupDate).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                            timeZone: 'Asia/Kolkata',
-                          }) : 'No time'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
     );
   } catch (error) {

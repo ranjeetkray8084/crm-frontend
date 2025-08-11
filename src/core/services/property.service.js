@@ -32,9 +32,46 @@ export class PropertyService {
   static async createProperty(companyId, propertyData) {
     try {
       const response = await axios.post(API_ENDPOINTS.PROPERTIES.CREATE(companyId), propertyData);
-      return { success: true, data: response.data, message: 'Property created successfully' };
+      
+      // Check if response is successful (status 200-299)
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          data: response.data,
+          message: 'Property created successfully'
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data?.message || 'Failed to create property'
+        };
+      }
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Failed to create property' };
+
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 
+                            error.response.data || 
+                            `Server error: ${error.response.status}`;
+        return {
+          success: false,
+          error: errorMessage
+        };
+      } else if (error.request) {
+        // Network error
+        return {
+          success: false,
+          error: 'Network error. Please check your connection.'
+        };
+      } else {
+        // Other error
+        return {
+          success: false,
+          error: error.message || 'Failed to create property'
+        };
+      }
     }
   }
 
@@ -43,6 +80,7 @@ export class PropertyService {
       const response = await axios.put(API_ENDPOINTS.PROPERTIES.UPDATE(companyId, propertyId), propertyData);
       return { success: true, data: response.data, message: 'Property updated successfully' };
     } catch (error) {
+
       return { success: false, error: error.response?.data?.message || 'Failed to update property' };
     }
   }
@@ -230,8 +268,7 @@ export class PropertyService {
       // Construct final URL
       const finalUrl = `${url}?${urlParams.toString()}`;
       
-      // Debug: Log the final URL to verify format
-      console.log('🔍 Final API URL:', finalUrl);
+      
       
       // Use the constructed URL directly
       const response = await axios.get(finalUrl);

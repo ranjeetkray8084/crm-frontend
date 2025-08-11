@@ -44,10 +44,10 @@ const FollowUp = ({ leadId, userId }) => {
         // Refresh follow-ups for this lead
         await loadLeadFollowUps();
       } else {
-        // console.error("Error adding follow-up:", result.error);
+        // Handle error silently
       }
     } catch (error) {
-      // console.error("Error adding follow-up:", error);
+      // Handle error silently
     }
   };
 

@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // ✅ Backend API base URL
-const BASE_URL = "https://backend.leadstracker.in/";
+const BASE_URL = "http://localhost:8080/";
 
 // ✅ Create an Axios instance
 const axiosInstance = axios.create({
@@ -31,9 +31,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Log all errors for debugging
     if (error.response?.status === 401) {
-      // Only logout for authentication-related endpoints
       const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
       const isFollowUpEndpoint = error.config?.url?.includes('/followups');
       const isOnLogin = window.location.pathname.includes('/login') || window.location.pathname === '/';
@@ -43,6 +41,7 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      // Only logout for auth endpoints or if we're not on login page
       if (isAuthEndpoint && !isOnLogin) {
         // Clear auth data
         localStorage.removeItem("token");

@@ -57,16 +57,46 @@ export class LeadService {
   static async createLead(companyId, leadData) {
     try {
       const response = await axios.post(API_ENDPOINTS.LEADS.CREATE(companyId), leadData);
-      return {
-        success: true,
-        data: response.data,
-        message: 'Lead created successfully'
-      };
+      
+      // Check if response is successful (status 200-299)
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          data: response.data,
+          message: 'Lead created successfully'
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data?.message || 'Failed to create lead'
+        };
+      }
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to create lead'
-      };
+
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 
+                            error.response.data || 
+                            `Server error: ${error.response.status}`;
+        return {
+          success: false,
+          error: errorMessage
+        };
+      } else if (error.request) {
+        // Network error
+        return {
+          success: false,
+          error: 'Network error. Please check your connection.'
+        };
+      } else {
+        // Other error
+        return {
+          success: false,
+          error: error.message || 'Failed to create lead'
+        };
+      }
     }
   }
 
@@ -507,7 +537,7 @@ export class LeadService {
       const finalUrl = `${url}?${urlParams.toString()}`;
       
       // Debug: Log the final URL to verify format
-      console.log('🔍 Final Lead Search API URL:', finalUrl);
+  
       
       // Use the constructed URL directly
       const response = await axios.get(finalUrl);
@@ -614,7 +644,7 @@ export class LeadService {
       const finalUrl = `${url}?${urlParams.toString()}`;
       
       // Debug: Log the final URL to verify format
-      console.log('🔍 Final Lead Search Created/Assigned API URL:', finalUrl);
+  
       
       // Use the constructed URL directly
       const response = await axios.get(finalUrl);
@@ -725,7 +755,7 @@ export class LeadService {
       const finalUrl = `${url}?${urlParams.toString()}`;
       
       // Debug: Log the final URL to verify format
-      console.log('🔍 Final Lead Search Visible to Admin API URL:', finalUrl);
+  
       
       // Use the constructed URL directly
       const response = await axios.get(finalUrl);

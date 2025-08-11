@@ -123,8 +123,18 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const handleGetRemarks = (property) => setViewingRemarksProperty(property);
 
   const handleStatusUpdate = async (propertyId, newStatus) => {
-    await updateProperty(propertyId, { status: newStatus });
-    handleRefresh();
+    try {
+      const result = await updateProperty(propertyId, { status: newStatus });
+      if (result.success) {
+        customAlert(`✅ Property status updated to: ${newStatus}`);
+      } else {
+        customAlert(`❌ Failed to update property status: ${result.error}`);
+      }
+      handleRefresh();
+    } catch (error) {
+
+      customAlert(`❌ Failed to update property status: ${error.message}`);
+    }
   };
 
   const handleDeleteProperty = (propertyId) => {
@@ -140,7 +150,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
 
   const handleOutOfBox = (property) => {
     // Handle Out of Box action
-    console.log('Out of Box action for property:', property);
+    
     // You can implement any custom logic here
     // For example, show a modal, navigate to a special page, etc.
     customAlert(`🚀 Out of Box action triggered for: ${property.propertyName || property.name}`);
@@ -165,7 +175,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   };
 
   const actionHandlers = {
-    onStatusUpdate: handleStatusUpdate,
+    onStatusChange: handleStatusUpdate,
     onDelete: handleDeleteProperty,
     onUpdate: handleUpdateProperty,
     onAddRemark: handleAddRemark,

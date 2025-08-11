@@ -59,7 +59,7 @@ const UsersSection = () => {
         await getUsersByAdmin(userId);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
+
     }
   };
 

@@ -87,7 +87,7 @@ const MobileLeadList = ({
   const isIndeterminate = selectedLeads.size > 0 && !isAllSelected;
 
   return (
-    <div className="md:hidden space-y-4">
+    <div className="md:hidden space-y-4 max-h-[60vh] overflow-y-auto pb-4">
       {/* Bulk Selection Header */}
       <div className="p-3 bg-gray-50 border rounded-lg flex items-center justify-between">
         <label className="flex items-center gap-3 cursor-pointer">

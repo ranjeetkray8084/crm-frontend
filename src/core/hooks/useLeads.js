@@ -126,15 +126,24 @@ export const useLeads = (companyId, userId, userRole) => {
       const result = await apiCall();
       if (result.success) {
         if (successMsg) customAlert('✅ ' + successMsg);
-        if (shouldReloadLeads) loadLeads(0, 10);
+        if (shouldReloadLeads) {
+          // Don't show error if reload fails, just log it
+          try {
+            await loadLeads(0, 10);
+          } catch (reloadError) {
+    
+          }
+        }
         return { success: true, data: result.data };
       } else {
         customAlert('❌ ' + (result.error || errorMsg));
         return { success: false, error: result.error };
       }
     } catch (err) {
-      customAlert('❌ ' + errorMsg);
-      return { success: false, error: errorMsg };
+      
+      const finalErrorMsg = err.response?.data?.message || err.message || errorMsg;
+      customAlert('❌ ' + finalErrorMsg);
+      return { success: false, error: finalErrorMsg };
     }
   };
 

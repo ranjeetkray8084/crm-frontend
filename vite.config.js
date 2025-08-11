@@ -25,19 +25,19 @@ export default defineConfig({
     port: 5173,       // optional, default is 5173
     proxy: {
       '/api': {
-        target: 'https://backend.leadstracker.in',
+        target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
+                  proxy.on('error', (err, _req, _res) => {
+          // Handle proxy errors silently
+        });
+        proxy.on('proxyReq', (proxyReq, req, _res) => {
+          // Log proxy requests silently
+        });
+        proxy.on('proxyRes', (proxyRes, req, _res) => {
+          // Log proxy responses silently
+        });
         },
       },
     },

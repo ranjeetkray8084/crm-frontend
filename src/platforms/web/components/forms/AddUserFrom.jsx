@@ -4,6 +4,7 @@ import { useUsers } from '../../../../core/hooks/useUsers'
 import { useAuth } from '../../../../shared/contexts/AuthContext'
 import { customAlert } from '../../../../core/utils/alertUtils'
 import { UserService } from '../../../../core/services/user.service'
+import { CompanyService } from '../../../../core/services/company.service'
 
 const AddUserForm = ({ onSuccess }) => {
   const { user } = useAuth()
@@ -11,8 +12,12 @@ const AddUserForm = ({ onSuccess }) => {
   const userRole = user?.role
   const userId = user?.userId || user?.id
 
-  // Use the useUsers hook instead of direct service
-  const { createUser, loading } = useUsers(companyId, userRole, userId)
+  // Use the useUsers hook for non-developers, direct service for developers
+  const { createUser: createUserHook, loading: hookLoading } = useUsers(companyId, userRole, userId)
+  const [directLoading, setDirectLoading] = useState(false)
+  
+  // Use hook loading for non-developers, direct loading for developers
+  const loading = userRole === 'DEVELOPER' ? directLoading : hookLoading
 
   const [formData, setFormData] = useState({
     name: '',
@@ -21,11 +26,14 @@ const AddUserForm = ({ onSuccess }) => {
     password: '',
     confirmPassword: '',
     role: userRole === 'DEVELOPER' ? 'DIRECTOR' : 'USER',
-    adminId: ''
+    adminId: '',
+    companyId: userRole === 'DEVELOPER' ? '' : companyId // For developers, let them select company
   })
 
   const [admins, setAdmins] = useState([])
   const [loadingAdmins, setLoadingAdmins] = useState(false)
+  const [companies, setCompanies] = useState([])
+  const [loadingCompanies, setLoadingCompanies] = useState(false)
 
   // Get available roles based on current user's role
   const getAvailableRoles = useCallback(() => {
@@ -50,37 +58,57 @@ const AddUserForm = ({ onSuccess }) => {
 
   const availableRoles = getAvailableRoles()
 
+  // Load companies for DEVELOPER users
+  const loadCompanies = useCallback(async () => {
+    if (userRole !== 'DEVELOPER') return;
+
+    setLoadingCompanies(true);
+    try {
+      const result = await CompanyService.getAllCompanies();
+      if (result.success) {
+        setCompanies(result.data || []);
+      } else {
+
+        setCompanies([]);
+        customAlert('❌ Failed to load companies: ' + result.error);
+      }
+    } catch (error) {
+      setCompanies([]);
+      customAlert('❌ Error loading companies: ' + error.message);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  }, [userRole]);
+
+  // Load companies on component mount for DEVELOPER users
+  useEffect(() => {
+    if (userRole === 'DEVELOPER') {
+      loadCompanies();
+    }
+  }, [userRole, loadCompanies]);
+
   // Load admins for DIRECTOR users only
   const loadAdmins = useCallback(async () => {
     if (!companyId || userRole !== 'DIRECTOR') return;
 
-    console.log('Loading admins for company:', companyId, 'user role:', userRole);
     setLoadingAdmins(true);
     try {
       // Try the specific company admins endpoint first
-      console.log('Trying admin endpoint...');
       const result = await UserService.getAdminRoleByCompany(companyId);
-      console.log('Admin endpoint result:', result);
 
       if (result.success && result.data && result.data.length > 0) {
-        console.log('Admins loaded successfully:', result.data);
         setAdmins(result.data || []);
       } else {
-        console.log('No admins found for company, trying fallback...');
         // Fallback: try to get all users and filter for admins
         const allUsersResult = await UserService.getAllUsersByCompany(companyId);
-        console.log('All users result:', allUsersResult);
         if (allUsersResult.success) {
           const adminUsers = allUsersResult.data.filter(user => user.role === 'ADMIN');
-          console.log('Admins found via fallback:', adminUsers);
           setAdmins(adminUsers);
         } else {
-          console.error('Failed to load admins via fallback:', allUsersResult.error);
           setAdmins([]);
         }
       }
     } catch (error) {
-      console.error('Error loading admins:', error);
       setAdmins([]);
     } finally {
       setLoadingAdmins(false);
@@ -105,6 +133,9 @@ const AddUserForm = ({ onSuccess }) => {
 
   // Form validation
   const isFormValid = useCallback(() => {
+    // For developers, use selected company ID, for others use their company ID
+    const selectedCompanyId = userRole === 'DEVELOPER' ? formData.companyId : companyId;
+    
     const baseValid = (
       formData.name.trim() &&
       formData.email.trim() &&
@@ -112,7 +143,7 @@ const AddUserForm = ({ onSuccess }) => {
       formData.password.trim() &&
       formData.confirmPassword.trim() &&
       formData.role &&
-      companyId &&
+      selectedCompanyId &&
       availableRoles.length > 0
     );
 
@@ -138,8 +169,11 @@ const AddUserForm = ({ onSuccess }) => {
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
-    if (!companyId) {
-      customAlert('❌ Company ID not found. Please login again.');
+    // For developers, use selected company ID, for others use their company ID
+    const selectedCompanyId = userRole === 'DEVELOPER' ? formData.companyId : companyId;
+
+    if (!selectedCompanyId) {
+      customAlert(userRole === 'DEVELOPER' ? '❌ Please select a company.' : '❌ Company ID not found. Please login again.');
       return;
     }
 
@@ -162,16 +196,32 @@ const AddUserForm = ({ onSuccess }) => {
         password: formData.password,
         confirmPassword: formData.confirmPassword,
         role: role,
-        company: { id: parseInt(companyId, 10) },
+        company: { id: parseInt(selectedCompanyId, 10) },
         admin: role === "USER" && adminId ? { userId: parseInt(adminId, 10) } : null
       };
 
       // Remove confirmPassword before sending (backend validation)
       delete user.confirmPassword;
 
-      const result = await createUser(user);
+      let result;
+      if (userRole === 'DEVELOPER') {
+        // For developers, use direct API call
+        setDirectLoading(true);
+        try {
+          result = await UserService.createUser(user);
+        } finally {
+          setDirectLoading(false);
+        }
+      } else {
+        // For other roles, use the hook
+        result = await createUserHook(user);
+      }
 
       if (result.success) {
+        // Show success message
+        const roleText = role === 'DIRECTOR' ? 'Director' : role === 'ADMIN' ? 'Admin' : 'User';
+        customAlert(`✅ ${roleText} created successfully!`);
+        
         setFormData({
           name: '',
           email: '',
@@ -179,15 +229,19 @@ const AddUserForm = ({ onSuccess }) => {
           password: '',
           confirmPassword: '',
           role: userRole === 'DEVELOPER' ? 'DIRECTOR' : 'USER',
-          adminId: ''
+          adminId: '',
+          companyId: userRole === 'DEVELOPER' ? '' : companyId
         });
         onSuccess?.();
+      } else {
+        // Show error message if result is not successful
+        customAlert('❌ Error: ' + (result.error || 'Failed to create user'));
       }
     } catch (error) {
 
       customAlert('❌ Error adding user: ' + error.message);
     }
-  }, [formData, companyId, createUser, onSuccess, userRole, userId]);
+  }, [formData, companyId, createUserHook, onSuccess, userRole, userId]);
 
 
   const handleInputChange = useCallback((e) => {
@@ -223,7 +277,7 @@ const AddUserForm = ({ onSuccess }) => {
         </div>
 
         <div className="p-6">
-          {!companyId && (
+          {!companyId && userRole !== 'DEVELOPER' && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
               ⚠️ Company ID not found. Please login again.
             </div>
@@ -237,7 +291,7 @@ const AddUserForm = ({ onSuccess }) => {
 
           {userRole === 'DEVELOPER' && (
             <div className="mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded">
-              ℹ️ As a Developer, you can only create Directors for companies.
+              ℹ️ As a Developer, you can create Directors for any company. Please select the company first.
             </div>
           )}
 
@@ -245,6 +299,50 @@ const AddUserForm = ({ onSuccess }) => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Company selection - only for DEVELOPER */}
+              {userRole === 'DEVELOPER' && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Company *
+                  </label>
+                  <select
+                    name="companyId"
+                    value={formData.companyId}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    disabled={loadingCompanies}
+                  >
+                    <option value="">
+                      {loadingCompanies ? 'Loading companies...' : 'Select Company'}
+                    </option>
+                    {companies.map(company => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                  {companies.length === 0 && !loadingCompanies && (
+                    <div className="text-sm text-red-600 mt-1">
+                      <p>No companies available. Please create a company first.</p>
+                    </div>
+                  )}
+                  {companies.length > 0 && !loadingCompanies && (
+                    <p className="text-sm text-green-600 mt-1">
+                      {companies.length} company(ies) available
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={loadCompanies}
+                    disabled={loadingCompanies}
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                  >
+                    {loadingCompanies ? 'Loading...' : 'Refresh Companies'}
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name *
@@ -399,7 +497,7 @@ const AddUserForm = ({ onSuccess }) => {
               {userRole === 'DEVELOPER' && (
                 <div className="md:col-span-2">
                   <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-                    ℹ️ As a Developer, you can only create Directors. Directors will manage their company operations.
+                    ℹ️ As a Developer, you can create Directors for any company. Directors will manage their company operations and can create admins and users.
                   </div>
                 </div>
               )}

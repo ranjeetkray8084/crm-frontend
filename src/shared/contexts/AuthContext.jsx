@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       const { AuthService } = await import('../../core/services/auth.service');
       await AuthService.logout();
     } catch (error) {
-      // console.error('Logout API call failed:', error);
+      
     } finally {
       // Always clear local data regardless of API call result
       localStorage.removeItem('user');

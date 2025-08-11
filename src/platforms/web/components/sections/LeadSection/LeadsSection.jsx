@@ -116,7 +116,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
       setFollowUpLead(null);
       handleRefresh();
     } catch (error) {
-      // console.error('Error in handleConfirmAddFollowUp:', error);
+      
     }
   };
 
@@ -184,7 +184,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
 
   return (
     <div className="flex justify-center items-start min-h-screen p-4">
-      <div className="bg-white p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
+      <div className="bg-white p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] min-h-[600px] max-h-[85vh] overflow-y-auto">
         <h2 className="text-center text-xl p-2 font-bold text-gray-800">Lead Management</h2>
 
         <LeadToolbar

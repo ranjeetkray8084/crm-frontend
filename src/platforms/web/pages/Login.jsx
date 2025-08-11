@@ -5,6 +5,7 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import ForgetPassword from "./ForgetPassword";
 import { AuthService } from "../../../core/services/auth.service";
+import DeactivatedUserModal from "../components/modals/DeactivatedUserModal";
 
 
 const Login = () => {
@@ -13,6 +14,8 @@ const Login = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
+  const [deactivatedUserEmail, setDeactivatedUserEmail] = useState("");
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -57,7 +60,14 @@ const Login = () => {
           navigate("/dashboard");
         }
       } else {
-        setError(result.error || "Login failed");
+        // Check if user is deactivated
+        if (result.isDeactivated) {
+          setDeactivatedUserEmail(result.userEmail || formData.email);
+          setShowDeactivatedModal(true);
+          setError(""); // Clear error since we're showing the modal
+        } else {
+          setError(result.error || "Login failed");
+        }
       }
     } catch (err) {
       setError(err?.message || "Login failed");
@@ -191,6 +201,13 @@ const Login = () => {
           </motion.div>
         </motion.div>
       </motion.div>
+
+      {/* Deactivated User Modal */}
+      <DeactivatedUserModal
+        isOpen={showDeactivatedModal}
+        onClose={() => setShowDeactivatedModal(false)}
+        userEmail={deactivatedUserEmail}
+      />
     </div>
   );
 };

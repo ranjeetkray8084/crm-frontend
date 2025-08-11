@@ -61,6 +61,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
             <SortableHeader columnKey="bhk" title="BHK" />
             <SortableHeader columnKey="unitDetails" title="Unit" />
             <SortableHeader columnKey="floor" title="Floor" />
+            <SortableHeader columnKey="ownerName" title="Owner/Broker" />
             <SortableHeader columnKey="ownerNumber" title="Owner No." />
             <SortableHeader columnKey="createdAt" title="Created" />
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">

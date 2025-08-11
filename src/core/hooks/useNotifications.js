@@ -52,25 +52,22 @@ export const useNotifications = (userId, companyId) => {
   // Helper for actions that MODIFY data and then refresh the state.
   const executeNotificationAction = useCallback(async (apiCall, successMsg, errorMsg) => {
     if (!userId || !companyId) {
-      console.error('User and Company ID are required');
+
       return { success: false, error: 'User and Company ID are required' };
     }
     
     try {
       const result = await apiCall();
       if (result.success) {
-        console.log(`✅ ${successMsg}`);
         // After a successful action, reload both notifications and the unread count.
         await Promise.all([loadNotifications(), loadUnreadCount()]);
         return { success: true, message: result.message };
       } else {
         setError(result.error);
-        console.error(`❌ ${result.error || errorMsg}`);
         return { success: false, error: result.error };
       }
     } catch (err) {
       setError(errorMsg);
-      console.error(`❌ ${errorMsg}`, err);
       return { success: false, error: errorMsg };
     }
   }, [userId, companyId, loadNotifications, loadUnreadCount]);

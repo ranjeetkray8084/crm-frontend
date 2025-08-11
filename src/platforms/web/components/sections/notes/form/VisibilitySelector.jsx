@@ -10,14 +10,14 @@ const visibilityOptions = {
     ],
     ADMIN: [
         { value: 'ONLY_ME', label: '🔒 Only Me' },
-        { value: 'ME_DIRECTOR', label: '🎯 Me and DIrector' },
+        { value: 'ME_AND_DIRECTOR', label: '🎯 Me and Director' },
         { value: 'ALL_USERS', label: '👥 All Users' },
         { value: 'SPECIFIC_USERS', label: '👤 Specific Users' }
     ],
     USER: [
         { value: 'ONLY_ME', label: '🔒 Only Me' },
-        { value: 'ME_DIRECTOR', label: '🎯 Me and Director' },
-        { value: 'ME_ADMIN', label: '🛡️ Me and Admin ' }
+        { value: 'ME_AND_DIRECTOR', label: '🎯 Me and Director' },
+        { value: 'ME_AND_ADMIN', label: '🛡️ Me and Admin' }
     ]
 };
 

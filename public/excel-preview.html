@@ -161,6 +161,45 @@
             padding: 12px;
             margin: 10px;
             border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        /* Error container styling */
+        .error-container {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .error-details {
+            background-color: #fff1f1;
+            border: 1px solid #fecaca;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .error-details p {
+            margin: 5px 0;
         }
 
         /* Column selection highlight */
@@ -284,6 +323,38 @@
             return true;
         }
 
+        // Function to check authentication and provide login option if needed
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            if (!token || !user) {
+                document.getElementById('scrollContainer').innerHTML = `
+                    <div class="error-container">
+                        <div class="error-icon">⚠️</div>
+                        <div class="error-message">Authentication Required</div>
+                        <div class="error-details">
+                            <p>You need to be logged in to view this task.</p>
+                            <p>Please log in to your account and try again.</p>
+                        </div>
+                        <button onclick="redirectToLogin()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 16px;">Login</button>
+                    </div>
+                `;
+                return false;
+            }
+            return true;
+        }
+
+        // Function to redirect to login page
+        function redirectToLogin() {
+            // Store current URL to redirect back after login
+            const currentUrl = window.location.href;
+            localStorage.setItem('redirectAfterLogin', currentUrl);
+
+            // Redirect to login page
+            window.location.href = '/login';
+        }
+
         // Load Excel data on page load
         window.onload = function () {
             if (!taskId || !companyId) {
@@ -298,19 +369,15 @@
                 return;
             }
 
-            const user = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
-
-            if (!user || !token) {
-                document.getElementById('scrollContainer').innerHTML =
-                    '<div class="error">❌ Please login first to access Excel data. <br><br><button onclick="window.close()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button></div>';
+            // Check authentication before proceeding
+            if (!checkAuthentication()) {
                 return;
             }
 
             // Add event listener as fallback for add column button
             const addColumnBtn = document.getElementById('addColumnBtn');
             if (addColumnBtn) {
-                addColumnBtn.addEventListener('click', function(e) {
+                addColumnBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     addNewColumn();
                 });
@@ -320,38 +387,42 @@
             loadExcelData();
         };
 
-        async function tryMultiplePortsWithAuth(authHeaders) {
-            const ports = [8080, 8081, 9090, 3000];
+        async function tryLocalApiCall(authHeaders) {
+            console.log('Making API call to localhost:8080 with auth headers:', JSON.stringify(authHeaders));
+            console.log('Task ID:', taskId);
+            console.log('Company ID:', companyId);
 
-            for (const port of ports) {
-                try {
-                    const apiUrl = `https://backend.leadstracker.in/api/task-files/${taskId}/preview?companyId=${companyId}`;
+            try {
+                const apiUrl = `http://localhost:8080/api/task-files/${taskId}/preview?companyId=${companyId}`;
+                console.log(`Attempting to connect to: ${apiUrl}`);
 
-                    const response = await fetch(apiUrl, {
-                        method: 'GET',
-                        credentials: 'include',
-                        headers: authHeaders
-                    });
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: authHeaders
+                });
 
-                    if (response.ok) {
-                        const contentType = response.headers.get('content-type');
-                        if (contentType && contentType.includes('application/json')) {
-                            return await response.json();
-                        }
-                    } else if (response.status === 403) {
-                        throw new Error('Access denied. You may not have permission to view this task.');
-                    } else if (response.status === 401) {
-                        throw new Error('Authentication required. Please login again.');
+                console.log(`Response status from ${apiUrl}:`, response.status);
+
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    console.log('Response content type:', contentType);
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        console.log('Successfully received data from localhost:8080');
+                        return data;
                     }
-                } catch (e) {
-                    if (e.message.includes('Access denied') || e.message.includes('Authentication required')) {
-                        throw e;
-                    }
-                    continue;
+                } else if (response.status === 403) {
+                    throw new Error('Access denied. You may not have permission to view this task.');
+                } else if (response.status === 401) {
+                    throw new Error('Authentication required. Please login again.');
+                } else {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
                 }
+            } catch (e) {
+                console.error(`Error connecting to localhost:8080:`, e.message);
+                throw e;
             }
-
-            throw new Error('Could not connect to backend server on any common port (8080, 8081, 9090, 3000)');
         }
 
         async function loadExcelData() {
@@ -360,6 +431,30 @@
 
                 // Get authentication token from localStorage
                 const token = localStorage.getItem('token');
+                const user = localStorage.getItem('user');
+
+                // Debug info for authentication issues
+                console.log('Token exists:', !!token);
+                console.log('User exists:', !!user);
+
+                // Additional token validation for debugging
+                if (token) {
+                    try {
+                        // Basic JWT validation check
+                        const parts = token.split('.');
+                        if (parts.length !== 3) {
+                            console.error('Invalid token format');
+                        } else {
+                            const payload = JSON.parse(atob(parts[1]));
+                            console.log('Token expiration:', new Date(payload.exp * 1000));
+                            console.log('Current time:', new Date());
+                            console.log('Token expired:', payload.exp < Date.now() / 1000);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing token:', e);
+                    }
+                }
+
                 const authHeaders = {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
@@ -368,21 +463,26 @@
                 // Add Authorization header if token exists
                 if (token) {
                     authHeaders['Authorization'] = `Bearer ${token}`;
+                    console.log('Authorization header added');
                 }
 
                 try {
+                    console.log(`Attempting to fetch from: /api/task-files/${taskId}/preview?companyId=${companyId}`);
                     const response = await fetch(`/api/task-files/${taskId}/preview?companyId=${companyId}`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: authHeaders
                     });
 
+                    console.log('Response status:', response.status);
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
+                        console.log('Content-Type:', contentType);
                         if (contentType && contentType.includes('application/json')) {
                             data = await response.json();
+                            console.log('Successfully received JSON data via proxy');
                         } else {
-                            throw new Error('Non-JSON response from relative URL');
+                            throw new Error('Non-JSON response from proxy URL');
                         }
                     } else if (response.status === 403) {
                         throw new Error('Access denied. You may not have permission to view this task.');
@@ -391,12 +491,10 @@
                     } else {
                         throw new Error(`HTTP ${response.status}`);
                     }
-                } catch (relativeError) {
-                    if (window.location.port === '5173') {
-                        data = await tryMultiplePortsWithAuth(authHeaders);
-                    } else {
-                        throw relativeError;
-                    }
+                } catch (proxyError) {
+                    console.log('Error with proxy URL:', proxyError.message);
+                    console.log('Trying direct localhost:8080 connection');
+                    data = await tryLocalApiCall(authHeaders);
                 }
 
                 if (!Array.isArray(data)) {
@@ -407,6 +505,7 @@
                 renderTable();
             } catch (error) {
                 let errorMessage = error.message;
+                console.error('Excel preview error:', error);
 
                 if (error.message.includes('Could not connect to backend')) {
                     errorMessage = 'Backend server not running. Please start the Spring Boot application on port 8080.';
@@ -420,13 +519,33 @@
                     errorMessage = 'Network error. Please check your connection.';
                 }
 
+                // Check if token might be expired or invalid
+                const token = localStorage.getItem('token');
+                if (token) {
+                    try {
+                        // Basic JWT expiration check
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const currentTime = Date.now() / 1000;
+                        if (payload.exp < currentTime) {
+                            errorMessage = 'Your session has expired. Please login again.';
+                        }
+                    } catch (e) {
+                        errorMessage = 'Invalid authentication token. Please login again.';
+                    }
+                }
+
+                // Create a more detailed error message with debugging info
                 document.getElementById('scrollContainer').innerHTML =
                     `<div class="error">❌ Failed to load Excel data: ${errorMessage}<br><br>
                      <strong>Debug Info:</strong><br>
                      Task ID: ${taskId}<br>
                      Company ID: ${companyId}<br>
                      User ID: ${userId}<br>
-                     User Role: ${userRole}<br><br>
+                     User Role: ${userRole}<br>
+                     Token exists: ${!!localStorage.getItem('token')}<br>
+                     User data exists: ${!!localStorage.getItem('user')}<br><br>
+                     <p>Please ensure you are logged in and have permission to view this task.</p>
+                     <p>If the problem persists, try logging out and logging back in.</p><br>
 
                      <button onclick="loadExcelData()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🔄 Retry</button>
                      <button onclick="window.close()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
@@ -532,6 +651,12 @@
 
         async function makeApiCall(endpoint, options = {}) {
             const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            console.log('Making API call to endpoint:', endpoint);
+            console.log('Token exists:', !!token);
+            console.log('User exists:', !!user);
+
             const defaultHeaders = {
                 'Accept': 'application/json'
             };
@@ -539,6 +664,22 @@
             // Add Authorization header if token exists
             if (token) {
                 defaultHeaders['Authorization'] = `Bearer ${token}`;
+
+                // Additional token validation for debugging
+                try {
+                    // Basic JWT validation check
+                    const parts = token.split('.');
+                    if (parts.length !== 3) {
+                        console.error('Invalid token format');
+                    } else {
+                        const payload = JSON.parse(atob(parts[1]));
+                        console.log('Token expiration:', new Date(payload.exp * 1000));
+                        console.log('Current time:', new Date());
+                        console.log('Token expired:', payload.exp < Date.now() / 1000);
+                    }
+                } catch (e) {
+                    console.error('Error parsing token:', e);
+                }
             }
 
             if (options.body && !options.headers?.['Content-Type']) {
@@ -554,14 +695,36 @@
                 ...options
             };
 
-            let apiUrl;
-            if (window.location.port === '5173') {
-                apiUrl = `https://backend.leadstracker.in${endpoint}`;
-            } else {
-                apiUrl = endpoint;
+            console.log('Request headers:', JSON.stringify(mergedOptions.headers));
+            if (options.body) {
+                console.log('Request body:', typeof options.body === 'string' ? options.body : JSON.stringify(options.body));
             }
 
-            return await fetch(apiUrl, mergedOptions);
+            let apiUrl;
+            if (window.location.port === '5173' || window.location.port === '5174') {
+                // Try proxy first, then fallback to direct localhost:8080
+                apiUrl = endpoint;
+                console.log('Development mode detected, using proxy to localhost:8080');
+            } else {
+                apiUrl = endpoint;
+                console.log('Using relative backend URL');
+            }
+
+            console.log(`Attempting to fetch from: ${apiUrl}`);
+            let response;
+
+            try {
+                response = await fetch(apiUrl, mergedOptions);
+                console.log('Response status:', response.status);
+            } catch (fetchError) {
+                console.log('Proxy failed, trying direct localhost:8080 connection');
+                const directUrl = `http://localhost:8080${endpoint}`;
+                console.log(`Attempting direct fetch from: ${directUrl}`);
+                response = await fetch(directUrl, mergedOptions);
+                console.log('Direct response status:', response.status);
+            }
+
+            return response;
         }
 
         async function updateCell(row, col, newValue) {
@@ -635,12 +798,12 @@
         async function addNewColumn() {
             console.log('addNewColumn function called');
             alert('Add Column button clicked!'); // Temporary alert for testing
-            
+
             try {
                 // Get the current number of columns
                 const currentColCount = currentData.length > 0 ? Math.max(...currentData.map(row => row.length)) : 0;
                 console.log('Current column count:', currentColCount);
-                
+
                 // Add empty column to all rows locally first
                 currentData.forEach(row => {
                     row.push('');
@@ -652,17 +815,17 @@
                 }
 
                 console.log('Added column locally, currentData:', currentData);
-                
+
                 // Re-render the table immediately
                 renderTable();
-                
+
                 console.log('Table re-rendered');
-                
+
                 // Try to make API call to persist the column (but don't block if it fails)
                 try {
                     const endpoint = `/api/task-files/${taskId}/add-column?companyId=${companyId}`;
                     console.log('Making API call to:', endpoint);
-                    
+
                     const response = await makeApiCall(endpoint, {
                         method: "POST"
                     });
@@ -678,7 +841,7 @@
                     console.warn('Backend API not available, column added locally only:', apiError.message);
                     // Don't show alert to user since column was added locally
                 }
-                
+
             } catch (e) {
                 console.error('Error in addNewColumn:', e);
                 alert(`Error adding column: ${e.message}`);

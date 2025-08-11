@@ -110,6 +110,7 @@ function Dashboard() {
       case 'ViewCompany': return <CompaniesSection />;
       case 'addCompany': return <AddCompanyForm />;
       case 'User': return <AddAdmin />;
+      case 'AddAdmin': return <AddAdmin />;
       case 'Lead': return <AddLeadForm />;
       case 'Properties': return <AddPropertyForm />;
       case 'Notes': return <AddNoteFormWrapper />;
@@ -125,9 +126,9 @@ function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden">
       {/* Sidebar - always visible on desktop */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Sidebar
           userRole={userRole}
           activeSection={activeSection}
@@ -145,7 +146,7 @@ function Dashboard() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 bg-black bg-opacity-50 flex"
+            className="fixed inset-0 z-50 bg-black bg-opacity-50 flex lg:hidden"
           >
             <Sidebar
               userRole={userRole}
@@ -166,7 +167,7 @@ function Dashboard() {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Topbar
           userName={userName}
           userRole={userRole}
@@ -174,14 +175,16 @@ function Dashboard() {
           onLogout={handleLogout}
           onAddAction={(action) => setActiveSection(action)}
           onSectionChange={setActiveSection}
-          onSidebarToggle={() => setShowSidebar(true)} // Pass trigger to Topbar
+          onSidebarToggle={() => setShowSidebar(true)} 
         />
-        <div className="p-4 md:p-6 overflow-y-auto flex-1">
-          {renderContent()}
-        </div>
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 max-w-7xl">
+            <div className="min-h-full">
+              {renderContent()}
+            </div>
+          </div>
+        </main>
       </div>
-      
-
     </div>
   );
 }

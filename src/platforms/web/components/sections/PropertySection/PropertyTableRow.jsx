@@ -92,6 +92,16 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.floor || 'N/A'}</td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
+        <div className="font-medium" title={property.ownerName}>
+          {property.ownerName || 'N/A'}
+        </div>
+        {property.ownerName && (
+          <div className="text-xs text-gray-500">
+            {property.referenceName ? `Ref: ${property.referenceName}` : 'Direct'}
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
         {property.ownerContact || property.ownerNumber || 'N/A'}
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">

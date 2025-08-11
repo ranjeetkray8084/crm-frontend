@@ -36,6 +36,13 @@
   z-index: 50;
 }
 
+/* Ensure action menus are always visible */
+[role="menu"] {
+  z-index: 9999 !important;
+  transform: translateZ(0);
+  contain: layout;
+}
+
 /* Smooth transitions for hover effects */
 .transition-all {
   transition: all 0.2s ease-in-out;
@@ -58,4 +65,13 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Sticky header for tables */
+.sticky-header thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f9fafb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

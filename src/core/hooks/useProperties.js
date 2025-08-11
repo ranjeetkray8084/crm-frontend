@@ -95,7 +95,7 @@ export const useProperties = (companyId, userId, userRole) => {
     [userInfo]
   );
 
-  const executeApiCall = async (apiCall, successMsg, errorMsg) => {
+  const executeApiCall = async (apiCall, successMsg, errorMsg, shouldReloadProperties = true) => {
     if (!userInfo.companyId) {
       customAlert('Company ID is missing.');
       return { success: false, error: 'Company ID missing' };
@@ -104,13 +104,24 @@ export const useProperties = (companyId, userId, userRole) => {
       const result = await apiCall();
       if (result.success) {
         customAlert(`✅ ${successMsg}`);
+        if (shouldReloadProperties) {
+          // Don't show error if reload fails, just log it
+          try {
+            await loadProperties(0, 10);
+          } catch (reloadError) {
+    
+          }
+        }
         return { success: true, data: result.data };
       } else {
-        throw new Error(result.error || errorMsg);
+        customAlert(`❌ ${result.error || errorMsg}`);
+        return { success: false, error: result.error };
       }
     } catch (err) {
-      customAlert(`❌ ${err.message || errorMsg}`);
-      return { success: false, error: err.message };
+      
+      const finalErrorMsg = err.response?.data?.message || err.message || errorMsg;
+      customAlert(`❌ ${finalErrorMsg}`);
+      return { success: false, error: finalErrorMsg };
     }
   };
 
