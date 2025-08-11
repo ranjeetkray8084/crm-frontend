@@ -3,6 +3,7 @@ import { AuthProvider } from "./shared/contexts/AuthContext";
 import Dashboard from "./platforms/web/pages/Dashboard";
 import Login from "./platforms/web/pages/Login";
 import ExcelEditorPage from "./platforms/web/pages/ExcelEditorPage";
+import SecurityTest from "./pages/SecurityTest";
 
 import { useEffect, useState } from "react";
 import CustomAlert from "./platforms/web/components/common/CustomAlert";
@@ -23,6 +24,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/excel-preview/:taskId" element={<ExcelEditorPage />} />
+          <Route path="/security-test" element={<SecurityTest />} />
         </Routes>
       </Router>
 

@@ -73,13 +73,7 @@ axiosInstance.interceptors.request.use(
     config.headers['X-Request-Timestamp'] = Date.now().toString();
 
     // Obfuscate sensitive headers
-    if (config.data && typeof config.data === 'object') {
-      // Remove sensitive fields from request data if needed
-      const { password, confirmPassword, ...safeData } = config.data;
-      if (Object.keys(safeData).length > 0) {
-        config.data = safeData;
-      }
-    }
+    // Removed code that stripped password and confirmPassword from request data
 
     return config;
   },
