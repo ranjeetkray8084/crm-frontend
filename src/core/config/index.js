@@ -69,14 +69,14 @@ export const environments = {
   
   production: {
     api: {
-      baseURL: 'https://api.yourcrm.com/api'
+      baseURL: 'https://backend.leadstracker.in/api'
     },
     debug: false
   },
   
   mobile: {
     api: {
-      baseURL: 'https://api.yourcrm.com/api'
+      baseURL: 'https://backend.leadstracker.in/api'
     },
     storage: {
       // Use AsyncStorage for React Native

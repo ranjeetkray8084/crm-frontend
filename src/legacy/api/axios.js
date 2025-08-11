@@ -1,10 +1,8 @@
 // src/utils/axios.js
 import axios from "axios";
 
-// ✅ Backend API base URL - Force HTTPS in production
-const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? "https://backend.leadstracker.in/"
-  : "http://localhost:8080/";
+// ✅ Backend API base URL - Use hosted backend for all environments
+const BASE_URL = "https://backend.leadstracker.in";
 
 // ✅ Security configuration
 const SECURITY_CONFIG = {

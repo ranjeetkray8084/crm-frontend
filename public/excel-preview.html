@@ -388,12 +388,12 @@
         };
 
         async function tryLocalApiCall(authHeaders) {
-            console.log('Making API call to localhost:8080 with auth headers:', JSON.stringify(authHeaders));
+            console.log('Making API call to backend.leadstracker.in with auth headers:', JSON.stringify(authHeaders));
             console.log('Task ID:', taskId);
             console.log('Company ID:', companyId);
 
             try {
-                const apiUrl = `http://localhost:8080/api/task-files/${taskId}/preview?companyId=${companyId}`;
+                const apiUrl = `https://backend.leadstracker.in/api/task-files/${taskId}/preview?companyId=${companyId}`;
                 console.log(`Attempting to connect to: ${apiUrl}`);
 
                 const response = await fetch(apiUrl, {
@@ -409,7 +409,7 @@
                     console.log('Response content type:', contentType);
                     if (contentType && contentType.includes('application/json')) {
                         const data = await response.json();
-                        console.log('Successfully received data from localhost:8080');
+                        console.log('Successfully received data from backend.leadstracker.in');
                         return data;
                     }
                 } else if (response.status === 403) {
@@ -419,8 +419,8 @@
                 } else {
                     throw new Error(`HTTP ${response.status} - ${response.statusText}`);
                 }
-            } catch (e) {
-                console.error(`Error connecting to localhost:8080:`, e.message);
+                } catch (e) {
+                console.error(`Error connecting to backend.leadstracker.in:`, e.message);
                 throw e;
             }
         }
@@ -702,9 +702,9 @@
 
             let apiUrl;
             if (window.location.port === '5173' || window.location.port === '5174') {
-                // Try proxy first, then fallback to direct localhost:8080
+                // Try proxy first, then fallback to direct hosted backend
                 apiUrl = endpoint;
-                console.log('Development mode detected, using proxy to localhost:8080');
+                console.log('Development mode detected, using proxy to backend.leadstracker.in');
             } else {
                 apiUrl = endpoint;
                 console.log('Using relative backend URL');
@@ -717,8 +717,8 @@
                 response = await fetch(apiUrl, mergedOptions);
                 console.log('Response status:', response.status);
             } catch (fetchError) {
-                console.log('Proxy failed, trying direct localhost:8080 connection');
-                const directUrl = `http://localhost:8080${endpoint}`;
+                console.log('Proxy failed, trying direct backend.leadstracker.in connection');
+                const directUrl = `https://backend.leadstracker.in${endpoint}`;
                 console.log(`Attempting direct fetch from: ${directUrl}`);
                 response = await fetch(directUrl, mergedOptions);
                 console.log('Direct response status:', response.status);
