@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // ✅ Backend API base URL - pointing to Spring Boot backend
-const BASE_URL = "http://localhost:8082";
+const BASE_URL = "https://backend.leadstracker.in";
 
 // ✅ Security configuration
 const SECURITY_CONFIG = {
