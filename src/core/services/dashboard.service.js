@@ -1,6 +1,6 @@
 // Dashboard Service - Modern implementation
 import axios from '../../legacy/api/axios';
-import { API_ENDPOINTS } from './api.endpoints';
+import { API_ENDPOINTS, buildUrl } from './api.endpoints';
 
 export class DashboardService {
   /**
@@ -70,7 +70,7 @@ export class DashboardService {
    */
   static getClosedLeadsCountByAdmin(companyId, adminId) {
     return this._request(
-      () => axios.get(API_ENDPOINTS.LEADS.COUNT_CLOSED_BY_ADMIN(companyId, adminId)),
+      () => axios.get(buildUrl(API_ENDPOINTS.LEADS.COUNT_CLOSED_BY_ADMIN(companyId), { adminId })),
       'Failed to load closed leads count for admin'
     );
   }

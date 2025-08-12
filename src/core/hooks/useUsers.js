@@ -31,7 +31,28 @@ export const useUsers = (companyId, role, userId) => {
       }
 
       if (result.success) {
-        setUsers(result.data || []);
+        let filteredUsers = result.data || [];
+        
+        // Additional filtering based on current user role
+        if (role === 'ADMIN') {
+          // Admin should only see USER role users assigned to them
+          filteredUsers = filteredUsers.filter(user => user.role === 'USER');
+          console.log('🔍 useUsers - Admin filtering:', {
+            original: result.data?.length,
+            filtered: filteredUsers.length,
+            users: filteredUsers.map(u => ({ name: u.name, role: u.role }))
+          });
+        } else if (role === 'DIRECTOR') {
+          // Director should see USER role users in company
+          filteredUsers = filteredUsers.filter(user => user.role === 'USER');
+          console.log('🔍 useUsers - Director filtering:', {
+            original: result.data?.length,
+            filtered: filteredUsers.length
+          });
+        }
+        // DEVELOPER role already gets filtered data from backend
+        
+        setUsers(filteredUsers);
       } else {
         setError(result.error);
         customAlert('❌ ' + result.error);

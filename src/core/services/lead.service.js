@@ -1,6 +1,6 @@
 // Lead Service - Reusable for Web & Mobile
 import axios from '../../legacy/api/axios';
-import { API_ENDPOINTS } from './api.endpoints';
+import { API_ENDPOINTS, buildUrl } from './api.endpoints';
 
 export class LeadService {
   /**
@@ -825,9 +825,7 @@ export class LeadService {
    */
   static async countClosedLeadsByAdmin(companyId, adminId) {
     try {
-      const response = await axios.get(API_ENDPOINTS.LEADS.COUNT_CLOSED_BY_ADMIN, {
-        params: { companyId, adminId }
-      });
+      const response = await axios.get(buildUrl(API_ENDPOINTS.LEADS.COUNT_CLOSED_BY_ADMIN(companyId), { adminId }));
       return {
         success: true,
         data: response.data

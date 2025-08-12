@@ -170,7 +170,7 @@ export const useDashboardStats = (companyId, userId, role) => {
         },
         usersOverview: usersOverviewResult.data,
       };
-      
+
       setStats(finalStats);
     } catch (err) {
       setError(err.message || 'Failed to load dashboard stats');

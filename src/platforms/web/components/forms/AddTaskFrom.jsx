@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import TaskUploadForm from '../sections/task/TaskUploadForm';
 import { useTasks } from '../../../../core/hooks/useTasks';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
@@ -10,28 +10,51 @@ const AddTaskForm = () => {
   const userId = user?.userId || user?.id;
   const role = user?.role;
 
-  const { uploadExcelFile, loading } = useTasks(companyId, userId, role);
+  // Debug logging to identify missing companyId issues
+  React.useEffect(() => {
+    if (user && !companyId) {
+      console.error('User authenticated but missing companyId:', user);
+    }
+  }, [user, companyId]);
+
+  const { uploadExcelFile } = useTasks(companyId, userId, role);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   // ✅ Always define as a stable function using useCallback
   const handleUpload = useCallback(async (taskData) => {
+    if (!companyId) {
+      customAlert('❌ Company ID is required. Please log in again.');
+      return { success: false, error: 'Missing company ID' };
+    }
+
+    if (!userId) {
+      customAlert('❌ User ID is required. Please log in again.');
+      return { success: false, error: 'Missing user ID' };
+    }
+
     if (typeof uploadExcelFile !== 'function') {
       customAlert('❌ Upload function not available.');
       return { success: false, error: 'Upload handler not ready' };
     }
 
-    const result = await uploadExcelFile({
-      ...taskData,
-      uploadedBy: userId  // ✅ Ensure backend receives uploadedBy param
-    });
+    setUploadLoading(true);
+    try {
+      const result = await uploadExcelFile({
+        ...taskData,
+        uploadedBy: userId  // ✅ Ensure backend receives uploadedBy param
+      });
 
-    if (result.success) {
-      customAlert('✅ Task uploaded successfully!');
-    } else {
-      customAlert('❌ Failed to upload task: ' + (result.error || 'Unknown error'));
+      if (result.success) {
+        customAlert('✅ Task uploaded successfully!');
+      } else {
+        customAlert('❌ Failed to upload task: ' + (result.error || 'Unknown error'));
+      }
+
+      return result;
+    } finally {
+      setUploadLoading(false);
     }
-
-    return result;
-  }, [uploadExcelFile, userId]);
+  }, [uploadExcelFile, userId, companyId]);
 
   if (authLoading) {
     return (
@@ -50,11 +73,19 @@ const AddTaskForm = () => {
     );
   }
 
+  if (!companyId) {
+    return (
+      <div className="text-center text-red-600 p-8">
+        <p>Company information is missing. Please log in again.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <TaskUploadForm
         onUpload={handleUpload}
-        loading={loading}
+        loading={uploadLoading}
       />
     </div>
   );

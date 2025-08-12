@@ -10,7 +10,10 @@ export const useTasks = (companyId, userId, role) => {
 
   // --- Role-based Tasks Loader ---
   const loadTasksByRole = useCallback(async () => {
-    if (!companyId || !role) return;
+    if (!companyId || !role) {
+      console.warn('loadTasksByRole: Missing companyId or role', { companyId, role });
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -40,7 +43,10 @@ export const useTasks = (companyId, userId, role) => {
   }, [companyId, userId, role]);
 
   const loadAssignedTasks = useCallback(async () => {
-    if (!companyId || !userId) return;
+    if (!companyId || !userId) {
+      console.warn('loadAssignedTasks: Missing companyId or userId', { companyId, userId });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -55,7 +61,10 @@ export const useTasks = (companyId, userId, role) => {
   }, [companyId, userId]);
 
   const loadUploadedTasks = useCallback(async () => {
-    if (!companyId || !userId) return;
+    if (!companyId || !userId) {
+      console.warn('loadUploadedTasks: Missing companyId or userId', { companyId, userId });
+      return;
+    }
 
     setLoading(true);
     try {

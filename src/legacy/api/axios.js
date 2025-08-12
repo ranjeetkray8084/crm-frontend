@@ -65,6 +65,10 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
+      // Debug: Log token attachment
+      console.log('🔑 Token attached to request:', config.url, token.substring(0, 20) + '...');
+    } else {
+      console.warn('⚠️ No token found for request:', config.url);
     }
 
     // Add request timestamp for security

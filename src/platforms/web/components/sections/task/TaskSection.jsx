@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 import { useTasks } from '../../../../../core/hooks/useTasks';
 import { useUsers } from '../../../../../core/hooks/useUsers';
+import { useTaskCreators } from '../../../../../core/hooks/useTaskCreators';
+import { useTaskAssignees } from '../../../../../core/hooks/useTaskAssignees';
 import TaskTable from './TaskTable';
 import UserAssignmentModal from './UserAssignmentModal';
 import TaskToolbar from './TaskToolbar';
@@ -15,6 +17,7 @@ const TaskSection = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [initError, setInitError] = useState(null);
+    const [userDataLoaded, setUserDataLoaded] = useState(false);
 
     // Initialize user info from localStorage
     useEffect(() => {
@@ -60,9 +63,13 @@ const TaskSection = () => {
             }
 
             setUserInfo({ companyId, userId, role: userRole });
+            setUserDataLoaded(true);
 
         } catch (error) {
-            // Error reading localStorage
+            console.error('Error loading user data:', error);
+            setInitError('Failed to load user data. Please log in again.');
+        } finally {
+            setIsLoading(false);
         }
     }, []);
 
@@ -94,13 +101,31 @@ const TaskSection = () => {
         isTaskAssignedToUser,
         refreshTasks,
         clearError
-    } = useTasks(userInfo.companyId, userInfo.userId, userInfo.role);
+    } = useTasks(
+        userDataLoaded ? userInfo.companyId : null, 
+        userDataLoaded ? userInfo.userId : null, 
+        userDataLoaded ? userInfo.role : null
+    );
 
     // Load users for filters based on role
     const { users: companyUsers, loadUsers: loadCompanyUsers } = useUsers(
-        userInfo.companyId,
-        userInfo.role,
-        userInfo.userId
+        userDataLoaded ? userInfo.companyId : null,
+        userDataLoaded ? userInfo.role : null,
+        userDataLoaded ? userInfo.userId : null
+    );
+
+    // Load filtered users for Created By dropdown (DIRECTOR/ADMIN only)
+    const { users: taskCreators, loading: creatorsLoading } = useTaskCreators(
+        userDataLoaded ? userInfo.companyId : null,
+        userDataLoaded ? userInfo.role : null,
+        userDataLoaded ? userInfo.userId : null
+    );
+
+    // Load filtered users for Assigned To dropdown (role-based filtering)
+    const { users: taskAssignees, loading: assigneesLoading } = useTaskAssignees(
+        userDataLoaded ? userInfo.companyId : null,
+        userDataLoaded ? userInfo.role : null,
+        userDataLoaded ? userInfo.userId : null
     );
 
     // Handle global task error
@@ -483,10 +508,17 @@ const TaskSection = () => {
         );
     }, [searchTerm, createdById, assignedToId, assignmentStatus]);
 
+    // Use taskCreators for Created By dropdown (filtered by role)
     const displayUsers = useMemo(() => {
         if (!isAdminOrDirector) return [];
-        return (companyUsers || []).map(u => ({ id: u.id || u.userId, name: u.name || u.username || u.email }));
-    }, [companyUsers, isAdminOrDirector]);
+        return taskCreators || [];
+    }, [taskCreators, isAdminOrDirector]);
+
+    // Use filtered users for Assigned To dropdown (role-based)
+    const assignmentUsers = useMemo(() => {
+        if (!isAdminOrDirector) return [];
+        return taskAssignees || [];
+    }, [taskAssignees, isAdminOrDirector]);
 
     const normalizedIncludes = (text, query) => (text || '').toLowerCase().includes((query || '').toLowerCase());
 
@@ -525,6 +557,49 @@ const TaskSection = () => {
 
         return list;
     }, [tasks, searchTerm, createdById, assignedToId, assignmentStatus]);
+
+    // Show loading state while user data is being loaded
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="ml-3 text-gray-600">Loading user data...</span>
+            </div>
+        );
+    }
+
+    // Show error state if user data failed to load
+    if (initError) {
+        return (
+            <div className="text-center text-red-600 p-8">
+                <p>{initError}</p>
+                <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Reload Page
+                </button>
+            </div>
+        );
+    }
+
+    // Show error if essential user data is missing
+    if (!userInfo.companyId || !userInfo.userId) {
+        return (
+            <div className="text-center text-red-600 p-8">
+                <p>Essential user data is missing. Please log in again.</p>
+                <button 
+                    onClick={() => {
+                        localStorage.clear();
+                        window.location.href = '/';
+                    }} 
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Go to Login
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="flex justify-center items-start p-2">
@@ -573,10 +648,13 @@ const TaskSection = () => {
                                     value={createdById}
                                     onChange={(e) => setCreatedById(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={creatorsLoading}
                                 >
                                     <option value="">All Created By</option>
                                     {displayUsers.map(u => (
-                                        <option key={`creator-${u.id}`} value={u.id}>{u.name}</option>
+                                        <option key={`creator-${u.id}`} value={u.id}>
+                                            {u.isCurrentUser ? 'Me' : u.name}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -588,9 +666,10 @@ const TaskSection = () => {
                                     value={assignedToId}
                                     onChange={(e) => setAssignedToId(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={assigneesLoading}
                                 >
                                     <option value="">All Assigned To</option>
-                                    {displayUsers.map(u => (
+                                    {assignmentUsers.map(u => (
                                         <option key={`assignee-${u.id}`} value={u.id}>{u.name}</option>
                                     ))}
                                 </select>

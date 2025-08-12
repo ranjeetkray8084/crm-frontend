@@ -97,7 +97,7 @@ export const API_ENDPOINTS = {
     SEARCH_VISIBLE_TO_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/visible-to-admin/${adminId}/search`,
     GET_ADMIN_VISIBLE: (companyId, adminId) => `/api/companies/${companyId}/leads/admin-visible/${adminId}`,
     COUNT_VISIBLE_TO_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/count-visible-to-admin/${adminId}`,
-    COUNT_CLOSED_BY_ADMIN: (companyId, adminId) => `/api/companies/${companyId}/leads/count/closed-droped?adminId=${adminId}`,
+    COUNT_CLOSED_BY_ADMIN: (companyId) => `/api/companies/${companyId}/leads/count/closed-droped`,
     COUNT_NEW_CONTACTED: (companyId) => `/api/companies/${companyId}/leads/count/new-contacted`,
     COUNT_DEALS_CLOSE: (companyId) => `/api/companies/${companyId}/leads/count/deals-close`,
     COUNT_SUMMARY: (companyId, userId) => `/api/companies/${companyId}/leads/count/summary/${userId}`
