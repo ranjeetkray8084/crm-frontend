@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Excel Editor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         /* Base styles for the entire page */
         html,
@@ -239,6 +240,162 @@
         let updateTimeout = null;
         let isRendering = false;
 
+        // ✅ Backend API base URL - pointing to Spring Boot backend (from legacy/api/axios.js)
+        const BASE_URL = "https://backend.leadstracker.in";
+
+        // ✅ Security configuration (from legacy/api/axios.js)
+        const SECURITY_CONFIG = {
+            maxRetries: 3,
+            retryDelay: 1000,
+            rateLimit: {
+                maxRequests: 100,
+                timeWindow: 60000, // 1 minute
+            }
+        };
+
+        // ✅ Rate limiting implementation (from legacy/api/axios.js)
+        class RateLimiter {
+            constructor(maxRequests, timeWindow) {
+                this.maxRequests = maxRequests;
+                this.timeWindow = timeWindow;
+                this.requests = [];
+            }
+
+            canMakeRequest() {
+                const now = Date.now();
+                this.requests = this.requests.filter(time => now - time < this.timeWindow);
+                
+                if (this.requests.length < this.maxRequests) {
+                    this.requests.push(now);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        const rateLimiter = new RateLimiter(SECURITY_CONFIG.rateLimit.maxRequests, SECURITY_CONFIG.rateLimit.timeWindow);
+
+        // ✅ Create axios instance with security headers (from legacy/api/axios.js)
+        const axiosInstance = axios.create({
+            baseURL: BASE_URL,
+            timeout: 30000,
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-Client-Version": "1.0.0",
+                "X-Platform": "web"
+            }
+        });
+
+        // ✅ Enhanced request interceptor with security measures (from legacy/api/axios.js)
+        axiosInstance.interceptors.request.use(
+            (config) => {
+                // Rate limiting check
+                if (!rateLimiter.canMakeRequest()) {
+                    return Promise.reject(new Error('Rate limit exceeded. Please try again later.'));
+                }
+
+                // Force HTTPS in production
+                if (config.url && !config.url.startsWith('https://')) {
+                    config.url = config.url.replace('http://', 'https://');
+                }
+
+                // Add authentication token
+                const token = localStorage.getItem('token');
+                if (token) {
+                    config.headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                // Add request timestamp for security
+                config.headers['X-Request-Timestamp'] = Date.now().toString();
+
+                return config;
+            },
+            (error) => {
+                return Promise.reject(error);
+            }
+        );
+
+        // ✅ Enhanced response interceptor with security measures (from legacy/api/axios.js)
+        axiosInstance.interceptors.response.use(
+            (response) => {
+                // Validate response structure
+                if (response.data && typeof response.data === 'object') {
+                    // Remove sensitive data from response if needed
+                    if (response.data.password) {
+                        delete response.data.password;
+                    }
+                }
+                return response;
+            },
+            (error) => {
+                // Enhanced error handling with security
+                if (error.response?.status === 401) {
+                    const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
+                    const isFollowUpEndpoint = error.config?.url?.includes('/followups');
+                    const isOnLogin = window.location.pathname.includes('/login') || window.location.pathname === '/';
+
+                    // Don't logout for follow-up API errors (temporary fix for backend JPA issue)
+                    if (isFollowUpEndpoint) {
+                        return Promise.reject(error);
+                    }
+
+                    // Only logout for auth endpoints or if we're not on login page
+                    if (isAuthEndpoint && !isOnLogin) {
+                        // Clear auth data securely
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        sessionStorage.clear();
+
+                        // Redirect to login
+                        window.location.href = "/";
+                    }
+                }
+
+                // Handle 500 errors (like your JPA parameter binding issue)
+                if (error.response?.status === 500) {
+                    // Don't logout for server errors
+                }
+
+                // Handle rate limiting errors
+                if (error.response?.status === 429) {
+                    // Rate limiting handled
+                }
+
+                // Handle network errors
+                if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
+                    // Network error handled
+                }
+
+                return Promise.reject(error);
+            }
+        );
+
+        // ✅ Add retry mechanism for failed requests (from legacy/api/axios.js)
+        axiosInstance.interceptors.response.use(
+            (response) => response,
+            async (error) => {
+                const { config } = error;
+                
+                if (!config || !config.retry) {
+                    config.retry = 0;
+                }
+
+                if (config.retry >= SECURITY_CONFIG.maxRetries) {
+                    return Promise.reject(error);
+                }
+
+                config.retry += 1;
+                
+                // Exponential backoff
+                const delay = SECURITY_CONFIG.retryDelay * Math.pow(2, config.retry - 1);
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                
+                return axiosInstance(config);
+            }
+        );
+
 
 
 
@@ -387,95 +544,46 @@
             loadExcelData();
         };
 
-        async function tryLocalApiCall(authHeaders) {
+        async function loadExcelDataWithAxios() {
             try {
-                const apiUrl = `http://localhost:8082/api/task-files/${taskId}/preview?companyId=${companyId}`;
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: authHeaders
+                const response = await axiosInstance.get(`/api/task-files/${taskId}/preview`, {
+                    params: { companyId: companyId }
                 });
 
-                if (response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const data = await response.json();
-                        return data;
-                    }
-                } else if (response.status === 403) {
-                    throw new Error('Access denied. You may not have permission to view this task.');
-                } else if (response.status === 401) {
-                    throw new Error('Authentication required. Please login again.');
+                if (response.data && Array.isArray(response.data)) {
+                    return response.data;
                 } else {
-                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                    throw new Error('Invalid data format received from server');
                 }
-                } catch (e) {
-                throw e;
+            } catch (error) {
+                if (error.response?.status === 403) {
+                    throw new Error('Access denied. You may not have permission to view this task.');
+                } else if (error.response?.status === 401) {
+                    throw new Error('Authentication required. Please login again.');
+                } else if (error.response?.status === 404) {
+                    throw new Error('Task not found.');
+                } else {
+                    throw new Error(error.message || 'Failed to load Excel data');
+                }
             }
         }
 
         async function loadExcelData() {
             try {
-                let data;
-
-                // Get authentication token from localStorage
-                const token = localStorage.getItem('token');
-                const user = localStorage.getItem('user');
-
-                const authHeaders = {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                };
-
-                // Add Authorization header if token exists
-                if (token) {
-                    authHeaders['Authorization'] = `Bearer ${token}`;
-                }
-
-                try {
-                    const response = await fetch(`/api/task-files/${taskId}/preview?companyId=${companyId}`, {
-                        method: 'GET',
-                        credentials: 'include',
-                        headers: authHeaders
-                    });
-
-                    if (response.ok) {
-                        const contentType = response.headers.get('content-type');
-                        if (contentType && contentType.includes('application/json')) {
-                            data = await response.json();
-                        } else {
-                            throw new Error('Non-JSON response from proxy URL');
-                        }
-                    } else if (response.status === 403) {
-                        throw new Error('Access denied. You may not have permission to view this task.');
-                    } else if (response.status === 401) {
-                        throw new Error('Authentication required. Please login again.');
-                    } else {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                } catch (proxyError) {
-                    data = await tryLocalApiCall(authHeaders);
-                }
-
-                if (!Array.isArray(data)) {
-                    throw new Error('Invalid data format received from server');
-                }
-
+                const data = await loadExcelDataWithAxios();
                 currentData = JSON.parse(JSON.stringify(data));
                 renderTable();
             } catch (error) {
                 let errorMessage = error.message;
 
-                if (error.message.includes('Could not connect to backend')) {
-                    errorMessage = 'Backend server not running. Please start the Spring Boot application on port 8082.';
+                if (error.message.includes('Network Error')) {
+                    errorMessage = 'Network error. Please check your connection.';
                 } else if (error.message.includes('Access denied')) {
                     errorMessage = 'Access denied. You may not have permission to view this task. Please check with your administrator.';
                 } else if (error.message.includes('Authentication required')) {
                     errorMessage = 'Authentication required. Please login first and try again.';
-                } else if (error.message.includes('non-JSON') || error.message.includes('Unexpected token')) {
-                    errorMessage = 'Authentication required. Please login first and try again.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Network error. Please check your connection.';
+                } else if (error.message.includes('Task not found')) {
+                    errorMessage = 'Task not found. It may have been deleted.';
                 }
 
                 // Check if token might be expired or invalid
@@ -601,50 +709,22 @@
             isRendering = false;
         }
 
-        async function makeApiCall(endpoint, options = {}) {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
-
-            const defaultHeaders = {
-                'Accept': 'application/json'
-            };
-
-            // Add Authorization header if token exists
-            if (token) {
-                defaultHeaders['Authorization'] = `Bearer ${token}`;
-            }
-
-            if (options.body && !options.headers?.['Content-Type']) {
-                defaultHeaders['Content-Type'] = 'application/json';
-            }
-
-            const mergedOptions = {
-                credentials: 'include',
-                headers: {
-                    ...defaultHeaders,
-                    ...options.headers
-                },
-                ...options
-            };
-
-            let apiUrl;
-            if (window.location.port === '5173' || window.location.port === '5174') {
-                // Try proxy first, then fallback to direct local backend
-                apiUrl = endpoint;
-            } else {
-                apiUrl = endpoint;
-            }
-
-            let response;
-
+        async function makeApiCall(endpoint, method = 'GET', data = null) {
             try {
-                response = await fetch(apiUrl, mergedOptions);
-            } catch (fetchError) {
-                const directUrl = `http://localhost:8082${endpoint}`;
-                response = await fetch(directUrl, mergedOptions);
-            }
+                const config = {
+                    method: method,
+                    url: endpoint
+                };
 
-            return response;
+                if (data) {
+                    config.data = data;
+                }
+
+                const response = await axiosInstance(config);
+                return response;
+            } catch (error) {
+                throw error;
+            }
         }
 
         async function updateCell(row, col, newValue) {
@@ -678,37 +758,24 @@
             try {
                 const endpoint = `/api/task-files/${taskId}/update-cell?companyId=${companyId}&row=${row}&col=${col}&newValue=${encodeURIComponent(newValue)}`;
 
-                const response = await makeApiCall(endpoint, {
-                    method: "PATCH"
-                });
+                const response = await makeApiCall(endpoint, 'PATCH');
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-
-                    // Revert on failure
-                    currentData[row][col] = oldValue;
-
-                    if (response.status === 400) {
-                        alert('Invalid request format. Please try again.');
-                    } else if (response.status === 401) {
-                        alert('Session expired. Please refresh the page and login again.');
-                    } else if (response.status === 403) {
-                        alert('Access denied. You may not have permission to edit this task.');
-                    } else if (response.status === 404) {
-                        alert('Task not found. It may have been deleted.');
-                    } else {
-                        alert(`Failed to update cell: ${errorText || 'Unknown error'}`);
-                    }
-                }
-            } catch (e) {
-
+            } catch (error) {
                 // Revert on error
                 currentData[row][col] = oldValue;
 
-                if (e.message.includes('Failed to fetch')) {
-                    alert('Cannot connect to server. Please check if the backend is running.');
+                if (error.response?.status === 400) {
+                    alert('Invalid request format. Please try again.');
+                } else if (error.response?.status === 401) {
+                    alert('Session expired. Please refresh the page and login again.');
+                } else if (error.response?.status === 403) {
+                    alert('Access denied. You may not have permission to edit this task.');
+                } else if (error.response?.status === 404) {
+                    alert('Task not found. It may have been deleted.');
+                } else if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
+                    alert('Cannot connect to server. Please check your connection.');
                 } else {
-                    alert(`Network error: ${e.message}`);
+                    alert(`Failed to update cell: ${error.message || 'Unknown error'}`);
                 }
             } finally {
                 isUpdating = false;
@@ -736,15 +803,7 @@
                 // Try to make API call to persist the column (but don't block if it fails)
                 try {
                     const endpoint = `/api/task-files/${taskId}/add-column?companyId=${companyId}`;
-
-                    const response = await makeApiCall(endpoint, {
-                        method: "POST"
-                    });
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        // Don't show alert to user since column was added locally
-                    }
+                    await makeApiCall(endpoint, 'POST');
                 } catch (apiError) {
                     // Don't show alert to user since column was added locally
                 }
@@ -766,36 +825,28 @@
 
             try {
                 const endpoint = `/api/task-files/${taskId}/delete-column?companyId=${companyId}&colIndex=${selectedColumn}`;
-                const response = await makeApiCall(endpoint, {
-                    method: "DELETE"
+                await makeApiCall(endpoint, 'DELETE');
+
+                // Remove column from local data
+                currentData.forEach(row => {
+                    if (selectedColumn < row.length) {
+                        row.splice(selectedColumn, 1);
+                    }
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
+                selectedColumn = null;
+                document.getElementById('deleteBtn').disabled = true;
+                renderTable();
 
-                    if (response.status === 401) {
-                        alert('Session expired. Please refresh the page and login again.');
-                    } else if (response.status === 400) {
-                        alert('Invalid column index or column does not exist.');
-                    } else {
-                        alert(`Failed to delete column: ${errorText || 'Unknown error'}`);
-                    }
+            } catch (error) {
+                if (error.response?.status === 401) {
+                    alert('Session expired. Please refresh the page and login again.');
+                } else if (error.response?.status === 400) {
+                    alert('Invalid column index or column does not exist.');
+                } else if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
+                    alert('Cannot connect to server. Please check your connection.');
                 } else {
-
-                    // Remove column from local data
-                    currentData.forEach(row => {
-                        if (selectedColumn < row.length) {
-                            row.splice(selectedColumn, 1);
-                        }
-                    });
-
-                    selectedColumn = null;
-                    document.getElementById('deleteBtn').disabled = true;
-                    renderTable();
-                }
-            } catch (e) {
-                if (e.message.includes('Failed to fetch')) {
-                    alert('Cannot connect to server. Please check if the backend is running.');
+                    alert(`Failed to delete column: ${error.message || 'Unknown error'}`);
                 }
             }
         }

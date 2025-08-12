@@ -209,6 +209,11 @@ function Topbar({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           </div>
 
+          {/* Mobile Notification Icon */}
+          <div className="flex-shrink-0">
+            <NotificationDropdown onSectionChange={onSectionChange} />
+          </div>
+
           {/* Mobile User Info */}
           <div className="flex items-center gap-2 bg-blue-600 px-3 py-2 rounded-lg">
             <div className="text-right">

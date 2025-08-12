@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Filter } from 'lucide-react';
 import { useTasks } from '../../../../../core/hooks/useTasks';
 import { useUsers } from '../../../../../core/hooks/useUsers';
 import TaskTable from './TaskTable';
@@ -462,6 +463,7 @@ const TaskSection = () => {
     const [createdById, setCreatedById] = useState('');
     const [assignedToId, setAssignedToId] = useState('');
     const [assignmentStatus, setAssignmentStatus] = useState('ALL'); // ALL | ASSIGNED | UNASSIGNED
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     const isAdminOrDirector = userInfo.role === 'ADMIN' || userInfo.role === 'DIRECTOR';
 
@@ -531,20 +533,42 @@ const TaskSection = () => {
 
                 {/* Toolbar Section */}
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <TaskToolbar
-                        onRefresh={refreshTasks}
-                        searchTerm={searchTerm}
-                        onSearchChange={setSearchTerm}
-                        loading={loading}
-                        taskCount={filteredTasks.length}
-                    />
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <TaskToolbar
+                                onRefresh={refreshTasks}
+                                searchTerm={searchTerm}
+                                onSearchChange={setSearchTerm}
+                                loading={loading}
+                                taskCount={filteredTasks.length}
+                            />
+                        </div>
+                        {/* Mobile Filter Toggle */}
+                        {isAdminOrDirector && (
+                            <button
+                                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                                className="md:hidden ml-3 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors relative"
+                                title="Toggle Filters"
+                            >
+                                <Filter className="h-5 w-5" />
+                                {hasActiveFilters && (
+                                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full"></div>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Filters Section */}
                 {isAdminOrDirector && (
-                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div className={`mb-4 p-4 bg-gray-50 rounded-lg transition-all duration-300 ${
+                        showMobileFilters ? 'block' : 'hidden md:block'
+                    }`}>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1 md:hidden">
+                                    Created By
+                                </label>
                                 <select
                                     value={createdById}
                                     onChange={(e) => setCreatedById(e.target.value)}
@@ -557,6 +581,9 @@ const TaskSection = () => {
                                 </select>
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1 md:hidden">
+                                    Assigned To
+                                </label>
                                 <select
                                     value={assignedToId}
                                     onChange={(e) => setAssignedToId(e.target.value)}
@@ -569,6 +596,9 @@ const TaskSection = () => {
                                 </select>
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1 md:hidden">
+                                    Status
+                                </label>
                                 <select
                                     value={assignmentStatus}
                                     onChange={(e) => setAssignmentStatus(e.target.value)}
@@ -582,16 +612,18 @@ const TaskSection = () => {
                         </div>
 
                         {/* Filter Summary */}
-                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
-                            <div className="text-sm text-gray-600 flex gap-4">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-3 pt-3 border-t border-gray-200 gap-3">
+                            <div className="text-sm text-gray-600 flex flex-col md:flex-row gap-2 md:gap-4">
                                 <span>Showing {filteredTasks.length} of {tasks?.length || 0} tasks</span>
-                                <span className="text-blue-600">Assigned: {filteredTasks.filter(t => t.assignedTo).length}</span>
-                                <span className="text-yellow-600">Pending: {filteredTasks.filter(t => !t.assignedTo).length}</span>
+                                <div className="flex gap-4">
+                                    <span className="text-blue-600">Assigned: {filteredTasks.filter(t => t.assignedTo).length}</span>
+                                    <span className="text-yellow-600">Pending: {filteredTasks.filter(t => !t.assignedTo).length}</span>
+                                </div>
                             </div>
                             {hasActiveFilters && (
                                 <button
                                     onClick={clearAllFilters}
-                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors self-start md:self-auto"
                                 >
                                     Clear Filters
                                 </button>
