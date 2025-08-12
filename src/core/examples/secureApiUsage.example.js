@@ -141,8 +141,6 @@ export const batchSecureRequestsExample = async () => {
 export const getSecurityStatusExample = () => {
   // Get current security status
   const status = secureApiService.getSecurityStatus();
-  
-  console.log('Security Status:', status);
   /*
   Output:
   {
@@ -213,13 +211,10 @@ export const secureErrorHandlingExample = async () => {
   } catch (error) {
     // Security errors are automatically logged
     if (error.message.includes('Request blocked for security reasons')) {
-      console.error('Security violation detected');
       // Handle security violation
     } else if (error.message.includes('Rate limit exceeded')) {
-      console.error('Too many requests');
       // Handle rate limiting
     } else {
-      console.error('API error:', error.message);
       // Handle other errors
     }
     

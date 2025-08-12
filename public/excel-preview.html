@@ -388,28 +388,18 @@
         };
 
         async function tryLocalApiCall(authHeaders) {
-            console.log('Making API call to backend.leadstracker.in with auth headers:', JSON.stringify(authHeaders));
-            console.log('Task ID:', taskId);
-            console.log('Company ID:', companyId);
-
             try {
-                const apiUrl = `https://backend.leadstracker.in/api/task-files/${taskId}/preview?companyId=${companyId}`;
-                console.log(`Attempting to connect to: ${apiUrl}`);
-
+                const apiUrl = `http://localhost:8082/api/task-files/${taskId}/preview?companyId=${companyId}`;
                 const response = await fetch(apiUrl, {
                     method: 'GET',
                     credentials: 'include',
                     headers: authHeaders
                 });
 
-                console.log(`Response status from ${apiUrl}:`, response.status);
-
                 if (response.ok) {
                     const contentType = response.headers.get('content-type');
-                    console.log('Response content type:', contentType);
                     if (contentType && contentType.includes('application/json')) {
                         const data = await response.json();
-                        console.log('Successfully received data from backend.leadstracker.in');
                         return data;
                     }
                 } else if (response.status === 403) {
@@ -420,7 +410,6 @@
                     throw new Error(`HTTP ${response.status} - ${response.statusText}`);
                 }
                 } catch (e) {
-                console.error(`Error connecting to backend.leadstracker.in:`, e.message);
                 throw e;
             }
         }
@@ -433,28 +422,6 @@
                 const token = localStorage.getItem('token');
                 const user = localStorage.getItem('user');
 
-                // Debug info for authentication issues
-                console.log('Token exists:', !!token);
-                console.log('User exists:', !!user);
-
-                // Additional token validation for debugging
-                if (token) {
-                    try {
-                        // Basic JWT validation check
-                        const parts = token.split('.');
-                        if (parts.length !== 3) {
-                            console.error('Invalid token format');
-                        } else {
-                            const payload = JSON.parse(atob(parts[1]));
-                            console.log('Token expiration:', new Date(payload.exp * 1000));
-                            console.log('Current time:', new Date());
-                            console.log('Token expired:', payload.exp < Date.now() / 1000);
-                        }
-                    } catch (e) {
-                        console.error('Error parsing token:', e);
-                    }
-                }
-
                 const authHeaders = {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
@@ -463,24 +430,19 @@
                 // Add Authorization header if token exists
                 if (token) {
                     authHeaders['Authorization'] = `Bearer ${token}`;
-                    console.log('Authorization header added');
                 }
 
                 try {
-                    console.log(`Attempting to fetch from: /api/task-files/${taskId}/preview?companyId=${companyId}`);
                     const response = await fetch(`/api/task-files/${taskId}/preview?companyId=${companyId}`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: authHeaders
                     });
 
-                    console.log('Response status:', response.status);
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
-                        console.log('Content-Type:', contentType);
                         if (contentType && contentType.includes('application/json')) {
                             data = await response.json();
-                            console.log('Successfully received JSON data via proxy');
                         } else {
                             throw new Error('Non-JSON response from proxy URL');
                         }
@@ -492,8 +454,6 @@
                         throw new Error(`HTTP ${response.status}`);
                     }
                 } catch (proxyError) {
-                    console.log('Error with proxy URL:', proxyError.message);
-                    console.log('Trying direct localhost:8080 connection');
                     data = await tryLocalApiCall(authHeaders);
                 }
 
@@ -505,10 +465,9 @@
                 renderTable();
             } catch (error) {
                 let errorMessage = error.message;
-                console.error('Excel preview error:', error);
 
                 if (error.message.includes('Could not connect to backend')) {
-                    errorMessage = 'Backend server not running. Please start the Spring Boot application on port 8080.';
+                    errorMessage = 'Backend server not running. Please start the Spring Boot application on port 8082.';
                 } else if (error.message.includes('Access denied')) {
                     errorMessage = 'Access denied. You may not have permission to view this task. Please check with your administrator.';
                 } else if (error.message.includes('Authentication required')) {
@@ -534,16 +493,9 @@
                     }
                 }
 
-                // Create a more detailed error message with debugging info
+                // Create error message
                 document.getElementById('scrollContainer').innerHTML =
                     `<div class="error">❌ Failed to load Excel data: ${errorMessage}<br><br>
-                     <strong>Debug Info:</strong><br>
-                     Task ID: ${taskId}<br>
-                     Company ID: ${companyId}<br>
-                     User ID: ${userId}<br>
-                     User Role: ${userRole}<br>
-                     Token exists: ${!!localStorage.getItem('token')}<br>
-                     User data exists: ${!!localStorage.getItem('user')}<br><br>
                      <p>Please ensure you are logged in and have permission to view this task.</p>
                      <p>If the problem persists, try logging out and logging back in.</p><br>
 
@@ -653,10 +605,6 @@
             const token = localStorage.getItem('token');
             const user = localStorage.getItem('user');
 
-            console.log('Making API call to endpoint:', endpoint);
-            console.log('Token exists:', !!token);
-            console.log('User exists:', !!user);
-
             const defaultHeaders = {
                 'Accept': 'application/json'
             };
@@ -664,22 +612,6 @@
             // Add Authorization header if token exists
             if (token) {
                 defaultHeaders['Authorization'] = `Bearer ${token}`;
-
-                // Additional token validation for debugging
-                try {
-                    // Basic JWT validation check
-                    const parts = token.split('.');
-                    if (parts.length !== 3) {
-                        console.error('Invalid token format');
-                    } else {
-                        const payload = JSON.parse(atob(parts[1]));
-                        console.log('Token expiration:', new Date(payload.exp * 1000));
-                        console.log('Current time:', new Date());
-                        console.log('Token expired:', payload.exp < Date.now() / 1000);
-                    }
-                } catch (e) {
-                    console.error('Error parsing token:', e);
-                }
             }
 
             if (options.body && !options.headers?.['Content-Type']) {
@@ -695,33 +627,21 @@
                 ...options
             };
 
-            console.log('Request headers:', JSON.stringify(mergedOptions.headers));
-            if (options.body) {
-                console.log('Request body:', typeof options.body === 'string' ? options.body : JSON.stringify(options.body));
-            }
-
             let apiUrl;
             if (window.location.port === '5173' || window.location.port === '5174') {
-                // Try proxy first, then fallback to direct hosted backend
+                // Try proxy first, then fallback to direct local backend
                 apiUrl = endpoint;
-                console.log('Development mode detected, using proxy to backend.leadstracker.in');
             } else {
                 apiUrl = endpoint;
-                console.log('Using relative backend URL');
             }
 
-            console.log(`Attempting to fetch from: ${apiUrl}`);
             let response;
 
             try {
                 response = await fetch(apiUrl, mergedOptions);
-                console.log('Response status:', response.status);
             } catch (fetchError) {
-                console.log('Proxy failed, trying direct backend.leadstracker.in connection');
-                const directUrl = `https://backend.leadstracker.in${endpoint}`;
-                console.log(`Attempting direct fetch from: ${directUrl}`);
+                const directUrl = `http://localhost:8082${endpoint}`;
                 response = await fetch(directUrl, mergedOptions);
-                console.log('Direct response status:', response.status);
             }
 
             return response;
@@ -796,13 +716,9 @@
         }
 
         async function addNewColumn() {
-            console.log('addNewColumn function called');
-            alert('Add Column button clicked!'); // Temporary alert for testing
-
             try {
                 // Get the current number of columns
                 const currentColCount = currentData.length > 0 ? Math.max(...currentData.map(row => row.length)) : 0;
-                console.log('Current column count:', currentColCount);
 
                 // Add empty column to all rows locally first
                 currentData.forEach(row => {
@@ -814,17 +730,12 @@
                     currentData.push(['']);
                 }
 
-                console.log('Added column locally, currentData:', currentData);
-
                 // Re-render the table immediately
                 renderTable();
-
-                console.log('Table re-rendered');
 
                 // Try to make API call to persist the column (but don't block if it fails)
                 try {
                     const endpoint = `/api/task-files/${taskId}/add-column?companyId=${companyId}`;
-                    console.log('Making API call to:', endpoint);
 
                     const response = await makeApiCall(endpoint, {
                         method: "POST"
@@ -832,18 +743,13 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.warn(`Backend API call failed: ${errorText || 'Unknown error'}`);
                         // Don't show alert to user since column was added locally
-                    } else {
-                        console.log(`Successfully added new column ${getColumnLetter(currentColCount)}`);
                     }
                 } catch (apiError) {
-                    console.warn('Backend API not available, column added locally only:', apiError.message);
                     // Don't show alert to user since column was added locally
                 }
 
             } catch (e) {
-                console.error('Error in addNewColumn:', e);
                 alert(`Error adding column: ${e.message}`);
             }
         }

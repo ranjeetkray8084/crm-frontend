@@ -40,7 +40,9 @@ const LeadFilters = ({
       { value: "INSTAGRAM", label: "Instagram" },
       { value: "FACEBOOK", label: "Facebook" },
       { value: "YOUTUBE", label: "YouTube" },
-      { value: "REFERENCE", label: "Reference" }
+      { value: "REFERENCE", label: "Reference" },
+      { value: "NINETY_NINE_ACRES", label: "99acres" },
+      { value: "MAGIC_BRICKS", label: "MagicBricks" }
     ],
     assignedTo: [
       { value: "", label: "All Assignments" },

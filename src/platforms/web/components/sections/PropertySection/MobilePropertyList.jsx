@@ -114,6 +114,10 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
                 <p className="text-sm font-medium">{property.bhk ? `${property.bhk} BHK` : 'N/A'}</p>
               </div>
               <div>
+                <span className="text-xs text-gray-500">Size</span>
+                <p className="text-sm font-medium">{property.size || 'N/A'}</p>
+              </div>
+              <div>
                 <span className="text-xs text-gray-500">Price</span>
                 <p className="text-sm font-medium">
                   {property.price ? `₹${property.price.toLocaleString()}` : 'N/A'}

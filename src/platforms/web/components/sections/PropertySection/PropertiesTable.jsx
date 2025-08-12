@@ -48,7 +48,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
   );
 
   return (
-    <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
+    <div className="hidden md:block overflow-x-auto max-h-[45vh] overflow-y-auto border border-gray-200 rounded-lg">
       <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
         <thead className="bg-gray-50">
           <tr>
@@ -59,6 +59,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
             <SortableHeader columnKey="location" title="Location" />
             <SortableHeader columnKey="sector" title="Sector" />
             <SortableHeader columnKey="bhk" title="BHK" />
+            <SortableHeader columnKey="size" title="Size" />
             <SortableHeader columnKey="unitDetails" title="Unit" />
             <SortableHeader columnKey="floor" title="Floor" />
             <SortableHeader columnKey="ownerName" title="Owner/Broker" />

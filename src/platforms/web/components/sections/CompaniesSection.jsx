@@ -99,7 +99,7 @@ const CompaniesSection = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="max-h-[500px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
+                    <div className="max-h-[350px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
                         <table className="min-w-full table-auto border-collapse bg-white">
                             <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
                                 <tr>
@@ -138,7 +138,7 @@ const CompaniesSection = () => {
                                                     {company.status === 'active' ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
-                                            <td className="border-b px-6 py-4 text-center">
+                                            <td className="border-b px-2 py-2 text-center">
                                                 <ThreeDotMenu
                                                     item={company}
                                                     actions={[

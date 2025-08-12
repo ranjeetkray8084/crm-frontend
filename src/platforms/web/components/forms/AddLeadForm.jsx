@@ -1,9 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { UserPlus, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useLeads } from '../../../../core/hooks/useLeads';
 import { customAlert } from '../../../../core/utils/alertUtils';
-import { useUsers } from '../../../../core/hooks/useUsers';
 
 const AddLeadForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -15,8 +13,9 @@ const AddLeadForm = ({ onSuccess }) => {
     status: '',
     budget: '',
     location: '',
-    requirements: [],
-    customRequirement: '',
+    propertyType: '', // New field for Commercial/Residential
+    transactionType: [], // New field for Purchase/Lease/Rent
+    additionalRequirements: '', // Simple text input for additional requirements
   });
 
   const [loading, setLoading] = useState(false);
@@ -29,49 +28,46 @@ const AddLeadForm = ({ onSuccess }) => {
   const userRole = user.role;
 
   // Use the useLeads hook
-  const { createLead, assignLead } = useLeads(companyId, userId, userRole);
-
-  // Load users for assignment when role allows (DIRECTOR or ADMIN)
-  const { users: allUsers } = useUsers(companyId, userRole, userId);
-
-  const [assignToUserId, setAssignToUserId] = useState('');
-  const [assignToUserName, setAssignToUserName] = useState('');
-
-  const canAssign = userRole === 'DIRECTOR' || userRole === 'ADMIN';
-
-  const assignableUsers = useMemo(() => {
-    if (!canAssign || !Array.isArray(allUsers)) return [];
-    if (userRole === 'DIRECTOR') {
-      // Director can assign to ADMIN and USER
-      return allUsers.filter(u => u.role === 'ADMIN' || u.role === 'USER');
-    }
-    // Admin can assign only to USER
-    return allUsers.filter(u => u.role === 'USER');
-  }, [allUsers, canAssign, userRole]);
+  const { createLead } = useLeads(companyId, userId, userRole);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
     if (name === 'source') {
       setShowReferenceField(value === 'REFERENCE');
     }
+    
+    // Reset transaction type when property type changes
+    if (name === 'propertyType') {
+      setFormData(prev => ({ ...prev, transactionType: [] }));
+    }
   };
 
-  const handleCheckboxChange = (value) => {
+  const handleTransactionTypeChange = (value) => {
     setFormData(prev => {
-      const alreadyChecked = prev.requirements.includes(value);
+      const alreadyChecked = prev.transactionType.includes(value);
       const updated = alreadyChecked
-        ? prev.requirements.filter(v => v !== value)
-        : [...prev.requirements, value];
-      return { ...prev, requirements: updated };
+        ? prev.transactionType.filter(v => v !== value)
+        : [...prev.transactionType, value];
+      return { ...prev, transactionType: updated };
     });
   };
 
   const getFinalRequirement = () => {
-    const final = [...formData.requirements];
-    if (formData.customRequirement.trim()) {
-      final.push(formData.customRequirement.trim());
+    const final = [];
+    
+    // Add property type and transaction type to requirements
+    if (formData.propertyType) {
+      final.push(formData.propertyType);
     }
+    if (formData.transactionType.length > 0) {
+      final.push(...formData.transactionType);
+    }
+    if (formData.additionalRequirements) {
+      final.push(formData.additionalRequirements);
+    }
+    
     return final.join(', ');
   };
 
@@ -86,7 +82,7 @@ const AddLeadForm = ({ onSuccess }) => {
         phone: formData.phone.trim(),
         source: formData.source,
         referenceName: formData.source === 'REFERENCE' ? formData.referenceName.trim() : null,
-        status: formData.status,
+        status: 'NEW', // Always set to NEW for new leads
         budget: formData.budget.trim() || null,
         location: formData.location.trim() || null,
         requirement: getFinalRequirement(),
@@ -96,27 +92,18 @@ const AddLeadForm = ({ onSuccess }) => {
       const result = await createLead(leadData);
 
       if (result.success) {
-        // If assignTo is selected and role allows, assign immediately after create
-        if (canAssign && assignToUserId) {
-          const createdLeadId = result?.data?.leadId || result?.data?.id;
-          if (createdLeadId) {
-            await assignLead(createdLeadId, parseInt(assignToUserId, 10), assignToUserName || 'selected user');
-          }
-        }
         setFormData({
           name: '',
           email: '',
           phone: '',
           source: 'INSTAGRAM',
           referenceName: '',
-          status: '',
           budget: '',
           location: '',
-          requirements: [],
-          customRequirement: '',
+          propertyType: '',
+          transactionType: [],
+          additionalRequirements: '',
         });
-        setAssignToUserId('');
-        setAssignToUserName('');
         if (onSuccess) onSuccess();
       }
     } catch (err) {
@@ -127,11 +114,8 @@ const AddLeadForm = ({ onSuccess }) => {
   };
 
   return (
-    <motion.div
+    <div
       className="max-w-2xl mx-auto"
-      initial={{ opacity: 0, y: -40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
     >
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
@@ -156,6 +140,8 @@ const AddLeadForm = ({ onSuccess }) => {
                 <option value="FACEBOOK">Facebook</option>
                 <option value="YOUTUBE">YouTube</option>
                 <option value="REFERENCE">Reference</option>
+                <option value="NINETY_NINE_ACRES">99acres</option>
+                <option value="MAGIC_BRICKS">MagicBricks</option>
               </select>
             </div>
 
@@ -163,62 +149,123 @@ const AddLeadForm = ({ onSuccess }) => {
               <InputField name="referenceName" label="Reference Name *" value={formData.referenceName} onChange={handleInputChange} required />
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-              <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-4 py-3 border rounded-lg" required>
-                <option value="">Select Status</option>
-                <option value="NEW">New</option>
-                <option value="CONTACTED">Contacted</option>
-                <option value="CLOSED">Dropped</option>
-              </select>
-            </div>
+
           </div>
 
+          {/* Property Type Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Requirement</label>
-            <div className="flex flex-wrap gap-4">
-              {['Commercial', 'Residential', 'Rent', 'Lease', 'Purchase', 'Plot'].map(option => (
-                <label key={option} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.requirements.includes(option)}
-                    onChange={() => handleCheckboxChange(option)}
-                    className="accent-green-500"
-                  />
-                  {option}
-                </label>
-              ))}
+            <label className="block text-sm font-medium text-gray-700 mb-2">Property Type *</label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="propertyType"
+                  value="Commercial"
+                  checked={formData.propertyType === 'Commercial'}
+                  onChange={handleInputChange}
+                  className="accent-green-500"
+                  required
+                />
+                Commercial
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="propertyType"
+                  value="Residential"
+                  checked={formData.propertyType === 'Residential'}
+                  onChange={handleInputChange}
+                  className="accent-green-500"
+                  required
+                />
+                Residential
+              </label>
             </div>
-            <input
-              type="text"
-              placeholder="Type custom requirement"
-              value={formData.customRequirement}
-              onChange={(e) => setFormData(prev => ({ ...prev, customRequirement: e.target.value }))}
-              className="mt-3 w-full px-4 py-2 border rounded-lg"
-            />
           </div>
 
-          {canAssign && (
-            <div className="pt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Assign To (optional)</label>
-              <select
-                value={assignToUserId}
-                onChange={(e) => {
-                  const selected = assignableUsers.find(u => (u.id?.toString() ?? u.userId?.toString()) === e.target.value);
-                  setAssignToUserId(e.target.value);
-                  setAssignToUserName(selected?.name || '');
-                }}
-                className="w-full px-4 py-3 border rounded-lg"
-              >
-                <option value="">-- Select user --</option>
-                {assignableUsers.map(u => (
-                  <option key={u.userId || u.id} value={(u.userId || u.id)?.toString()}>
-                    {u.name} ({u.role})
-                  </option>
-                ))}
-              </select>
+          {/* Transaction Type Selection - Show based on Property Type */}
+          {formData.propertyType && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Transaction Type *</label>
+              <div className="flex gap-4">
+                {formData.propertyType === 'Commercial' ? (
+                  // Commercial options: Purchase, Lease
+                  <>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.transactionType.includes('Purchase')}
+                        onChange={() => handleTransactionTypeChange('Purchase')}
+                        className="accent-green-500"
+                      />
+                      Purchase
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.transactionType.includes('Lease')}
+                        onChange={() => handleTransactionTypeChange('Lease')}
+                        className="accent-green-500"
+                      />
+                      Lease
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.transactionType.includes('Plot')}
+                        onChange={() => handleTransactionTypeChange('Plot')}
+                        className="accent-green-500"
+                      />
+                      Plot
+                    </label>
+                  </>
+                ) : formData.propertyType === 'Residential' ? (
+                  // Residential options: Rent, Purchase
+                  <>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.transactionType.includes('Rent')}
+                        onChange={() => handleTransactionTypeChange('Rent')}
+                        className="accent-green-500"
+                      />
+                      Rent
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.transactionType.includes('Purchase')}
+                        onChange={() => handleTransactionTypeChange('Purchase')}
+                        className="accent-green-500"
+                      />
+                      Purchase
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.transactionType.includes('Plot')}
+                        onChange={() => handleTransactionTypeChange('Plot')}
+                        className="accent-green-500"
+                      />
+                      Plot
+                    </label>
+                  </>
+                ) : null}
+              </div>
             </div>
           )}
+
+          {/* Additional Requirements - Simple Text Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Additional Requirements</label>
+            <input
+              type="text"
+              placeholder="Type any additional requirements..."
+              value={formData.additionalRequirements || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, additionalRequirements: e.target.value }))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
 
           <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
             <button type="button" onClick={() => onSuccess?.()} className="flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
@@ -232,7 +279,7 @@ const AddLeadForm = ({ onSuccess }) => {
           </div>
         </form>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

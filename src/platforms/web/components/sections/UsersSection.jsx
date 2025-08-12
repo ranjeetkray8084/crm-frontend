@@ -226,7 +226,7 @@ const UsersSection = () => {
           ) : (
             /* Full User Table for Director */
             <>
-              <div className="hidden md:block max-h-[400px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
+              <div className="hidden md:block max-h-[300px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
                 <table className="min-w-full table-auto border-collapse bg-white">
                   <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
                     <tr>

@@ -87,6 +87,7 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.sector || 'N/A'}</td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.bhk || 'N/A'}</td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.size || 'N/A'}</td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
         {property.unit || property.unitDetails || 'N/A'}
       </td>
@@ -111,7 +112,7 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
         </div>
       </td>
 
-      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+      <td className="px-2 py-2 whitespace-nowrap text-right text-sm font-medium">
         <ThreeDotMenu
           item={property}
           actions={[

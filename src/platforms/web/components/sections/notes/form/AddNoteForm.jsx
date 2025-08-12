@@ -124,7 +124,9 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
   return (
     <div className="max-h-[85vh] overflow-y-auto animate-fadeIn">
       <div className="flex items-center justify-between mb-6 animate-slideDown">
-        <h2 className="text-2xl font-semibold text-gray-900">Create New Note</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {formData.type === 'NOTE' ? '📝 Create Note' : '📅 Schedule Event'}
+        </h2>
         <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse" />
       </div>
 
@@ -143,12 +145,12 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
           </select>
         </div>
 
-        {/* Date & Time */}
+        {/* Date & Time - Show only for Events */}
         {formData.type === 'EVENT' && (
           <div className="p-4 bg-blue-50 border rounded-lg animate-slideDown">
             <div className="grid grid-cols-2 gap-4">
               <div className="animate-slideUp">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Event Date</label>
                 <input
                   type="date"
                   value={formData.date}
@@ -159,7 +161,7 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
                 />
               </div>
               <div className="animate-slideUp">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Event Time</label>
                 <input
                   type="time"
                   value={formData.time}
@@ -236,13 +238,15 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
           </select>
         </div>
 
-        {/* Content */}
+        {/* Content - Dynamic label based on type */}
         <div className="space-y-2 animate-slideUp">
-          <label className="text-sm font-medium text-gray-700">Content</label>
+          <label className="text-sm font-medium text-gray-700">
+            {formData.type === 'NOTE' ? 'Note Content' : 'Event Description'}
+          </label>
           <textarea
             value={formData.content}
             onChange={(e) => handleInputChange('content', e.target.value)}
-            placeholder="Write your note content..."
+            placeholder={formData.type === 'NOTE' ? 'Write your note content...' : 'Describe the event details...'}
             className="w-full px-4 py-3 border rounded-lg resize-none"
             rows={4}
             disabled={isSubmitting}
@@ -264,7 +268,10 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
           className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Creating...' : 'Create Note'}
+          {isSubmitting 
+            ? (formData.type === 'NOTE' ? 'Creating...' : 'Scheduling...') 
+            : (formData.type === 'NOTE' ? 'Create Note' : 'Schedule Event')
+          }
         </button>
       </div>
     </div>

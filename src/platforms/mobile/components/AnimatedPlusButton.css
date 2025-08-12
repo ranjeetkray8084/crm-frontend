@@ -1,0 +1,120 @@
+.animated-plus-button {
+  position: relative;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  overflow: hidden;
+}
+
+.animated-plus-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.animated-plus-button:active {
+  transform: translateY(0);
+}
+
+/* Plus icon container */
+.plus-icon {
+  position: relative;
+  width: 50%;
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Plus icon lines */
+.horizontal-line,
+.vertical-line {
+  position: absolute;
+  background-color: white;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.horizontal-line {
+  width: 100%;
+  height: 3px;
+}
+
+.vertical-line {
+  width: 3px;
+  height: 100%;
+}
+
+/* Click animation */
+.animated-plus-button.clicked {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.animated-plus-button.clicked .plus-icon {
+  transform: rotate(180deg);
+}
+
+.animated-plus-button.clicked .horizontal-line {
+  transform: scaleX(1.2);
+}
+
+.animated-plus-button.clicked .vertical-line {
+  transform: scaleY(1.2);
+}
+
+/* Ripple effect */
+.animated-plus-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.animated-plus-button.clicked::before {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .animated-plus-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: 56px;
+    height: 56px;
+  }
+  
+  .animated-plus-button:hover {
+    transform: none; /* Disable hover effects on mobile */
+  }
+  
+  .animated-plus-button:active {
+    transform: scale(0.9);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animated-plus-button,
+  .plus-icon,
+  .horizontal-line,
+  .vertical-line,
+  .animated-plus-button::before {
+    transition: none;
+  }
+}

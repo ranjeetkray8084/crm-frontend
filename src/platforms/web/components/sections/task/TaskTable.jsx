@@ -88,7 +88,7 @@ const TaskTable = ({
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
               Status
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
               Actions
             </th>
           </tr>
@@ -134,19 +134,21 @@ const TaskTable = ({
                     {task.assignedTo ? 'Assigned' : 'Pending'}
                   </span>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <TaskActions
-                    task={task}
-                    onOpen={onOpen}
-                    onDownload={onDownload}
-                    onAssign={onAssign}
-                    onUnassign={onUnassign}
-                    onDelete={onDelete}
-                    role={role}
-                    canManageTask={canManageTask}
-                    isTaskAssignedToUser={isTaskAssignedToUser}
-                    loading={loading}
-                  />
+                <td className="px-2 py-2 whitespace-nowrap text-center hover:bg-gray-50 transition-colors duration-150">
+                  <div className="flex justify-center">
+                    <TaskActions
+                      task={task}
+                      onOpen={onOpen}
+                      onDownload={onDownload}
+                      onAssign={onAssign}
+                      onUnassign={onUnassign}
+                      onDelete={onDelete}
+                      role={role}
+                      canManageTask={canManageTask}
+                      isTaskAssignedToUser={isTaskAssignedToUser}
+                      loading={loading}
+                    />
+                  </div>
                 </td>
               </tr>
             ))

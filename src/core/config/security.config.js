@@ -35,7 +35,7 @@ export const securityConfig = {
   // Development environment
   development: {
     api: {
-      baseURL: 'https://backend.leadstracker.in/api',
+      baseURL: '',
       timeout: 30000,
       maxRetries: 3,
       enableHTTPS: false,

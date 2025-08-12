@@ -95,7 +95,7 @@ export const useProperties = (companyId, userId, userRole) => {
     [userInfo]
   );
 
-  const executeApiCall = async (apiCall, successMsg, errorMsg, shouldReloadProperties = true) => {
+  const executeApiCall = async (apiCall, successMsg, errorMsg, shouldReloadProperties = false) => {
     if (!userInfo.companyId) {
       customAlert('Company ID is missing.');
       return { success: false, error: 'Company ID missing' };

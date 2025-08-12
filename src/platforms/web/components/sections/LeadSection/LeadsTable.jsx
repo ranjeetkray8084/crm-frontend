@@ -41,7 +41,7 @@ const LeadsTable = ({
     };
 
     return (
-        <div className="hidden md:block overflow-x-auto max-h-[60vh] overflow-y-auto">
+        <div className="hidden md:block overflow-x-auto max-h-[45vh] overflow-y-auto">
             <table className="min-w-full bg-white border border-gray-200 rounded-lg sticky-header">
                 <thead className="bg-gray-50">
                     <tr>

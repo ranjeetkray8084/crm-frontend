@@ -82,7 +82,7 @@ const AdminTableRow = ({
                     {isActive ? "Active" : "Inactive"}
                 </span>
             </td>
-            <td className="px-6 py-4 text-center">
+            <td className="px-2 py-2 text-center">
                 <ThreeDotMenu
                     item={admin}
                     actions={[

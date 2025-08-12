@@ -99,7 +99,7 @@ function Topbar({
 
   return (
     <header className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg sticky top-0 z-40">
-      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-5">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-3 md:py-4">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           {/* Left section: Welcome + hamburger */}
           <div className="flex items-center justify-between w-full lg:w-auto">
@@ -231,11 +231,14 @@ function Topbar({
         {addOptions.length > 0 && (
           <div className="md:hidden fixed bottom-6 right-6 z-50" ref={phoneDropdownRef}>
             <button 
-              className="flex items-center justify-center w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-200 transform hover:scale-110"
+              className="mobile-plus-btn flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-full shadow-2xl transition-all duration-300 transform active:scale-95 relative overflow-hidden"
               onClick={() => setShowPhoneDropdown(!showPhoneDropdown)}
               aria-label="Quick Add Menu"
             >
-              <Plus size={24} />
+              <div className="plus-icon-container transition-transform duration-300">
+                <Plus size={24} className="transition-all duration-300" />
+              </div>
+              <div className="ripple-effect absolute inset-0 rounded-full bg-white opacity-0 scale-0 transition-all duration-300"></div>
             </button>
 
             <AnimatePresence>

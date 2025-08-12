@@ -75,3 +75,70 @@
   background-color: #f9fafb;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+/* Mobile Plus Button Animation */
+.mobile-plus-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-plus-btn:active {
+  transform: scale(0.95);
+}
+
+.mobile-plus-btn:active .plus-icon-container {
+  transform: rotate(180deg);
+}
+
+.mobile-plus-btn:active .ripple-effect {
+  opacity: 0.3;
+  transform: scale(2);
+}
+
+/* Pulse animation for attention */
+.mobile-plus-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* Hover effect for desktop (when testing) */
+@media (hover: hover) {
+  .mobile-plus-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+  }
+}
+
+/* Enhanced click feedback */
+.mobile-plus-btn:active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+/* Smooth icon rotation */
+.plus-icon-container {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ripple effect */
+.ripple-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

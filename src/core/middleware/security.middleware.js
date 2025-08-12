@@ -200,9 +200,8 @@ class SecurityMiddleware {
     // In production, send to security monitoring service
     if (process.env.NODE_ENV === 'production') {
       // Send to security monitoring (implement as needed)
-      console.warn('Security event:', securityLog);
     } else {
-      console.warn('Security event (dev):', securityLog);
+      // Security event logged in development
     }
   }
 }

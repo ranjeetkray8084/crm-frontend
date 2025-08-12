@@ -1,8 +1,8 @@
 // src/utils/axios.js
 import axios from "axios";
 
-// ✅ Backend API base URL - Use hosted backend for all environments
-const BASE_URL = "https://backend.leadstracker.in";
+// ✅ Backend API base URL - pointing to Spring Boot backend
+const BASE_URL = "http://localhost:8082";
 
 // ✅ Security configuration
 const SECURITY_CONFIG = {
@@ -119,17 +119,16 @@ axiosInstance.interceptors.response.use(
     // Handle 500 errors (like your JPA parameter binding issue)
     if (error.response?.status === 500) {
       // Don't logout for server errors
-      console.error('Server error occurred');
     }
 
     // Handle rate limiting errors
     if (error.response?.status === 429) {
-      console.error('Too many requests. Please wait before trying again.');
+      // Rate limiting handled
     }
 
     // Handle network errors
     if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
-      console.error('Network error. Please check your connection.');
+      // Network error handled
     }
 
     return Promise.reject(error);

@@ -168,7 +168,7 @@ const LeadTableRow = ({
                     </span>
                 )}
             </td>
-            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <td className="px-2 py-2 whitespace-nowrap text-right text-sm font-medium">
                 <ThreeDotMenu
                     item={lead}
                     actions={[

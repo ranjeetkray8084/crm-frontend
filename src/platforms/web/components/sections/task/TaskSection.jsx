@@ -34,7 +34,6 @@ const TaskSection = () => {
             const companyIdAlt = localStorage.getItem('company_id');
             
             if (!token) {
-                alert('DEBUG: No authentication token found. This might cause logout.');
                 return;
             }
 
@@ -56,13 +55,13 @@ const TaskSection = () => {
             const userRole = user.role || 'USER';
 
             if (!companyId || !userId) {
-                alert(`DEBUG: Missing data - companyId: ${companyId}, userId: ${userId}`);
+                // Missing required data
             }
 
             setUserInfo({ companyId, userId, role: userRole });
 
         } catch (error) {
-            alert(`DEBUG: Error reading localStorage: ${error.message}`);
+            // Error reading localStorage
         }
     }, []);
 
@@ -526,8 +525,8 @@ const TaskSection = () => {
     }, [tasks, searchTerm, createdById, assignedToId, assignmentStatus]);
 
     return (
-        <div className="flex justify-center items-start min-h-screen p-4">
-            <div className="bg-white p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
+        <div className="flex justify-center items-start p-2">
+            <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
                 <h2 className="text-center text-xl p-2 font-bold text-gray-800">Task Management</h2>
 
                 {/* Toolbar Section */}

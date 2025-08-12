@@ -96,7 +96,7 @@ const UserTableRow = ({
             <td className="px-6 py-4 text-gray-600">
                 {user.adminName || 'No Admin'}
             </td>
-            <td className="px-6 py-4 text-center">
+            <td className="px-2 py-2 text-center">
                 {isDeveloper ? (
                     <span className="text-gray-400 text-sm">View Only</span>
                 ) : (

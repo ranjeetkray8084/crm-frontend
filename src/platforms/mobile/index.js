@@ -4,7 +4,5 @@
 // Core functionality (reusable)
 export * from '../../core';
 
-// Mobile-specific components will be added here
-// export * from './components';
-// export * from './screens';
-// export * from './navigation';
+// Mobile-specific components
+export * from './components';

@@ -461,9 +461,6 @@ const AddUserForm = ({ onSuccess }) => {
                   {admins.length === 0 && !loadingAdmins && (
                     <div className="text-sm text-red-600 mt-1">
                       <p>No admins available. Please create an admin first.</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Debug: Company ID: {companyId}, User Role: {userRole}
-                      </p>
                     </div>
                   )}
                   {admins.length > 0 && !loadingAdmins && (

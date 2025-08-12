@@ -40,7 +40,7 @@ const DirectorTableRow = ({
                     {isActive ? 'Active' : 'Inactive'}
                 </span>
             </td>
-            <td className="border-b px-6 py-4 text-center">
+            <td className="border-b px-2 py-2 text-center">
                 {isDeveloper ? (
                     <span className="text-gray-400 text-sm">View Only</span>
                 ) : (

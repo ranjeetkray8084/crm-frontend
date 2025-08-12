@@ -17,6 +17,8 @@ export const useLeads = (companyId, userId, userRole) => {
 
   const userInfo = useMemo(() => {
     const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('token');
+    
     return {
       companyId: companyId || localUser.companyId,
       userId: userId || localUser.userId || localUser.id,

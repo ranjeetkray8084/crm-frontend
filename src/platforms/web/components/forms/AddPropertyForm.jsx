@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProperties } from '../../../../core/hooks/useProperties';
 import { motion } from 'framer-motion';
-import { UserPlus } from 'lucide-react'; // Optional icon
-import { useUsers } from '../../../../core/hooks/useUsers';
-import { customAlert } from '../../../../core/utils/alertUtils';
+import { UserPlus, Loader2 } from 'lucide-react'; // Optional icon
 
 const initialForm = {
   propertyName: '',
@@ -28,6 +26,7 @@ const AddPropertyForm = () => {
   const [showReference, setShowReference] = useState(false);
   const [isBroker, setIsBroker] = useState(false);
   const [disableBhk, setDisableBhk] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get user info from localStorage (same as AddLeadForm)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -37,20 +36,6 @@ const AddPropertyForm = () => {
 
   // Use the useProperties hook (same pattern as useLeads)
   const { createProperty } = useProperties(companyId, userId, userRole);
-
-  // Users for optional notification/send like director flow
-  const { users: allUsers } = useUsers(companyId, userRole, userId);
-  const canSend = userRole === 'DIRECTOR' || userRole === 'ADMIN';
-  const [sendToUserId, setSendToUserId] = useState('');
-  const [sendToUserName, setSendToUserName] = useState('');
-
-  const sendableUsers = useMemo(() => {
-    if (!canSend || !Array.isArray(allUsers)) return [];
-    if (userRole === 'DIRECTOR') {
-      return allUsers.filter(u => u.role === 'ADMIN' || u.role === 'USER');
-    }
-    return allUsers.filter(u => u.role === 'USER');
-  }, [allUsers, canSend, userRole]);
 
   useEffect(() => {
     toggleBhkField(form.type);
@@ -83,6 +68,8 @@ const AddPropertyForm = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     const payload = {
       propertyName: form.propertyName,
       type: form.type,
@@ -106,19 +93,14 @@ const AddPropertyForm = () => {
       const result = await createProperty(payload);
 
       if (result.success) {
-        // Mimic director "send" behavior: notify admin/director via existing notifications API
-        if (canSend && sendToUserId) {
-          // Currently no property-assign API; we simply show success feedback for send
-          customAlert(`✅ Sent to ${sendToUserName || 'selected user'}`);
-        }
         setForm(initialForm);
-        setSendToUserId('');
-        setSendToUserName('');
       } else {
         // Error already shown by executeApiCall in useProperties
       }
     } catch (err) {
       // Error already handled by executeApiCall
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -342,28 +324,7 @@ const AddPropertyForm = () => {
           />
         </div>
 
-        {/* Optional Send To (ADMIN/DIRECTOR) */}
-        {canSend && (
-          <div className="md:col-span-2">
-            <label className="block mb-1 font-medium">Send To (optional)</label>
-            <select
-              value={sendToUserId}
-              onChange={(e) => {
-                const selected = sendableUsers.find(u => (u.id?.toString() ?? u.userId?.toString()) === e.target.value);
-                setSendToUserId(e.target.value);
-                setSendToUserName(selected?.name || '');
-              }}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">-- Select user --</option>
-              {sendableUsers.map(u => (
-                <option key={u.userId || u.id} value={(u.userId || u.id)?.toString()}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+    
 
         {/* Buttons */}
         <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4">
@@ -374,12 +335,22 @@ const AddPropertyForm = () => {
           >
             Cancel
           </button>
-          <button
+          <motion.button
             type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full sm:w-auto"
+            disabled={isSubmitting}
+            whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+            whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+            className="bg-green-600 hover:bg-green-700 disabled:hover:bg-green-600 text-white px-4 py-2 rounded w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Save Property
-          </button>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Property'
+            )}
+          </motion.button>
         </div>
       </form>
     </motion.div>
