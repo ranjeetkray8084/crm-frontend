@@ -25,7 +25,7 @@ class RateLimiter {
   canMakeRequest() {
     const now = Date.now();
     this.requests = this.requests.filter(time => now - time < this.timeWindow);
-    
+
     if (this.requests.length < this.maxRequests) {
       this.requests.push(now);
       return true;
@@ -144,7 +144,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { config } = error;
-    
+
     if (!config || !config.retry) {
       config.retry = 0;
     }
@@ -154,12 +154,12 @@ axiosInstance.interceptors.response.use(
     }
 
     config.retry += 1;
-    
+
     // Exponential backoff
     const delay = SECURITY_CONFIG.retryDelay * Math.pow(2, config.retry - 1);
-    
+
     await new Promise(resolve => setTimeout(resolve, delay));
-    
+
     return axiosInstance(config);
   }
 );

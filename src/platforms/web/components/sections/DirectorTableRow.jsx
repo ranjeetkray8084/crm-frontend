@@ -9,7 +9,8 @@ const DirectorTableRow = ({
     onActivate,
     onDeactivate,
     isDeveloper = false,
-    isDirector = false
+    isDirector = false,
+    mobileView = false
 }) => {
     const highlightText = (text, searchTerm) => {
         if (!searchTerm || !text) return text;
@@ -23,6 +24,25 @@ const DirectorTableRow = ({
     };
 
     const isActive = director.status === 'ACTIVE' || director.status === true || director.status === 'active';
+
+    // Mobile view - return only the three-dot menu
+    if (mobileView) {
+        if (isDeveloper) {
+            return null; // No actions for developer in mobile view
+        }
+        
+        return (
+            <ThreeDotMenu
+                item={director}
+                actions={[
+                    { label: 'Update Director', icon: <Edit size={14} />, onClick: () => onUpdate(director) },
+                    isActive 
+                        ? { label: 'Deactivate', icon: <UserX size={14} />, onClick: () => onDeactivate(director.userId), danger: true }
+                        : { label: 'Activate', icon: <UserCheck size={14} />, onClick: () => onActivate(director.userId) }
+                ]}
+            />
+        );
+    }
 
     return (
         <tr className="hover:bg-gray-50 transition-colors">

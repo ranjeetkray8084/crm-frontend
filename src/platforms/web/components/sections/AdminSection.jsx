@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users as AdminIcon } from "lucide-react";
+import { Users as AdminIcon, Edit, UserCheck, UserX, Eye } from "lucide-react";
 import { useAdmins } from '../../../../core/hooks/useAdmins';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import UpdateUserModal from "../../components/action/UpdateUserModal";
 import AdminTableRow from './AdminTableRow';
 import AssignedUsersModal from '../modals/AssignedUsersModal';
+import ThreeDotMenu from '../common/ThreeDotMenu';
 
 const AdminSection = () => {
   const { user } = useAuth();
@@ -169,38 +170,103 @@ const AdminSection = () => {
         <>
           {/* Different tables based on role */}
           {role === 'DEVELOPER' ? (
-            /* Simple Admin Table for Developer */
-            <table id="adminTable" className="min-w-full border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">Admin ID</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Company</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Desktop Table for Developer */}
+              <div className="hidden md:block">
+                <table id="adminTable" className="min-w-full border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-4 py-2 text-left">Admin ID</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Company</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
+                      <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAdmins.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                          No admins found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredAdmins.map((admin) => {
+                        const companyName = admin.company?.name || admin.companyName || "No Company";
+                        const isActive = admin.status === "active" || admin.status === true || admin.status === 1;
+                        return (
+                          <tr key={admin.userId} className="hover:bg-gray-50">
+                            <td className="border border-gray-300 px-4 py-2">{admin.userId}</td>
+                            <td className="border border-gray-300 px-4 py-2">{admin.name}</td>
+                            <td className="border border-gray-300 px-4 py-2">{admin.email}</td>
+                            <td className="border border-gray-300 px-4 py-2">{companyName}</td>
+                            <td className="border border-gray-300 px-4 py-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              }`}>
+                                {isActive ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-center">
+                              <span className="text-gray-400 text-sm">View Only</span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View for Developer */}
+              <div className="space-y-4 md:hidden">
                 {filteredAdmins.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
-                      No admins found.
-                    </td>
-                  </tr>
+                  <p className="text-gray-500 text-center">No admins found.</p>
                 ) : (
                   filteredAdmins.map((admin) => {
                     const companyName = admin.company?.name || admin.companyName || "No Company";
+                    const isActive = admin.status === "active" || admin.status === true || admin.status === 1;
+                    
                     return (
-                      <tr key={admin.userId} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-2">{admin.userId}</td>
-                        <td className="border border-gray-300 px-4 py-2">{admin.name}</td>
-                        <td className="border border-gray-300 px-4 py-2">{admin.email}</td>
-                        <td className="border border-gray-300 px-4 py-2">{companyName}</td>
-                      </tr>
+                      <div
+                        key={admin.userId}
+                        className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="font-semibold text-lg text-gray-800">
+                            {admin.name}
+                          </div>
+                          <span className="text-gray-400 text-sm">View Only</span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">ID:</span>
+                            <span className="text-gray-700">{admin.userId}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">Email:</span>
+                            <span className="text-gray-700">{admin.email}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">Company:</span>
+                            <span className="text-gray-700">{companyName}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">Status:</span>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            }`}>
+                              {isActive ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </div>
+            </>
           ) : (
             /* Full Admin Table for Director */
             <>
@@ -254,13 +320,42 @@ const AdminSection = () => {
                         key={admin.userId}
                         className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
                       >
-                        <button
-                          onClick={() => setViewingAssignedUsers(admin)}
-                          className="font-semibold text-lg mb-3 text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
-                          title="Click to view assigned users"
-                        >
-                          {admin.name}
-                        </button>
+                        <div className="flex justify-between items-start mb-3">
+                          <button
+                            onClick={() => setViewingAssignedUsers(admin)}
+                            className="font-semibold text-lg text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+                            title="Click to view assigned users"
+                          >
+                            {admin.name}
+                          </button>
+                          <ThreeDotMenu
+                            item={admin}
+                            actions={[
+                              {
+                                label: 'View Assigned Users',
+                                icon: <Eye size={14} />,
+                                onClick: () => setViewingAssignedUsers(admin)
+                              },
+                              {
+                                label: 'Update Admin',
+                                icon: <Edit size={14} />,
+                                onClick: () => setSelectedAdmin(admin)
+                              },
+                              isActive
+                                ? {
+                                    label: 'Deactivate',
+                                    icon: <UserX size={14} />,
+                                    onClick: () => handleRevokeAdmin(admin.userId),
+                                    danger: true
+                                  }
+                                : {
+                                    label: 'Activate',
+                                    icon: <UserCheck size={14} />,
+                                    onClick: () => handleActivateAdmin(admin.userId)
+                                  }
+                            ]}
+                          />
+                        </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center">
                             <span className="font-medium text-gray-500 w-16">Email:</span>
@@ -285,27 +380,6 @@ const AdminSection = () => {
                               {isActive ? "Active" : "Inactive"}
                             </span>
                           </div>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                          <button
-                            onClick={() => setSelectedAdmin(admin)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                          >
-                            Update
-                          </button>
-                          <button
-                            onClick={() =>
-                              isActive
-                                ? handleRevokeAdmin(admin.userId)
-                                : handleActivateAdmin(admin.userId)
-                            }
-                            className={`w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white ${isActive
-                              ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                              : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
-                              }`}
-                          >
-                            {isActive ? "Deactivate" : "Activate"}
-                          </button>
                         </div>
                       </div>
                     );

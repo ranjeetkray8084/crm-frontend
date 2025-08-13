@@ -66,6 +66,16 @@ export class CompanyService {
   }
 
   /**
+   * Update an existing company.
+   */
+  static updateCompany(companyId, companyData) {
+    return CompanyService._request(
+      () => axios.put(API_ENDPOINTS.COMPANIES.UPDATE(companyId), companyData),
+      'Failed to update company'
+    );
+  }
+
+  /**
    * Delete a company.
    */
   static deleteCompany(companyId) {

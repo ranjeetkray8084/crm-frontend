@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Users as UsersIcon } from 'lucide-react';
+import { Users as UsersIcon, Edit, UserCheck, UserX, UserPlus, UserMinus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUsers } from '../../../../core/hooks';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import UpdateUserModal from "../../components/action/UpdateUserModal";
 import AssignAdminModal from "../../components/action/AssignAdminModal";
 import UserTableRow from './UserTableRow';
+import ThreeDotMenu from '../common/ThreeDotMenu';
 
 const UsersSection = () => {
   const { user } = useAuth();
@@ -191,38 +192,103 @@ const UsersSection = () => {
         <>
           {/* Different tables based on role */}
           {role === 'DEVELOPER' ? (
-            /* Simple User Table for Developer */
-            <table id="userTable" className="min-w-full border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">User ID</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Company</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Desktop Table for Developer */}
+              <div className="hidden md:block">
+                <table id="userTable" className="min-w-full border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-4 py-2 text-left">User ID</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Company</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
+                      <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                          No users found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredUsers.map((user) => {
+                        const companyName = user.company?.name || user.companyName || "No Company";
+                        const isActive = user.status === true || user.status === 'active';
+                        return (
+                          <tr key={user.userId} className="hover:bg-gray-50">
+                            <td className="border border-gray-300 px-4 py-2">{user.userId}</td>
+                            <td className="border border-gray-300 px-4 py-2">{user.name}</td>
+                            <td className="border border-gray-300 px-4 py-2">{user.email}</td>
+                            <td className="border border-gray-300 px-4 py-2">{companyName}</td>
+                            <td className="border border-gray-300 px-4 py-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              }`}>
+                                {isActive ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-center">
+                              <span className="text-gray-400 text-sm">View Only</span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View for Developer */}
+              <div className="space-y-4 md:hidden">
                 {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
-                      No users found.
-                    </td>
-                  </tr>
+                  <p className="text-gray-500 text-center">No users found.</p>
                 ) : (
                   filteredUsers.map((user) => {
                     const companyName = user.company?.name || user.companyName || "No Company";
+                    const isActive = user.status === true || user.status === 'active';
+                    
                     return (
-                      <tr key={user.userId} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-2">{user.userId}</td>
-                        <td className="border border-gray-300 px-4 py-2">{user.name}</td>
-                        <td className="border border-gray-300 px-4 py-2">{user.email}</td>
-                        <td className="border border-gray-300 px-4 py-2">{companyName}</td>
-                      </tr>
+                      <div
+                        key={user.userId}
+                        className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="font-semibold text-lg text-gray-800">
+                            {user.name}
+                          </div>
+                          <span className="text-gray-400 text-sm">View Only</span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">ID:</span>
+                            <span className="text-gray-700">{user.userId}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">Email:</span>
+                            <span className="text-gray-700">{user.email}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">Company:</span>
+                            <span className="text-gray-700">{companyName}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-500 w-20">Status:</span>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            }`}>
+                              {isActive ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </div>
+            </>
           ) : (
             /* Full User Table for Director */
             <>
@@ -281,8 +347,46 @@ const UsersSection = () => {
                         key={user.userId}
                         className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
                       >
-                        <div className="font-semibold text-lg mb-3 text-gray-800">
-                          {user.name}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="font-semibold text-lg text-gray-800">
+                            {user.name}
+                          </div>
+                          <ThreeDotMenu
+                            item={user}
+                            actions={[
+                              {
+                                label: 'Update User',
+                                icon: <Edit size={14} />,
+                                onClick: () => setSelectedUser(user)
+                              },
+                              isActive
+                                ? {
+                                    label: 'Deactivate',
+                                    icon: <UserX size={14} />,
+                                    onClick: () => handleDeactivateUser(user.userId),
+                                    danger: true
+                                  }
+                                : {
+                                    label: 'Activate',
+                                    icon: <UserCheck size={14} />,
+                                    onClick: () => handleActivateUser(user.userId)
+                                  },
+                              ...(isDirector ? [
+                                hasAdmin
+                                  ? {
+                                      label: 'Unassign Admin',
+                                      icon: <UserMinus size={14} />,
+                                      onClick: () => handleUnassignAdmin(user.userId),
+                                      danger: true
+                                    }
+                                  : {
+                                      label: 'Assign Admin',
+                                      icon: <UserPlus size={14} />,
+                                      onClick: () => setAssigningUser(user)
+                                    }
+                              ] : [])
+                            ]}
+                          />
                         </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center">
@@ -312,44 +416,6 @@ const UsersSection = () => {
                             <span className="font-medium text-gray-500 w-16">Admin:</span>
                             <span className="text-gray-700">{user.adminName || 'No Admin'}</span>
                           </div>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                          <button
-                            onClick={() => setSelectedUser(user)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                          >
-                            Update
-                          </button>
-                          <button
-                            onClick={() =>
-                              isActive
-                                ? handleDeactivateUser(user.userId)
-                                : handleActivateUser(user.userId)
-                            }
-                            className={`w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white ${isActive
-                              ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                              : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
-                              }`}
-                          >
-                            {isActive ? "Deactivate" : "Activate"}
-                          </button>
-                          {isDirector && (
-                            <button
-                              onClick={() => {
-                                if (hasAdmin) {
-                                  handleUnassignAdmin(user.userId);
-                                } else {
-                                  setAssigningUser(user);
-                                }
-                              }}
-                              className={`w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-white ${hasAdmin
-                                ? "bg-orange-600 hover:bg-orange-700 focus:ring-orange-500"
-                                : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"
-                                }`}
-                            >
-                              {hasAdmin ? "Unassign Admin" : "Assign Admin"}
-                            </button>
-                          )}
                         </div>
                       </div>
                     );

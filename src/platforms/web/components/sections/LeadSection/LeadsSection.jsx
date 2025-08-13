@@ -183,8 +183,8 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   };
 
   return (
-    <div className="flex justify-center items-start p-2">
-      <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm w-full max-w-[1200px] min-h-[400px] max-h-[70vh] overflow-y-auto">
+    <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
+      <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
         <h2 className="text-center text-xl p-2 font-bold text-gray-800">Lead Management</h2>
 
         <LeadToolbar

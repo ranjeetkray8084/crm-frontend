@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     ADD: '/api/companies/add',
     GET_ALL: '/api/companies/all',
     GET_MY: '/api/companies/my',
+    UPDATE: (id) => `/api/companies/update/${id}`,
     DELETE: (id) => `/api/companies/delete/${id}`,
     REVOKE: (id) => `/api/companies/revoke/${id}`,
     UNREVOKE: (id) => `/api/companies/unrevoke/${id}`,

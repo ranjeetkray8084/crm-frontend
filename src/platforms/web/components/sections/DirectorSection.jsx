@@ -152,8 +152,8 @@ const DirectorSection = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto p-6">
+      {/* Content */}
+      <div className="p-6">
         {loading ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -166,43 +166,110 @@ const DirectorSection = () => {
             ))}
           </div>
         ) : (
-          <div className="max-h-[350px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
-            <table className="min-w-full table-auto border-collapse bg-white">
-              <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
-                <tr>
-                  <th className="border-b px-6 py-4 text-left font-semibold">Name</th>
-                  <th className="border-b px-6 py-4 text-left font-semibold">Email</th>
-                  <th className="border-b px-6 py-4 text-left font-semibold">Phone</th>
-                  <th className="border-b px-6 py-4 text-left font-semibold">Company</th>
-                  <th className="border-b px-6 py-4 text-left font-semibold">Status</th>
-                  <th className="border-b px-6 py-4 text-center font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedDirectors.length === 0 ? (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block max-h-[350px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
+              <table className="min-w-full table-auto border-collapse bg-white">
+                <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
                   <tr>
-                    <td colSpan="6" className="text-center py-8 text-gray-500">
-                      <Crown size={48} className="mx-auto mb-4 text-gray-300" />
-                      <p>No directors found.</p>
-                    </td>
+                    <th className="border-b px-6 py-4 text-left font-semibold">Name</th>
+                    <th className="border-b px-6 py-4 text-left font-semibold">Email</th>
+                    <th className="border-b px-6 py-4 text-left font-semibold">Phone</th>
+                    <th className="border-b px-6 py-4 text-left font-semibold">Company</th>
+                    <th className="border-b px-6 py-4 text-left font-semibold">Status</th>
+                    <th className="border-b px-6 py-4 text-center font-semibold">Actions</th>
                   </tr>
-                ) : (
-                  displayedDirectors.map((director) => (
-                    <DirectorTableRow
+                </thead>
+                <tbody>
+                  {displayedDirectors.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-8 text-gray-500">
+                        <Crown size={48} className="mx-auto mb-4 text-gray-300" />
+                        <p>No directors found.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    displayedDirectors.map((director) => (
+                      <DirectorTableRow
+                        key={director.userId}
+                        director={director}
+                        searchTerm={search}
+                        onUpdate={setSelectedDirector}
+                        onActivate={activateUser}
+                        onDeactivate={deactivateUser}
+                        isDeveloper={role === 'DEVELOPER'}
+                        isDirector={role === 'DIRECTOR'}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="space-y-4 md:hidden">
+              {displayedDirectors.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Crown size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>No directors found.</p>
+                </div>
+              ) : (
+                displayedDirectors.map((director) => {
+                  const isActive = director.status === 'ACTIVE' || director.status === true || director.status === 'active';
+                  const companyName = director.company?.name || director.companyName || 'N/A';
+                  
+                  return (
+                    <div
                       key={director.userId}
-                      director={director}
-                      searchTerm={search}
-                      onUpdate={setSelectedDirector}
-                      onActivate={activateUser}
-                      onDeactivate={deactivateUser}
-                      isDeveloper={role === 'DEVELOPER'}
-                      isDirector={role === 'DIRECTOR'}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="font-semibold text-lg text-gray-800">
+                          {director.name}
+                        </div>
+                        {role === 'DEVELOPER' ? (
+                          <span className="text-gray-400 text-sm">View Only</span>
+                        ) : (
+                          <DirectorTableRow
+                            director={director}
+                            searchTerm={search}
+                            onUpdate={setSelectedDirector}
+                            onActivate={activateUser}
+                            onDeactivate={deactivateUser}
+                            isDeveloper={role === 'DEVELOPER'}
+                            isDirector={role === 'DIRECTOR'}
+                            mobileView={true}
+                          />
+                        )}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-500 w-20">Email:</span>
+                          <span className="text-gray-700">{director.email}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-500 w-20">Phone:</span>
+                          <span className="text-gray-700">{director.phone}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-500 w-20">Company:</span>
+                          <span className="text-gray-700">{companyName}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-500 w-20">Status:</span>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}>
+                            {isActive ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </>
         )}
       </div>
     </motion.div>

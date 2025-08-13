@@ -7,19 +7,15 @@ import {
     Eye,
     Edit,
     Trash2,
-    MoreVertical,
     Target,
     Calendar,
     GitBranch,
     Clock
   } from 'lucide-react';
+  import ThreeDotMenu from '../../common/ThreeDotMenu';
   
   const MobileLeadCard = ({
     lead,
-    isSelected,
-    isActive,
-    onSelect,
-    onToggleActions,
     onStatusUpdate,
     onDelete,
     onAddRemark,
@@ -54,147 +50,143 @@ import {
       }).format(budget);
     };
   
-    const statusStyles = {
-      NEW: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      CONTACTED: 'bg-cyan-100 text-cyan-800 border-cyan-300',
-      CLOSED: 'bg-green-100 text-green-800 border-green-300',
-      DROPED: 'bg-red-100 text-red-800 border-red-300'
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'NEW':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'CONTACTED':
+          return 'bg-cyan-100 text-cyan-800';
+        case 'CLOSED':
+          return 'bg-green-100 text-green-800';
+        case 'DROPED':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
     };
-    const statusColorClass =
-      statusStyles[lead.status] ??
-      'bg-gray-100 text-gray-800 border-gray-300';
+
+    const getStatusLabel = (status) => {
+      switch (status) {
+        case 'NEW':
+          return 'New';
+        case 'CONTACTED':
+          return 'Contacted';
+        case 'CLOSED':
+          return 'Closed';
+        case 'DROPED':
+          return 'Dropped';
+        default:
+          return status || 'N/A';
+      }
+    };
+
+    const actions = [
+      {
+        label: 'Update Lead',
+        icon: <Edit size={14} />,
+        onClick: () => onUpdate(lead)
+      },
+      {
+        label: 'Add Remark',
+        icon: <MessageSquare size={14} />,
+        onClick: () => onAddRemark(lead)
+      },
+      {
+        label: 'Add Follow-Up',
+        icon: <Calendar size={14} />,
+        onClick: () => onAddFollowUp(lead)
+      },
+      {
+        label: 'View Follow-ups',
+        icon: <Clock size={14} />,
+        onClick: () => onViewFollowUps(lead)
+      },
+      {
+        label: 'View Remarks',
+        icon: <Eye size={14} />,
+        onClick: () => onViewRemarks(lead)
+      },
+      ...(isAssigned ? [{
+        label: 'Unassign',
+        icon: <UserMinus size={14} />,
+        onClick: () => onUnassign(leadId)
+      }] : [{
+        label: 'Assign',
+        icon: <UserPlus size={14} />,
+        onClick: () => onAssign(leadId)
+      }]),
+      {
+        label: 'Delete Lead',
+        icon: <Trash2 size={14} />,
+        onClick: () => onDelete(leadId),
+        danger: true
+      }
+    ];
   
     return (
-      <div
-        className={`bg-white border rounded-lg transition-all ${
-          isSelected
-            ? 'ring-2 ring-blue-500 border-blue-500'
-            : 'border-gray-200'
-        }`}
-      >
+      <div className="bg-white rounded-lg border border-gray-200 p-4 relative">
         {/* Header */}
-        <div className="p-4 flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 flex-1">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => onSelect(leadId)}
-              className="w-5 h-5 mt-1"
-            />
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 text-lg">
-                {lead.name || 'Unnamed Lead'}
-              </h3>
-              <div className="text-sm text-gray-600">
-                {lead.assignedToSummary?.name || 'Unassigned'}
-              </div>
-            </div>
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 text-lg">
+              {lead.name || 'Unnamed Lead'}
+            </h3>
+            <p className="text-gray-600 text-sm">
+              {lead.assignedToSummary?.name || 'Unassigned'}
+            </p>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => onToggleActions(leadId)}
-              className={`p-1 rounded-full ${
-                isActive
-                  ? 'bg-gray-200 text-gray-800'
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <MoreVertical size={20} />
-            </button>
-            {isActive && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded shadow-lg z-10">
-                <div className="py-1">
-                  <button
-                    onClick={() => onUpdate(lead)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                  >
-                    <Edit size={14} /> Update Lead
-                  </button>
-                  <button
-                    onClick={() => onAddRemark(lead)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                  >
-                    <MessageSquare size={14} /> Add Remark
-                  </button>
-                  <button
-                    onClick={() => onAddFollowUp(lead)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full"
-                  >
-                    <Calendar size={14} /> Add Follow-Up
-                  </button>
-                  <button
-                    onClick={() => onViewFollowUps(lead)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full"
-                  >
-                    <Clock size={14} /> View Follow-ups
-                  </button>
-                  <button
-                    onClick={() => onViewRemarks(lead)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                  >
-                    <Eye size={14} /> View Remarks
-                  </button>
-                  {isAssigned ? (
-                    <button
-                      onClick={() => onUnassign(leadId)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full"
-                    >
-                      <UserMinus size={14} /> Unassign
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onAssign(leadId)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full"
-                    >
-                      <UserPlus size={14} /> Assign
-                    </button>
-                  )}
-                  <div className="my-1 h-px bg-gray-100" />
-                  <button
-                    onClick={() => onDelete(leadId)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full"
-                  >
-                    <Trash2 size={14} /> Delete
-                  </button>
-                </div>
+          
+          {/* Three Dot Menu */}
+          <ThreeDotMenu
+            item={lead}
+            actions={actions}
+            position="right-0"
+          />
+        </div>
+
+        {/* Lead Details */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <span className="text-xs text-gray-500">Phone</span>
+            <p className="text-sm font-medium">{lead.phone || 'N/A'}</p>
+          </div>
+          <div>
+            <span className="text-xs text-gray-500">Budget</span>
+            <p className="text-sm font-medium">₹{formatBudget(lead.budget)}</p>
+          </div>
+          {lead.requirement && (
+            <>
+              <div className="col-span-2">
+                <span className="text-xs text-gray-500">Requirement</span>
+                <p className="text-sm font-medium">{lead.requirement}</p>
               </div>
-            )}
+            </>
+          )}
+          <div>
+            <span className="text-xs text-gray-500">Source</span>
+            <p className="text-sm font-medium">{lead.source || 'N/A'}</p>
           </div>
         </div>
-  
-        {/* Status + Detail */}
-        <div className="px-4 pb-4 space-y-2.5">
+
+        {/* Status */}
+        <div className="mb-3">
           <select
             value={lead.status}
             onChange={(e) => onStatusUpdate(leadId, e.target.value)}
-            className={`w-full p-1.5 text-xs font-semibold rounded-md border text-center appearance-none focus:ring-2 ${statusColorClass}`}
+            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 ${getStatusColor(lead.status)}`}
           >
             <option value="NEW">New</option>
             <option value="CONTACTED">Contacted</option>
             <option value="CLOSED">Closed</option>
             <option value="DROPED">Dropped</option>
           </select>
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            <Phone size={14} /> <span>{lead.phone || 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            <IndianRupee size={14} />
-            <span className="font-medium">{formatBudget(lead.budget)}</span>
-          </div>
-          {lead.requirement && (
-            <div className="flex items-center gap-3 text-sm text-gray-600">
-              <Target size={14} /> <span>{lead.requirement}</span>
-            </div>
-          )}
         </div>
-  
+
         {/* Footer */}
-        <div className="px-4 py-2 border-t text-xs flex justify-between text-gray-500">
-          <div className="flex items-center gap-1.5">
-            <GitBranch size={12} /> {lead.source || 'N/A'}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Calendar size={12} /> {formatDate(lead.createdAt)}
+        <div className="pt-3 border-t border-gray-100 text-xs text-gray-500">
+          <div className="font-medium text-gray-700">Created {formatDate(lead.createdAt)}</div>
+          <div className="text-xs text-gray-500">
+            by {lead.createdBy?.name || lead.createdByName || 'Unknown'}
           </div>
         </div>
       </div>
