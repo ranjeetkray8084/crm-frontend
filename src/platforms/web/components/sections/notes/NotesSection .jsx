@@ -19,6 +19,7 @@ const NotesSection = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     const companyIdRaw = localStorage.getItem('companyId');
@@ -159,11 +160,23 @@ const NotesSection = () => {
                 'Refresh'
               )}
             </button>
+            
+            {/* Mobile Filters Toggle */}
+            <button 
+              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+              className="md:hidden bg-gray-500 text-white px-4 py-2 text-sm rounded hover:bg-gray-600 transition-colors flex items-center gap-2"
+              title="Toggle filters"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+            </button>
           </div>
         </div>
 
-        {/* Filters Section */}
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        {/* Desktop Filters */}
+        <div className="hidden md:block mb-4 p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search Input */}
             <div>
@@ -234,6 +247,81 @@ const NotesSection = () => {
             )}
           </div>
         </div>
+
+        {/* Mobile Filters */}
+        {mobileFiltersOpen && (
+          <div className="md:hidden mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-1 gap-4">
+              {/* Search Input */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="Search by content or type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Status</option>
+                  <option value="NEW">New</option>
+                  <option value="PROCESSING">Processing</option>
+                  <option value="COMPLETED">Completed</option>
+                </select>
+              </div>
+
+              {/* Priority Filter */}
+              <div>
+                <select
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Priority</option>
+                  <option value="PRIORITY_A">Priority A</option>
+                  <option value="PRIORITY_B">Priority B</option>
+                  <option value="PRIORITY_C">Priority C</option>
+                </select>
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Types</option>
+                  {uniqueTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Mobile Filter Summary */}
+            <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                Showing {filteredNotes.length} of {notes.length} notes
+              </div>
+              {(searchTerm || statusFilter || priorityFilter || typeFilter) && (
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Loading and Error States */}
         {loading && (
