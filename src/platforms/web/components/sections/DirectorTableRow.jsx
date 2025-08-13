@@ -8,7 +8,8 @@ const DirectorTableRow = ({
     onUpdate,
     onActivate,
     onDeactivate,
-    isDeveloper = true
+    isDeveloper = false,
+    isDirector = false
 }) => {
     const highlightText = (text, searchTerm) => {
         if (!searchTerm || !text) return text;
@@ -30,7 +31,7 @@ const DirectorTableRow = ({
             </td>
             <td className="border-b px-6 py-4 text-gray-600">{highlightText(director.email, searchTerm)}</td>
             <td className="border-b px-6 py-4 text-gray-600">{highlightText(director.phone, searchTerm)}</td>
-            <td className="border-b px-6 py-4 text-gray-600">{director.companyName || 'N/A'}</td>
+            <td className="border-b px-6 py-4 text-gray-600">{director.company?.name || director.companyName || 'N/A'}</td>
             <td className="border-b px-6 py-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     isActive 
@@ -43,7 +44,7 @@ const DirectorTableRow = ({
             <td className="border-b px-2 py-2 text-center">
                 {isDeveloper ? (
                     <span className="text-gray-400 text-sm">View Only</span>
-                ) : (
+                ) : (isDirector || !isDeveloper) ? (
                     <ThreeDotMenu
                         item={director}
                         actions={[
@@ -53,6 +54,8 @@ const DirectorTableRow = ({
                                 : { label: 'Activate', icon: <UserCheck size={14} />, onClick: () => onActivate(director.userId) }
                         ]}
                     />
+                ) : (
+                    <span className="text-gray-400 text-sm">No Actions</span>
                 )}
             </td>
         </tr>

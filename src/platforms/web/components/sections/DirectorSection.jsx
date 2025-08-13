@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Crown, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useUsers } from '../../../../core/hooks/useUsers';
+import { UserService } from '../../../../core/services';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
+import { customAlert } from '../../../../core/utils/alertUtils';
 import UpdateUserModal from '../action/UpdateUserModal';
 import DirectorTableRow from './DirectorTableRow';
 
@@ -12,40 +13,75 @@ const DirectorSection = () => {
   const role = user?.role;
   const userId = user?.userId || user?.id;
 
-  // Use useUsers hook for director management actions
-  const {
-    users: directors,
-    loading,
-    error,
-    activateUser,
-    deactivateUser,
-    getUsersWithRole
-  } = useUsers(role === 'DEVELOPER' ? null : companyId, role, userId);
-
+  const [directors, setDirectors] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedDirector, setSelectedDirector] = useState(null);
 
   // Load directors based on current user's role
   const loadDirectorsData = async () => {
-    // For DEVELOPER, we don't need companyId since they see all directors across companies
-    if (role === 'DEVELOPER') {
-      if (!role || !userId) {
-        return;
-      }
-    } else {
-      // For other roles, we need companyId
-      if (!companyId || !role || !userId) {
-        return;
-      }
+    if (!role || !userId) {
+      return;
     }
 
+    // For DIRECTOR role, we need companyId to see directors in the same company
+    if (role === 'DIRECTOR' && !companyId) {
+      return;
+    }
+
+    setLoading(true);
     try {
+      let result;
+      
       if (role === 'DEVELOPER') {
         // Developer can see all DIRECTOR role users across all companies
-        await getUsersWithRole('DIRECTOR');
+        result = await UserService.getUsersByRole('DIRECTOR');
+      } else if (role === 'DIRECTOR') {
+        // Director can see other DIRECTOR role users in the same company
+        result = await UserService.getUsersByRoleAndCompany(companyId, 'DIRECTOR');
+      }
+
+      if (result?.success) {
+        setDirectors(result.data || []);
+      } else {
+        customAlert('❌ Failed to load directors');
+        setDirectors([]);
       }
     } catch (error) {
+      console.error('Error loading directors:', error);
+      customAlert('❌ Failed to load directors');
+      setDirectors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // User action handlers
+  const activateUser = async (userId) => {
+    try {
+      const result = await UserService.unrevokeUser(userId);
+      if (result.success) {
+        customAlert('✅ Director activated successfully');
+        loadDirectorsData();
+      } else {
+        customAlert('❌ Failed to activate director');
+      }
+    } catch (error) {
+      customAlert('❌ Failed to activate director');
+    }
+  };
+
+  const deactivateUser = async (userId) => {
+    try {
+      const result = await UserService.revokeUser(userId);
+      if (result.success) {
+        customAlert('✅ Director deactivated successfully');
+        loadDirectorsData();
+      } else {
+        customAlert('❌ Failed to deactivate director');
+      }
+    } catch (error) {
+      customAlert('❌ Failed to deactivate director');
     }
   };
 
@@ -56,16 +92,21 @@ const DirectorSection = () => {
   const handleSearch = (e) => setSearch(e.target.value.toLowerCase());
 
   const displayedDirectors = directors.filter((director) => {
-    const fields = [director.name, director.email, director.phone, director.companyName];
+    const fields = [
+      director.name, 
+      director.email, 
+      director.phone, 
+      director.company?.name || director.companyName
+    ];
     return fields.some((field) => field?.toString().toLowerCase().includes(search));
   });
 
-  if (role !== 'DEVELOPER') {
+  if (role !== 'DEVELOPER' && role !== 'DIRECTOR') {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="text-center text-gray-500">
           <Crown size={48} className="mx-auto mb-4 text-gray-300" />
-          <p>You don't have permission to view all directors.</p>
+          <p>You don't have permission to view directors.</p>
         </div>
       </div>
     );
@@ -155,6 +196,7 @@ const DirectorSection = () => {
                       onActivate={activateUser}
                       onDeactivate={deactivateUser}
                       isDeveloper={role === 'DEVELOPER'}
+                      isDirector={role === 'DIRECTOR'}
                     />
                   ))
                 )}

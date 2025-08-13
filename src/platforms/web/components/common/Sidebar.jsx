@@ -51,6 +51,7 @@ function Sidebar({ userRole, activeSection, onSectionChange, companyName, userNa
         { id: 'logout', label: 'Log Out', icon: LogOut },
       ],
       DIRECTOR: [
+        { id: 'ViewDirector', label: 'Directors', icon: Eye },
         { id: 'ViewAdmins', label: 'Admins', icon: Users },
         { id: 'ViewUsers', label: 'Users', icon: Users },
         { id: 'ViewLead', label: 'Leads', icon: FileText },
