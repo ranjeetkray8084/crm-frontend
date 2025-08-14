@@ -6,12 +6,13 @@ import { customAlert } from '../../../../core/utils/alertUtils';
 const UpdateUserModal = ({ user, onClose }) => {
   const { user: currentUser } = useAuth();
   const { updateUser } = useUsers(currentUser?.companyId);
+  
+
   const [formData, setFormData] = useState({
     userId: "",
     name: "",
     email: "",
     phone: "",
-    password: "",
     role: "USER",
   });
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,6 @@ const UpdateUserModal = ({ user, onClose }) => {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
-        password: "",
         role: user.role || "USER",
       });
     }
@@ -54,11 +54,6 @@ const UpdateUserModal = ({ user, onClose }) => {
       role: formData.role,
     };
 
-    // Only include password if it's provided
-    if (formData.password) {
-      userData.password = formData.password;
-    }
-
     const result = await updateUser(formData.userId, userData);
     if (result.success) {
       customAlert('✅ User updated successfully');
@@ -71,8 +66,8 @@ const UpdateUserModal = ({ user, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 modal">
-      <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative animate-fadeIn modal-content1">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 modal" style={{zIndex: 9999}}>
+      <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative animate-fadeIn modal-content1" style={{zIndex: 10000}}>
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -117,14 +112,7 @@ const UpdateUserModal = ({ user, onClose }) => {
             required
           />
 
-          <input
-            name="password"
-            type="password"
-            placeholder="New Password (optional)"
-            value={formData.password}
-            onChange={handleInputChange}
-            className="w-full border px-3 py-2 rounded"
-          />
+
 
           <div>
             <label htmlFor="role" className="block font-medium mb-1">

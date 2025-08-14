@@ -172,6 +172,7 @@ const DirectorSection = () => {
               <table className="min-w-full table-auto border-collapse bg-white">
                 <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
                   <tr>
+                    <th className="border-b px-6 py-4 text-left font-semibold">User ID</th>
                     <th className="border-b px-6 py-4 text-left font-semibold">Name</th>
                     <th className="border-b px-6 py-4 text-left font-semibold">Email</th>
                     <th className="border-b px-6 py-4 text-left font-semibold">Phone</th>
@@ -183,7 +184,7 @@ const DirectorSection = () => {
                 <tbody>
                   {displayedDirectors.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="text-center py-8 text-gray-500">
+                      <td colSpan="7" className="text-center py-8 text-gray-500">
                         <Crown size={48} className="mx-auto mb-4 text-gray-300" />
                         <p>No directors found.</p>
                       </td>
@@ -243,6 +244,10 @@ const DirectorSection = () => {
                         )}
                       </div>
                       <div className="space-y-2 text-sm">
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-500 w-20">ID:</span>
+                          <span className="text-gray-700">{director.userId}</span>
+                        </div>
                         <div className="flex items-center">
                           <span className="font-medium text-gray-500 w-20">Email:</span>
                           <span className="text-gray-700">{director.email}</span>

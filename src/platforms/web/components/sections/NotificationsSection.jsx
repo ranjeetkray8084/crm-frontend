@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Search, RefreshCw } from 'lucide-react';
+import { Bell, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNotifications } from '../../../../core/hooks/useNotifications';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
@@ -9,9 +9,6 @@ const NotificationsSection = () => {
   const userId = user?.userId || user?.id;
   const companyId = user?.companyId;
 
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all'); // all, follow-up, general
-
   // Use the notifications hook
   const {
     notifications,
@@ -20,8 +17,6 @@ const NotificationsSection = () => {
     refreshNotifications,
     clearError
   } = useNotifications(userId, companyId);
-
-  const handleSearch = (e) => setSearch(e.target.value.toLowerCase());
 
   const handleRefresh = () => {
     refreshNotifications();
@@ -59,19 +54,6 @@ const NotificationsSection = () => {
     });
   };
 
-  // Filter notifications based on search and type
-  const filteredNotifications = notifications.filter((notification) => {
-    const matchesSearch = notification.message?.toLowerCase().includes(search);
-    
-    const notificationType = getNotificationType(notification.message);
-    const matchesTypeFilter =
-      typeFilter === 'all' ||
-      (typeFilter === 'follow-up' && notificationType === 'follow-up') ||
-      (typeFilter === 'general' && notificationType === 'general');
-
-    return matchesSearch && matchesTypeFilter;
-  });
-
   return (
     <motion.div
       className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
@@ -98,31 +80,6 @@ const NotificationsSection = () => {
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search notifications..."
-              value={search}
-              onChange={handleSearch}
-              className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          </div>
-
-          {/* Type Filter */}
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Types</option>
-            <option value="follow-up">📅 Follow-ups</option>
-            <option value="general">🔔 General</option>
-          </select>
         </div>
       </div>
 
@@ -182,15 +139,15 @@ const NotificationsSection = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredNotifications.length === 0 ? (
+                  {notifications.length === 0 ? (
                     <tr>
                       <td colSpan="3" className="text-center py-8 text-gray-500">
                         <Bell size={24} className="mx-auto mb-2 text-gray-300" />
-                        {search ? 'No notifications match your search.' : 'No notifications found.'}
+                        No notifications found.
                       </td>
                     </tr>
                   ) : (
-                    filteredNotifications.map((notification) => {
+                    notifications.map((notification) => {
                       const notificationType = getNotificationType(notification.message);
                       return (
                         <tr
@@ -228,13 +185,13 @@ const NotificationsSection = () => {
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-4">
-              {filteredNotifications.length === 0 ? (
+              {notifications.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Bell size={24} className="mx-auto mb-2 text-gray-300" />
-                  {search ? 'No notifications match your search.' : 'No notifications found.'}
+                  No notifications found.
                 </div>
               ) : (
-                filteredNotifications.map((notification) => {
+                notifications.map((notification) => {
                   const notificationType = getNotificationType(notification.message);
                   return (
                     <div

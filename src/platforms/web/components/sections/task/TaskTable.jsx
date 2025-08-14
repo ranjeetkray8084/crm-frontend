@@ -9,6 +9,7 @@ const TaskTable = ({
   onAssign, 
   onUnassign, 
   onDownload, 
+  onStatusUpdate,
   role, 
   canManageTask,
   isTaskAssignedToUser,
@@ -47,6 +48,11 @@ const TaskTable = ({
       bValue = new Date(bValue || 0);
     }
 
+    if (sortConfig.key === 'assignedToDate') {
+      aValue = new Date(aValue || 0);
+      bValue = new Date(bValue || 0);
+    }
+
     if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
@@ -80,12 +86,11 @@ const TaskTable = ({
     <>
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
+        <table className="min-w-[1000px] w-full table-auto text-sm text-left text-gray-700">
           <thead className="bg-gray-50">
             <tr>
               <SortableHeader columnKey="title" title="Title" />
-              <SortableHeader columnKey="uploadDate" title="Created At" />
-              <SortableHeader columnKey="uploadedBy" title="Created By" />
+              <SortableHeader columnKey="uploadDate" title="Created" />
               <SortableHeader columnKey="assignedTo" title="Assigned To" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                 Status
@@ -98,7 +103,7 @@ const TaskTable = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedTasks.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center py-6 text-gray-400">No tasks found.</td>
+                <td colSpan="5" className="text-center py-6 text-gray-400">No tasks found.</td>
               </tr>
             ) : (
               sortedTasks.map((task) => (
@@ -111,30 +116,57 @@ const TaskTable = ({
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="text-sm text-gray-900">{formatDate(task.uploadDate)}</div>
                     <div className="text-xs text-gray-400">
-                      {new Date(task.uploadDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      by {task.uploadedByName || 'Unknown'}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {task.uploadedByName || 'Unknown'}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                     {task.assignedTo ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {task.assignedTo.name}
-                      </span>
+                      <>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {task.assignedTo.name}
+                        </span>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {task.assignedToDate ? formatDate(task.assignedToDate) : 'Date not set'}
+                        </div>
+                      </>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Unassigned
-                      </span>
+                      <>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          Unassigned
+                        </span>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Not assigned
+                        </div>
+                      </>
                     )}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${task.assignedTo
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                      {task.assignedTo ? 'Assigned' : 'Pending'}
-                    </span>
+                    <select
+                      value={task.status || 'NEW'}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        if (newStatus === 'COMPLETED') {
+                          if (window.confirm(`Are you sure you want to mark this task as ${newStatus}?`)) {
+                            onStatusUpdate(task.id, newStatus);
+                          } else {
+                            e.target.value = task.status || 'NEW';
+                          }
+                        } else {
+                          onStatusUpdate(task.id, newStatus);
+                        }
+                      }}
+                      className={`px-2 py-1 border rounded-full text-xs font-semibold appearance-none focus:outline-none focus:ring-2 ${
+                        task.status === 'NEW' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                        task.status === 'UNDER_PROCESS' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                        task.status === 'COMPLETED' ? 'bg-green-100 text-green-800 border-green-300' :
+                        'bg-gray-100 text-gray-800 border-gray-300'
+                      }`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <option value="NEW">NEW</option>
+                      <option value="UNDER_PROCESS">UNDER PROCESS</option>
+                      <option value="COMPLETED">COMPLETED</option>
+                    </select>
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap text-center hover:bg-gray-50 transition-colors duration-150">
                     <div className="flex justify-center">
@@ -179,7 +211,7 @@ const TaskTable = ({
                     <Calendar className="h-3 w-3 mr-1" />
                     {formatDate(task.uploadDate)}
                     <span className="ml-2">
-                      {new Date(task.uploadDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      by {task.uploadedByName || 'Unknown'}
                     </span>
                   </div>
                 </div>
@@ -201,27 +233,29 @@ const TaskTable = ({
 
               {/* Task Details */}
               <div className="space-y-2">
-                {/* Created By */}
-                <div className="flex items-center text-sm">
-                  <User className="h-4 w-4 text-gray-400 mr-2" />
-                  <span className="text-gray-600">Created by:</span>
-                  <span className="ml-1 font-medium text-gray-900">
-                    {task.uploadedByName || 'Unknown'}
-                  </span>
-                </div>
 
                 {/* Assigned To */}
                 <div className="flex items-center text-sm">
                   <UserCheck className="h-4 w-4 text-gray-400 mr-2" />
                   <span className="text-gray-600">Assigned to:</span>
                   {task.assignedTo ? (
-                    <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {task.assignedTo.name}
-                    </span>
+                    <>
+                      <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {task.assignedTo.name}
+                      </span>
+                      <span className="ml-2 text-xs text-gray-400">
+                        {task.assignedToDate ? formatDate(task.assignedToDate) : 'Date not set'}
+                      </span>
+                    </>
                   ) : (
-                    <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      Unassigned
-                    </span>
+                    <>
+                      <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        Unassigned
+                      </span>
+                      <span className="ml-2 text-xs text-gray-400">
+                        Not assigned
+                      </span>
+                    </>
                   )}
                 </div>
 
@@ -229,12 +263,31 @@ const TaskTable = ({
                 <div className="flex items-center text-sm">
                   <Clock className="h-4 w-4 text-gray-400 mr-2" />
                   <span className="text-gray-600">Status:</span>
-                  <span className={`ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${task.assignedTo
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {task.assignedTo ? 'Assigned' : 'Pending'}
-                  </span>
+                  <select
+                    value={task.status || 'NEW'}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      if (newStatus === 'COMPLETED') {
+                        if (window.confirm(`Are you sure you want to mark this task as ${newStatus}?`)) {
+                          onStatusUpdate(task.id, newStatus);
+                        } else {
+                          e.target.value = task.status || 'NEW';
+                        }
+                      } else {
+                        onStatusUpdate(task.id, newStatus);
+                      }
+                    }}
+                    className={`ml-1 px-2 py-1 border rounded-full text-xs font-semibold appearance-none focus:outline-none focus:ring-2 ${
+                      task.status === 'NEW' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                      task.status === 'UNDER_PROCESS' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                      task.status === 'COMPLETED' ? 'bg-green-100 text-green-800 border-green-300' :
+                      'bg-gray-100 text-gray-800 border-gray-300'
+                    }`}
+                  >
+                    <option value="NEW">NEW</option>
+                    <option value="UNDER_PROCESS">UNDER PROCESS</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                  </select>
                 </div>
               </div>
             </div>

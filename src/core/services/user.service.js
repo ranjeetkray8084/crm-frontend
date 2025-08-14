@@ -215,9 +215,27 @@ export class UserService {
         message: 'User created successfully'
       };
     } catch (error) {
+      // Handle specific error messages from backend
+      let errorMessage = 'Failed to create user';
+      
+      if (error.response?.data) {
+        // If backend returns a string message directly
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } 
+        // If backend returns an object with message property
+        else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        // If backend returns an object with error property
+        else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'Failed to create user'
+        error: errorMessage
       };
     }
   }

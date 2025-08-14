@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 import { useTasks } from '../../../../../core/hooks/useTasks';
-import { useUsers } from '../../../../../core/hooks/useUsers';
-import { useTaskCreators } from '../../../../../core/hooks/useTaskCreators';
-import { useTaskAssignees } from '../../../../../core/hooks/useTaskAssignees';
+import { UserService } from '../../../../../core/services/user.service';
+
 import TaskTable from './TaskTable';
-import UserAssignmentModal from './UserAssignmentModal';
 import TaskToolbar from './TaskToolbar';
 
 const TaskSection = () => {
@@ -18,6 +16,10 @@ const TaskSection = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [initError, setInitError] = useState(null);
     const [userDataLoaded, setUserDataLoaded] = useState(false);
+
+    // Filter states
+    const [availableCreators, setAvailableCreators] = useState([]);
+    const [availableAssignees, setAvailableAssignees] = useState([]);
 
     // Initialize user info from localStorage
     useEffect(() => {
@@ -36,12 +38,10 @@ const TaskSection = () => {
             // Get all possible company ID sources
             const companyIdRaw = localStorage.getItem('companyId');
             const companyIdAlt = localStorage.getItem('company_id');
-            
+
             if (!token) {
                 return;
             }
-
-            const userData = JSON.parse(userRaw || '{}');
 
             // Find the first valid company ID from various sources
             let companyId = null;
@@ -51,22 +51,15 @@ const TaskSection = () => {
                 companyId = parseInt(user.companyId, 10);
             } else if (companyIdAlt) {
                 companyId = parseInt(companyIdAlt, 10);
-            } else {
-                alert('❌ No companyId found anywhere');
             }
 
             const userId = user.id || user.userId;
             const userRole = user.role || 'USER';
 
-            if (!companyId || !userId) {
-                // Missing required data
-            }
-
             setUserInfo({ companyId, userId, role: userRole });
             setUserDataLoaded(true);
 
         } catch (error) {
-            console.error('Error loading user data:', error);
             setInitError('Failed to load user data. Please log in again.');
         } finally {
             setIsLoading(false);
@@ -76,8 +69,6 @@ const TaskSection = () => {
     const {
         // Data
         tasks,
-        assignedTasks,
-        uploadedTasks,
         loading,
         error,
 
@@ -86,46 +77,24 @@ const TaskSection = () => {
         deleteTask,
         assignTask,
         unassignTask,
-        
-        // Excel Operations
-        previewExcel,
-        downloadFile,
-        updateCell,
-        deleteColumn,
+        updateTaskStatus,
 
-        // File Operations
-        uploadExcelFile,
+        // Excel Operations
+        downloadFile,
 
         // Utilities
         canManageTask,
         isTaskAssignedToUser,
         refreshTasks,
-        clearError
+        clearError,
+        createdByFilter,
+        setCreatedByFilter,
+        assignedToFilter,
+        setAssignedToFilter
     } = useTasks(
-        userDataLoaded ? userInfo.companyId : null, 
-        userDataLoaded ? userInfo.userId : null, 
+        userDataLoaded ? userInfo.companyId : null,
+        userDataLoaded ? userInfo.userId : null,
         userDataLoaded ? userInfo.role : null
-    );
-
-    // Load users for filters based on role
-    const { users: companyUsers, loadUsers: loadCompanyUsers } = useUsers(
-        userDataLoaded ? userInfo.companyId : null,
-        userDataLoaded ? userInfo.role : null,
-        userDataLoaded ? userInfo.userId : null
-    );
-
-    // Load filtered users for Created By dropdown (DIRECTOR/ADMIN only)
-    const { users: taskCreators, loading: creatorsLoading } = useTaskCreators(
-        userDataLoaded ? userInfo.companyId : null,
-        userDataLoaded ? userInfo.role : null,
-        userDataLoaded ? userInfo.userId : null
-    );
-
-    // Load filtered users for Assigned To dropdown (role-based filtering)
-    const { users: taskAssignees, loading: assigneesLoading } = useTaskAssignees(
-        userDataLoaded ? userInfo.companyId : null,
-        userDataLoaded ? userInfo.role : null,
-        userDataLoaded ? userInfo.userId : null
     );
 
     // Handle global task error
@@ -150,22 +119,20 @@ const TaskSection = () => {
         showCancel: false
     });
 
-    // Assignment modal state
-    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-    const [selectedTaskId, setSelectedTaskId] = useState(null);
-
+    // User selection modal state
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [userModalConfig, setUserModalConfig] = useState({
+        users: [],
+        taskId: null,
+        action: 'assign'
+    });
+    const [assigningUser, setAssigningUser] = useState(null);
 
     useEffect(() => {
-        if (loadTasksByRole && userInfo.companyId && userInfo.userId) {
+        if (loadTasksByRole && userInfo.companyId && userInfo.userId && userInfo.role) {
             loadTasksByRole();
         }
-    }, [loadTasksByRole, userInfo.companyId, userInfo.userId]);
-
-    useEffect(() => {
-        if ((userInfo.role === 'ADMIN' || userInfo.role === 'DIRECTOR') && userInfo.companyId) {
-            loadCompanyUsers?.();
-        }
-    }, [userInfo.role, userInfo.companyId, loadCompanyUsers]);
+    }, [loadTasksByRole, userInfo.companyId, userInfo.userId, userInfo.role]);
 
     // Custom Alert Function
     const customAlert = (config) => {
@@ -192,6 +159,50 @@ const TaskSection = () => {
             alertConfig.onCancel();
         }
         setShowAlert(false);
+    };
+
+    // User selection modal functions
+    const showUserSelectionModal = (users, taskId, action) => {
+        setUserModalConfig({
+            users,
+            taskId,
+            action
+        });
+        setShowUserModal(true);
+    };
+
+    const handleUserSelection = async (userId) => {
+        if (assigningUser === userId) return; // Prevent double click
+        
+        setAssigningUser(userId);
+        
+        try {
+            const result = await assignTask(userModalConfig.taskId, userId);
+            
+            if (result.success) {
+                // Close modal first
+                setShowUserModal(false);
+                setAssigningUser(null);
+                
+                // Then refresh tasks
+                await refreshTasks();
+                
+                customAlert({
+                    title: 'Success',
+                    message: 'Task assigned successfully!',
+                    type: 'success'
+                });
+            } else {
+                throw new Error(result.error || 'Failed to assign task');
+            }
+        } catch (error) {
+            setAssigningUser(null);
+            customAlert({
+                title: 'Error',
+                message: error.message || 'Failed to assign task. Please try again.',
+                type: 'error'
+            });
+        }
     };
 
     // Custom Alert Modal Component
@@ -285,11 +296,86 @@ const TaskSection = () => {
         );
     };
 
+    // User Selection Modal Component
+    const UserSelectionModal = () => {
+        if (!showUserModal) return null;
+
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-center items-center">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Select User to Assign</h3>
+                        <button
+                            onClick={() => setShowUserModal(false)}
+                            disabled={assigningUser !== null}
+                            className={`${
+                                assigningUser !== null
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : 'text-gray-400 hover:text-gray-600'
+                            }`}
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div className="max-h-64 overflow-y-auto">
+                        {userModalConfig.users.map(user => {
+                            const userId = user.userId || user.id; // Handle both userId and id
+                            const isAssigning = assigningUser === userId;
+
+                            return (
+                                <div
+                                    key={userId}
+                                    onClick={() => !isAssigning && handleUserSelection(userId)}
+                                    className={`flex items-center p-3 rounded-md border-b border-gray-100 last:border-b-0 ${
+                                        isAssigning 
+                                            ? 'bg-blue-50 cursor-not-allowed opacity-75' 
+                                            : 'hover:bg-gray-50 cursor-pointer'
+                                    }`}
+                                >
+                                    <div className="flex-1">
+                                        <div className="font-medium text-gray-900">{user.name || user.username}</div>
+                                        <div className="text-sm text-gray-500">USER</div>
+                                    </div>
+                                    <div className="text-blue-600">
+                                        {isAssigning ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                        ) : (
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    
+                    <div className="flex justify-end mt-4">
+                        <button
+                            onClick={() => setShowUserModal(false)}
+                            disabled={assigningUser !== null}
+                            className={`px-4 py-2 rounded-md transition-colors ${
+                                assigningUser !== null
+                                    ? 'text-gray-400 bg-gray-50 cursor-not-allowed'
+                                    : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const handleOpen = async (taskId) => {
         // Get user info from localStorage
         const user = localStorage.getItem('user');
         const token = localStorage.getItem('token');
-        
+
         if (!user || !token) {
             customAlert({
                 title: 'Error',
@@ -308,10 +394,10 @@ const TaskSection = () => {
             // Build the URL for excel-preview.html with parameters
             const baseUrl = window.location.origin;
             const excelPreviewUrl = `${baseUrl}/excel-preview.html?taskId=${taskId}&companyId=${companyId}&userId=${userId}&userRole=${userRole}`;
-            
+
             // Open in new tab
             window.open(excelPreviewUrl, '_blank');
-            
+
         } catch (error) {
             customAlert({
                 title: 'Error',
@@ -407,28 +493,32 @@ const TaskSection = () => {
             return;
         }
 
-        // Open assignment modal
-        setSelectedTaskId(taskId);
-        setShowAssignmentModal(true);
-    };
-
-    const handleAssignmentConfirm = async (taskId, userId) => {
         try {
-            const result = await assignTask(taskId, userId);
-            if (result.success) {
-                await refreshTasks();
-                customAlert({
-                    title: 'Success',
-                    message: 'Task assigned successfully!',
-                    type: 'success'
-                });
-            } else {
-                throw new Error(result.error || 'Failed to assign task');
+            // Fetch all USER role users
+            const usersResponse = await UserService.getUsersByRoleAndCompany(userInfo.companyId, 'USER');
+            
+            if (!usersResponse.success) {
+                throw new Error('Failed to fetch users');
             }
+
+            const users = usersResponse.data;
+            
+            if (users.length === 0) {
+                customAlert({
+                    title: 'No Users Available',
+                    message: 'No USER role users found to assign this task.',
+                    type: 'info'
+                });
+                return;
+            }
+
+            // Create user selection modal
+            showUserSelectionModal(users, taskId, 'assign');
+
         } catch (error) {
             customAlert({
                 title: 'Error',
-                message: error.message || 'Failed to assign task. Please try again.',
+                message: 'Failed to load users. Please try again.',
                 type: 'error'
             });
         }
@@ -454,9 +544,18 @@ const TaskSection = () => {
             return;
         }
 
+        if (!task.assignedTo) {
+            customAlert({
+                title: 'Task Not Assigned',
+                message: 'This task is not assigned to anyone.',
+                type: 'info'
+            });
+            return;
+        }
+
         customAlert({
             title: 'Confirm Unassign',
-            message: 'Are you sure you want to unassign this task?',
+            message: `Are you sure you want to unassign this task from ${task.assignedTo.name}?`,
             type: 'warning',
             showCancel: true,
             onConfirm: async () => {
@@ -483,80 +582,169 @@ const TaskSection = () => {
         });
     };
 
+    const handleStatusUpdate = async (taskId, newStatus) => {
+    
+        
+        const task = tasks.find(t => t.id === taskId);
+
+        
+        if (!task) {
+            customAlert({
+                title: 'Error',
+                message: 'Task not found',
+                type: 'error'
+            });
+            return;
+        }
+
+        // Check if user can update status: ADMIN, DIRECTOR, or assigned user
+        const canUpdateStatus = userInfo.role === 'ADMIN' ||
+            userInfo.role === 'DIRECTOR' ||
+            (task.assignedTo && task.assignedTo.userId === userInfo.userId);
+
+
+
+        if (!canUpdateStatus) {
+            customAlert({
+                title: 'Permission Denied',
+                message: 'You can only update status of tasks assigned to you, or you need ADMIN/DIRECTOR role',
+                type: 'error'
+            });
+            return;
+        }
+
+        try {
+            const result = await updateTaskStatus(taskId, newStatus);
+
+            if (result.success) {
+                // No need to call refreshTasks() here since useTasks now updates local state immediately
+                customAlert({
+                    title: 'Success',
+                    message: `Task status updated to ${newStatus} successfully!`,
+                    type: 'success'
+                });
+            } else {
+                throw new Error(result.error || 'Failed to update task status');
+            }
+        } catch (error) {
+            console.error('❌ Error in handleStatusUpdate:', error);
+            customAlert({
+                title: 'Error',
+                message: error.message || 'Failed to update task status. Please try again.',
+                type: 'error'
+            });
+        }
+    };
+
     // --- Search & Filters ---
     const [searchTerm, setSearchTerm] = useState('');
-    const [createdById, setCreatedById] = useState('');
-    const [assignedToId, setAssignedToId] = useState('');
-    const [assignmentStatus, setAssignmentStatus] = useState('ALL'); // ALL | ASSIGNED | UNASSIGNED
+    const [taskStatus, setTaskStatus] = useState('ALL'); // ALL | NEW | UNDER_PROCESS | COMPLETED
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     const isAdminOrDirector = userInfo.role === 'ADMIN' || userInfo.role === 'DIRECTOR';
 
+    // Load available creators from tasks data
+    useEffect(() => {
+        if (!tasks || tasks.length === 0) {
+            setAvailableCreators([]);
+            return;
+        }
+
+        const creators = [];
+        const seenIds = new Set();
+
+        tasks.forEach(task => {
+            if (task.uploadedBy && !seenIds.has(task.uploadedBy)) {
+                seenIds.add(task.uploadedBy);
+                creators.push({
+                    id: task.uploadedBy,
+                    name: task.uploadedBy === userInfo.userId ? 'Me' : task.uploadedByName,
+                    role: 'CREATOR'
+                });
+            }
+        });
+
+        setAvailableCreators(creators);
+    }, [tasks, userInfo.userId]);
+
+    // Load available assignees from tasks data
+    useEffect(() => {
+        if (!tasks || tasks.length === 0) {
+            setAvailableAssignees([]);
+            return;
+        }
+
+        const assignees = [];
+        const seenIds = new Set();
+
+        tasks.forEach(task => {
+            if (task.assignedTo && task.assignedTo.userId && !seenIds.has(task.assignedTo.userId)) {
+                seenIds.add(task.assignedTo.userId);
+                assignees.push({
+                    id: task.assignedTo.userId,
+                    name: task.assignedTo.userId === userInfo.userId ? 'Me' : task.assignedTo.name,
+                    role: 'ASSIGNEE'
+                });
+            }
+        });
+
+        setAvailableAssignees(assignees);
+    }, [tasks, userInfo.userId]);
+
     const clearAllFilters = () => {
         setSearchTerm('');
-        setCreatedById('');
-        setAssignedToId('');
-        setAssignmentStatus('ALL');
+        setTaskStatus('ALL');
+        setCreatedByFilter('ALL');
+        setAssignedToFilter('ALL');
     };
 
     const hasActiveFilters = useMemo(() => {
         return (
             (searchTerm && searchTerm.trim() !== '') ||
-            (createdById && createdById !== '') ||
-            (assignedToId && assignedToId !== '') ||
-            assignmentStatus !== 'ALL'
+            taskStatus !== 'ALL' ||
+            createdByFilter !== 'ALL' ||
+            assignedToFilter !== 'ALL'
         );
-    }, [searchTerm, createdById, assignedToId, assignmentStatus]);
-
-    // Use taskCreators for Created By dropdown (filtered by role)
-    const displayUsers = useMemo(() => {
-        if (!isAdminOrDirector) return [];
-        return taskCreators || [];
-    }, [taskCreators, isAdminOrDirector]);
-
-    // Use filtered users for Assigned To dropdown (role-based)
-    const assignmentUsers = useMemo(() => {
-        if (!isAdminOrDirector) return [];
-        return taskAssignees || [];
-    }, [taskAssignees, isAdminOrDirector]);
+    }, [searchTerm, taskStatus, createdByFilter, assignedToFilter]);
 
     const normalizedIncludes = (text, query) => (text || '').toLowerCase().includes((query || '').toLowerCase());
 
     const filteredTasks = useMemo(() => {
-        let list = tasks || [];
+        
+        let list = [...tasks];
 
-        // Search by title (and also by creator/assignee names for convenience)
+        // Search by title
         if (searchTerm.trim()) {
             list = list.filter(t => {
                 const titleMatch = normalizedIncludes(t.title, searchTerm);
-                const creatorName = t.uploadedByName || '';
-                const assigneeName = t.assignedTo?.name || '';
+                const creatorName = t.uploadedBy === userInfo.userId ? 'Me' : (t.uploadedByName || '');
+                const assigneeName = t.assignedTo?.userId === userInfo.userId ? 'Me' : (t.assignedTo?.name || '');
                 return titleMatch || normalizedIncludes(creatorName, searchTerm) || normalizedIncludes(assigneeName, searchTerm);
             });
         }
 
-        // Created By filter - we need to match by name since backend returns uploadedByName as string
-        if (createdById) {
-            const selectedUser = displayUsers.find(u => String(u.id) === String(createdById));
-            if (selectedUser) {
-                list = list.filter(t => t.uploadedByName === selectedUser.name);
-            }
+        // Created By filter
+        if (createdByFilter !== 'ALL') {
+            list = list.filter(t => t.uploadedBy === parseInt(createdByFilter));
         }
 
         // Assigned To filter
-        if (assignedToId) {
-            list = list.filter(t => String(t.assignedTo?.userId || t.assignedTo?.id) === String(assignedToId));
+        if (assignedToFilter !== 'ALL') {
+            list = list.filter(t => t.assignedTo?.userId === parseInt(assignedToFilter));
         }
 
-        // Assignment Status filter
-        if (assignmentStatus === 'ASSIGNED') {
-            list = list.filter(t => !!t.assignedTo);
-        } else if (assignmentStatus === 'UNASSIGNED') {
-            list = list.filter(t => !t.assignedTo);
+        // Task Status filter
+        if (taskStatus === 'NEW') {
+            list = list.filter(t => t.status === 'NEW');
+        } else if (taskStatus === 'UNDER_PROCESS') {
+            list = list.filter(t => t.status === 'UNDER_PROCESS');
+        } else if (taskStatus === 'COMPLETED') {
+            list = list.filter(t => t.status === 'COMPLETED');
         }
+
 
         return list;
-    }, [tasks, searchTerm, createdById, assignedToId, assignmentStatus]);
+    }, [tasks, searchTerm, createdByFilter, assignedToFilter, taskStatus, userInfo.userId]);
 
     // Show loading state while user data is being loaded
     if (isLoading) {
@@ -573,8 +761,8 @@ const TaskSection = () => {
         return (
             <div className="text-center text-red-600 p-8">
                 <p>{initError}</p>
-                <button 
-                    onClick={() => window.location.reload()} 
+                <button
+                    onClick={() => window.location.reload()}
                     className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                     Reload Page
@@ -588,11 +776,12 @@ const TaskSection = () => {
         return (
             <div className="text-center text-red-600 p-8">
                 <p>Essential user data is missing. Please log in again.</p>
-                <button 
+
+                <button
                     onClick={() => {
                         localStorage.clear();
                         window.location.href = '/';
-                    }} 
+                    }}
                     className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                     Go to Login
@@ -605,6 +794,8 @@ const TaskSection = () => {
         <div className="flex justify-center items-start p-2">
             <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
                 <h2 className="text-center text-xl p-2 font-bold text-gray-800">Task Management</h2>
+                
+
 
                 {/* Toolbar Section */}
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -616,8 +807,13 @@ const TaskSection = () => {
                                 onSearchChange={setSearchTerm}
                                 loading={loading}
                                 taskCount={filteredTasks.length}
+                                creatorFilter={createdByFilter}
+                                availableCreators={availableCreators}
                             />
                         </div>
+
+
+
                         {/* Mobile Filter Toggle */}
                         {isAdminOrDirector && (
                             <button
@@ -636,57 +832,60 @@ const TaskSection = () => {
 
                 {/* Filters Section */}
                 {isAdminOrDirector && (
-                    <div className={`mb-4 p-4 bg-gray-50 rounded-lg transition-all duration-300 ${
-                        showMobileFilters ? 'block' : 'hidden md:block'
-                    }`}>
+                    <div className={`mb-4 p-4 bg-gray-50 rounded-lg transition-all duration-300 ${showMobileFilters ? 'block' : 'hidden md:block'
+                        }`}>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1 md:hidden">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Task Status
+                                </label>
+                                <select
+                                    value={taskStatus}
+                                    onChange={(e) => setTaskStatus(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="ALL">All Task Status</option>
+                                    <option value="NEW">New</option>
+                                    <option value="UNDER_PROCESS">Under Process</option>
+                                    <option value="COMPLETED">Completed</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Created By
                                 </label>
                                 <select
-                                    value={createdById}
-                                    onChange={(e) => setCreatedById(e.target.value)}
+                                    value={createdByFilter}
+                                    onChange={(e) => setCreatedByFilter(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    disabled={creatorsLoading}
                                 >
-                                    <option value="">All Created By</option>
-                                    {displayUsers.map(u => (
-                                        <option key={`creator-${u.id}`} value={u.id}>
-                                            {u.isCurrentUser ? 'Me' : u.name}
+                                    <option value="ALL">All Creators</option>
+                                    {availableCreators.map(creator => (
+                                        <option key={creator.id} value={creator.id}>
+                                            {creator.name}
                                         </option>
                                     ))}
                                 </select>
                             </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1 md:hidden">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Assigned To
                                 </label>
                                 <select
-                                    value={assignedToId}
-                                    onChange={(e) => setAssignedToId(e.target.value)}
+                                    value={assignedToFilter}
+                                    onChange={(e) => setAssignedToFilter(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    disabled={assigneesLoading}
                                 >
-                                    <option value="">All Assigned To</option>
-                                    {assignmentUsers.map(u => (
-                                        <option key={`assignee-${u.id}`} value={u.id}>{u.name}</option>
+                                    <option value="ALL">No Filter</option>
+                                    {availableAssignees.map(assignee => (
+                                        <option key={assignee.id} value={assignee.id}>
+                                            {assignee.name}
+                                        </option>
                                     ))}
                                 </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1 md:hidden">
-                                    Status
-                                </label>
-                                <select
-                                    value={assignmentStatus}
-                                    onChange={(e) => setAssignmentStatus(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="ALL">All Status</option>
-                                    <option value="ASSIGNED">Assigned</option>
-                                    <option value="UNASSIGNED">Unassigned</option>
-                                </select>
+
                             </div>
                         </div>
 
@@ -695,9 +894,20 @@ const TaskSection = () => {
                             <div className="text-sm text-gray-600 flex flex-col md:flex-row gap-2 md:gap-4">
                                 <span>Showing {filteredTasks.length} of {tasks?.length || 0} tasks</span>
                                 <div className="flex gap-4">
-                                    <span className="text-blue-600">Assigned: {filteredTasks.filter(t => t.assignedTo).length}</span>
-                                    <span className="text-yellow-600">Pending: {filteredTasks.filter(t => !t.assignedTo).length}</span>
+                                    <span className="text-yellow-600">New: {filteredTasks.filter(t => t.status === 'NEW').length}</span>
+                                    <span className="text-blue-600">Under Process: {filteredTasks.filter(t => t.status === 'UNDER_PROCESS').length}</span>
+                                    <span className="text-green-600">Completed: {filteredTasks.filter(t => t.status === 'COMPLETED').length}</span>
                                 </div>
+                                {createdByFilter !== 'ALL' && (
+                                    <span className="text-purple-600">
+                                        Creator: {availableCreators.find(c => c.id === parseInt(createdByFilter))?.name || 'Unknown'}
+                                    </span>
+                                )}
+                                {assignedToFilter !== 'ALL' && (
+                                    <span className="text-indigo-600">
+                                        Assigned: {availableAssignees.find(a => a.id === parseInt(assignedToFilter))?.name || 'Unknown'}
+                                    </span>
+                                )}
                             </div>
                             {hasActiveFilters && (
                                 <button
@@ -755,6 +965,7 @@ const TaskSection = () => {
                         onDelete={handleDelete}
                         onAssign={handleAssign}
                         onUnassign={handleUnassign}
+                        onStatusUpdate={handleStatusUpdate}
                         role={userInfo.role}
                         canManageTask={canManageTask}
                         isTaskAssignedToUser={isTaskAssignedToUser}
@@ -763,20 +974,11 @@ const TaskSection = () => {
                 )}
             </div>
 
-            {/* User Assignment Modal */}
-            <UserAssignmentModal
-                isOpen={showAssignmentModal}
-                onClose={() => setShowAssignmentModal(false)}
-                onAssign={handleAssignmentConfirm}
-                taskId={selectedTaskId}
-                companyId={userInfo.companyId}
-                currentUserRole={userInfo.role}
-                currentUserId={userInfo.userId}
-                loading={loading}
-            />
-
             {/* Custom Alert Modal */}
             <CustomAlert />
+            
+            {/* User Selection Modal */}
+            <UserSelectionModal />
         </div>
     );
 };

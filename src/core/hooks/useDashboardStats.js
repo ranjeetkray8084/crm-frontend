@@ -186,71 +186,17 @@ export const useDashboardStats = (companyId, userId, role) => {
   return { stats, loading, error };
 };
 
-export const useTodayEvents = (companyId, userId) => {
+export const useTodayEvents = (companyId, userId, role) => {
   const [todayEvents, setTodayEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadTodayEvents = useCallback(async () => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    if (!companyId) {
-      setTodayEvents([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const today = new Date().toISOString().split('T')[0];
-
-      const [userNotes, publicNotes, visibleNotes] = await Promise.all([
-        DashboardService.getUserNotes(companyId, userId),
-        DashboardService.getPublicNotes(companyId),
-        DashboardService.getNotesVisibleToUser(companyId, userId),
-      ]);
-
-      const combinedNotes = [
-        ...(userNotes.data || []),
-        ...(publicNotes.data || []),
-        ...(visibleNotes.data || []),
-      ];
-
-      const todayMap = new Map();
-      combinedNotes.forEach((note) => {
-        const noteDate = new Date(note.dateTime).toISOString().split('T')[0];
-        if (note.status !== 'CLOSED' && noteDate === today) {
-          todayMap.set(note.id, note);
-        }
-      });
-
-      const enrichedEvents = await Promise.all(
-        Array.from(todayMap.values()).map(async (note) => {
-          try {
-            const res = await DashboardService.getUsernameById(note.userId);
-            return { ...note, username: res.success ? res.data : 'Unknown' };
-          } catch {
-            return { ...note, username: 'Unknown' };
-          }
-        })
-      );
-
-      setTodayEvents(enrichedEvents);
-    } catch (err) {
-      setError(err.message || 'Failed to load today events');
-    } finally {
-      setLoading(false);
-    }
-  }, [companyId, userId]);
-
+  // This hook now just returns empty state since we'll use the context directly
+  // The actual today events will be loaded from the NotesContext
   useEffect(() => {
-    loadTodayEvents();
-  }, [loadTodayEvents]);
+    // Set loading to false immediately since we're not making API calls
+    setLoading(false);
+  }, []);
 
   return { todayEvents, loading, error };
 };

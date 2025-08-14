@@ -29,8 +29,6 @@ export const useTaskAssignees = (companyId, currentUserRole, currentUserId) => {
             }
 
             if (result.success) {
-                console.log('🔍 useTaskAssignees - Raw API data:', result.data);
-                console.log('🔍 Current user role:', currentUserRole);
                 setAllUsers(result.data || []);
             } else {
                 setError(result.error);
@@ -55,12 +53,7 @@ export const useTaskAssignees = (companyId, currentUserRole, currentUserId) => {
             );
         } else if (currentUserRole === 'ADMIN') {
             // Admin can assign to: Only USER role users assigned to them
-            filtered = allUsers.filter(user => {
-                const isUserRole = user.role === 'USER';
-                console.log('🔍 Filtering user:', user.name, 'Role:', user.role, 'Include:', isUserRole);
-                return isUserRole;
-            });
-            console.log('🔍 Filtered users for ADMIN:', filtered.map(u => ({ name: u.name, role: u.role })));
+            filtered = allUsers.filter(user => user.role === 'USER');
         }
 
         // Sort alphabetically by name

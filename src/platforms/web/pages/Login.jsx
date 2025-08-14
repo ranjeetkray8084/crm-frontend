@@ -7,7 +7,6 @@ import ForgetPassword from "./ForgetPassword";
 import { AuthService } from "../../../core/services/auth.service";
 import DeactivatedUserModal from "../components/modals/DeactivatedUserModal";
 
-
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -16,17 +15,14 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
   const [deactivatedUserEmail, setDeactivatedUserEmail] = useState("");
+  const [isModalBlocking, setIsModalBlocking] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Auto-clear error message after 4 seconds
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => {
-        setError("");
-      }, 4000); // 4 seconds
-
+      const timer = setTimeout(() => setError(""), 4000);
       return () => clearTimeout(timer);
     }
   }, [error]);
@@ -43,16 +39,8 @@ const Login = () => {
       const result = await AuthService.login(formData);
 
       if (result.success) {
-        // Update auth context with both user data and token
         login(result.user, result.token);
-        
-        // Verify data is available
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-        
-        // Navigate to dashboard or redirect URL
         const redirectUrl = localStorage.getItem("redirectUrl");
-        
         if (redirectUrl) {
           localStorage.removeItem("redirectUrl");
           navigate(redirectUrl);
@@ -60,11 +48,10 @@ const Login = () => {
           navigate("/dashboard");
         }
       } else {
-        // Check if user is deactivated
         if (result.isDeactivated) {
           setDeactivatedUserEmail(result.userEmail || formData.email);
           setShowDeactivatedModal(true);
-          setError(""); // Clear error since we're showing the modal
+          setIsModalBlocking(true);
         } else {
           setError(result.error || "Login failed");
         }
@@ -83,6 +70,7 @@ const Login = () => {
         <h1 className="text-3xl font-extrabold tracking-wide uppercase">LEADS TRACKER</h1>
         <p className="text-xs tracking-wider mt-1">Track Leads, Close Faster</p>
       </div>
+
       {/* LEFT SECTION */}
       <motion.div
         className="hidden md:flex md:w-1/2 flex-col justify-center items-center text-[#1c69ff]"
@@ -90,34 +78,38 @@ const Login = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <h1 className="text-5xl font-extrabold tracking-wide mb-2 uppercase">
-          LEADS TRACKER
-        </h1>
+        <h1 className="text-5xl font-extrabold tracking-wide mb-2 uppercase">LEADS TRACKER</h1>
         <p className="text-sm tracking-wider mb-10">Track Leads, Close Faster</p>
         <img src="/images/building-logo.jpeg" alt="Logo" className="w-48 sm:w-72 md:w-[420px] h-auto" />
       </motion.div>
 
       {/* RIGHT SECTION with Flip Animation */}
-      <motion.div className="w-full md:w-1/2 flex flex-1 justify-center items-center px-4 py-8 md:py-0 perspective-[1200px]">
+      <div className="w-full md:w-1/2 flex flex-1 justify-center items-center px-4 py-8 md:py-0" style={{ perspective: "1200px" }}>
         <motion.div
           className="relative w-full max-w-[500px] min-h-[520px] md:h-[600px] rounded-xl shadow-xl"
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.8 }}
           style={{ transformStyle: "preserve-3d" }}
         >
-          {/* Login Form */}
-          <motion.div
-            className="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-xl p-6 sm:p-8 md:p-10 overflow-y-auto"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: isFlipped ? 0 : 1 }}
+          {/* FRONT SIDE - Login Form */}
+          <div
+            className="absolute w-full h-full bg-white border border-gray-200 rounded-xl p-6 sm:p-8 md:p-10 overflow-y-auto"
             style={{ backfaceVisibility: "hidden" }}
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-[#1c69ff] text-center mb-8">
-              Welcome Back!
-            </h2>
+            {isModalBlocking && (
+              <div className="absolute inset-0 bg-white bg-opacity-90 z-10 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🔒</div>
+                  <p className="text-lg font-semibold text-gray-700 mb-2">Account Deactivated</p>
+                  <p className="text-sm text-gray-500">Please check the modal above for instructions</p>
+                </div>
+              </div>
+            )}
+
+            <h2 className="text-2xl md:text-3xl font-bold text-[#1c69ff] text-center mb-8">Welcome Back!</h2>
 
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -131,9 +123,7 @@ const Login = () => {
             <form onSubmit={handleLogin} className="space-y-6">
               {/* Email */}
               <div>
-                <label className="block text-sm font-semibold text-[#1c69ff] mb-1">
-                  Your Email
-                </label>
+                <label className="block text-sm font-semibold text-[#1c69ff] mb-1">Your Email</label>
                 <div className="flex items-center border border-black rounded px-3 py-3 bg-gray-100">
                   <Mail size={18} className="mr-2 text-black" />
                   <input
@@ -150,9 +140,7 @@ const Login = () => {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-semibold text-[#1c69ff] mb-1">
-                  Password
-                </label>
+                <label className="block text-sm font-semibold text-[#1c69ff] mb-1">Password</label>
                 <div className="flex items-center border border-black rounded px-3 py-3 bg-gray-100 relative">
                   <Lock size={18} className="mr-2 text-black" />
                   <input
@@ -185,34 +173,65 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full bg-[#1c69ff] hover:bg-[#1554cc] text-white font-bold py-3 rounded text-sm transition-all duration-200 ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-[#1c69ff] hover:bg-[#1554cc] text-white font-bold py-3 rounded text-sm transition-all duration-200 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {isLoading ? "Logging in..." : "Log in"}
               </button>
             </form>
-          </motion.div>
+          </div>
 
-          {/* Forget Password Component */}
-          <motion.div
+          {/* BACK SIDE - Forget Password */}
+          <div
             className="absolute w-full h-full bg-white border border-gray-200 rounded-xl p-6 sm:p-8 md:p-10 overflow-y-auto"
-            style={{
-              transform: "rotateY(180deg)",
-              backfaceVisibility: "hidden",
-            }}
+            style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
           >
+            {isModalBlocking && (
+              <div className="absolute inset-0 bg-white bg-opacity-90 z-10 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🔒</div>
+                  <p className="text-lg font-semibold text-gray-700 mb-2">Account Deactivated</p>
+                  <p className="text-sm text-gray-500">Please check the modal above for instructions</p>
+                </div>
+              </div>
+            )}
             <ForgetPassword onBack={() => setIsFlipped(false)} />
-          </motion.div>
+          </div>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Deactivated User Modal */}
-      <DeactivatedUserModal
-        isOpen={showDeactivatedModal}
-        onClose={() => setShowDeactivatedModal(false)}
-        userEmail={deactivatedUserEmail}
-      />
+      {showDeactivatedModal && (
+        <DeactivatedUserModal
+          isOpen={showDeactivatedModal}
+          onClose={() => {
+            setShowDeactivatedModal(false);
+            setIsModalBlocking(false);
+          }}
+          userEmail={deactivatedUserEmail}
+        />
+      )}
+
+      {/* Fallback for deactivated users if modal fails */}
+      {showDeactivatedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Deactivated</h3>
+            <p className="text-gray-600 mb-4">
+              Your account has been deactivated. Please contact your administrator to reactivate it.
+            </p>
+            <p className="text-sm text-gray-500 mb-4">Account: {deactivatedUserEmail}</p>
+            <button
+              onClick={() => {
+                setShowDeactivatedModal(false);
+                setIsModalBlocking(false);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+            >
+              OK, I Understand
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

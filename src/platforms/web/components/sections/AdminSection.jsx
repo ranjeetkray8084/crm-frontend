@@ -391,13 +391,15 @@ const AdminSection = () => {
         </>
       )}
 
-      {/* Show Update Modal if selected - Only for Director */}
-      {selectedAdmin && role === 'DIRECTOR' && (
+      {/* Show Update Modal if selected - For Director, Admin, and Developer roles */}
+      {selectedAdmin && role && (role.toUpperCase() === 'DIRECTOR' || role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'DEVELOPER') && (
         <UpdateUserModal
           user={selectedAdmin}
           onClose={handleUpdateModalClose}
         />
       )}
+      
+
 
       {/* Show Assigned Users Modal if selected - Only for Director */}
       {viewingAssignedUsers && role === 'DIRECTOR' && (

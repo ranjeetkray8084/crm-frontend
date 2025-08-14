@@ -46,6 +46,7 @@ const DirectorTableRow = ({
 
     return (
         <tr className="hover:bg-gray-50 transition-colors">
+            <td className="border-b px-6 py-4 text-gray-600">{director.userId}</td>
             <td className="border-b px-6 py-4">
                 <div className="font-medium text-gray-900">{highlightText(director.name, searchTerm)}</div>
             </td>

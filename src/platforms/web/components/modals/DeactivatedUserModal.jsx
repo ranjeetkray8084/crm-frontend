@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasAcknowledged, setHasAcknowledged] = useState(false);
 
   useEffect(() => {
     if (isOpen && userEmail) {
@@ -31,11 +32,15 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
         }
       }
     } catch (error) {
-
       setUserRole('USER'); // Default fallback
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAcknowledge = () => {
+    setHasAcknowledged(true);
+    onClose();
   };
 
   const getContactInfo = () => {
@@ -152,6 +157,8 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
     }
   };
 
+  
+  
   if (!isOpen) return null;
 
   const contactInfo = getContactInfo();
@@ -166,7 +173,7 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-            onClick={onClose}
+            onClick={hasAcknowledged ? onClose : undefined}
           />
 
           {/* Modal */}
@@ -191,8 +198,13 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
                 </div>
               </div>
               <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={hasAcknowledged ? onClose : undefined}
+                disabled={!hasAcknowledged}
+                className={`transition-colors ${
+                  hasAcknowledged 
+                    ? 'text-gray-400 hover:text-gray-600 cursor-pointer' 
+                    : 'text-gray-300 cursor-not-allowed'
+                }`}
               >
                 <X className="w-6 h-6" />
               </button>
@@ -206,6 +218,15 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
               </div>
             ) : (
               <>
+                {/* Warning Message */}
+                {!hasAcknowledged && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 text-center font-medium">
+                      ⚠️ Please read this message carefully before proceeding
+                    </p>
+                  </div>
+                )}
+
                 {/* Description */}
                 <div className="mb-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">
@@ -240,8 +261,18 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
                   ))}
                 </div>
 
-                {/* Footer */}
+                {/* OK Button */}
                 <div className="mt-6 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleAcknowledge}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    OK, I Understand
+                  </button>
+                </div>
+
+                {/* Footer */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500 text-center">
                     Once your account is reactivated, you'll be able to log in normally.
                   </p>

@@ -1,13 +1,26 @@
 import React from 'react';
-import { RefreshCw, Search, Filter, Download } from 'lucide-react';
+import { RefreshCw, Search } from 'lucide-react';
 
-const TaskToolbar = ({ 
-  onRefresh, 
-  searchTerm, 
-  onSearchChange, 
+const TaskToolbar = ({
+  onRefresh,
+  searchTerm,
+  onSearchChange,
   loading = false,
-  taskCount = 0 
+  taskCount = 0,
+  creatorFilter = null,
+  availableCreators = []
 }) => {
+  const getCreatorFilterText = () => {
+    if (!creatorFilter || creatorFilter === 'ALL') return null;
+
+    if (creatorFilter === 'CURRENT_USER') return 'Me';
+
+    const creator = availableCreators.find(c => c.id === parseInt(creatorFilter));
+    return creator ? `Created by: ${creator.name}` : null;
+  };
+
+  const creatorFilterText = getCreatorFilterText();
+
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -17,6 +30,11 @@ const TaskToolbar = ({
           <span className="ml-3 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
             {taskCount} tasks
           </span>
+          {creatorFilterText && (
+            <span className="ml-2 px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+              {creatorFilterText}
+            </span>
+          )}
         </div>
 
         {/* Right side - Actions */}

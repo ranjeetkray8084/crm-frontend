@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Upload, FileSpreadsheet, X } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const TaskUploadForm = ({ onUpload, loading = false }) => {
   const [title, setTitle] = useState('');
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
+  const [fileDimensions, setFileDimensions] = useState(null);
 
   const allowedTypes = [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -17,7 +19,7 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
     if (fileInput) fileInput.value = '';
   };
 
-  const validateAndSetFile = (selectedFile) => {
+  const validateAndSetFile = async (selectedFile) => {
     setError('');
 
     if (!allowedTypes.includes(selectedFile.type) &&
@@ -31,7 +33,73 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
       return;
     }
 
-    setFile(selectedFile);
+    // Validate Excel file dimensions
+    try {
+      const dimensions = await validateExcelDimensions(selectedFile);
+      if (!dimensions.valid) {
+        setError(`❌ ${dimensions.error}`);
+        return;
+      }
+      setFile(selectedFile);
+      setFileDimensions({ columns: dimensions.columns, rows: dimensions.rows });
+    } catch (error) {
+      setError('❌ Error validating file dimensions. Please try again.');
+      console.error('File validation error:', error);
+    }
+  };
+
+  const validateExcelDimensions = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          // Get the range of the worksheet
+          const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+          const maxRow = range.e.r + 1; // +1 because range is 0-indexed
+          const maxCol = range.e.c + 1; // +1 because range is 0-indexed
+          
+  
+          
+          if (maxCol > 6) {
+            resolve({
+              valid: false,
+              error: `File has ${maxCol} columns. Maximum allowed is 6 columns.`
+            });
+            return;
+          }
+          
+          if (maxRow > 600) {
+            resolve({
+              valid: false,
+              error: `File has ${maxRow} rows. Maximum allowed is 600 rows.`
+            });
+            return;
+          }
+          
+          resolve({ valid: true, columns: maxCol, rows: maxRow });
+        } catch (error) {
+          console.error('Excel parsing error:', error);
+          resolve({
+            valid: false,
+            error: 'Unable to read Excel file. Please ensure it\'s a valid Excel file.'
+          });
+        }
+      };
+      
+      reader.onerror = () => {
+        resolve({
+          valid: false,
+          error: 'Error reading file. Please try again.'
+        });
+      };
+      
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   const handleFileChange = (e) => {
@@ -75,6 +143,7 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
     if (result?.success) {
       setTitle('');
       setFile(null);
+      setFileDimensions(null);
       resetFileInput();
       setError('');
     } else {
@@ -84,6 +153,7 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
 
   const removeFile = () => {
     setFile(null);
+    setFileDimensions(null);
     resetFileInput();
     setError('');
   };
@@ -137,7 +207,7 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
                   <span className="font-medium text-blue-600 hover:text-blue-500">Click to upload</span>{' '}
                   or drag and drop
                 </p>
-                <p className="text-xs text-gray-500">Excel files (.xlsx, .xls) under 10MB</p>
+                <p className="text-xs text-gray-500">Excel files (.xlsx, .xls) under 10MB, max 6 columns × 600 rows</p>
               </div>
             ) : (
               <div className="flex items-center justify-between">
@@ -147,6 +217,11 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
                     <p className="text-sm font-medium text-gray-900">{file.name}</p>
                     <p className="text-xs text-gray-500">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
+                      {fileDimensions && (
+                        <span className="ml-2 text-green-600">
+                          • {fileDimensions.columns} cols × {fileDimensions.rows} rows
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

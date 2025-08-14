@@ -22,7 +22,7 @@ import AddNoteFormWrapper from '../components/forms/AddNoteFormWrapper';
 import AddPropertyForm from '../components/forms/AddPropertyForm';
 import AddTaskForm from '../components/forms/AddTaskFrom';
 import AddAdmin from '../components/forms/AddUserFrom';
-import { debugAuthStatus, testAuthenticatedCall } from '../../../core/utils/debugAuth';
+
 
 
 function Dashboard() {
@@ -40,9 +40,6 @@ function Dashboard() {
       const storedUser = localStorage.getItem('user');
       const token = localStorage.getItem('token');
       
-      // Debug authentication status
-      debugAuthStatus();
-      
       if (storedUser && token) {
         try {
           const parsedUser = JSON.parse(storedUser);
@@ -50,12 +47,6 @@ function Dashboard() {
           const finalUserId = parsedUser.userId || parsedUser.id || '';
           const finalUserRole = parsedUser.role || '';
           const finalCompanyId = parsedUser.companyId || '';
-          
-          // Test the problematic API call
-          if (finalUserRole === 'ADMIN' && finalCompanyId && finalUserId) {
-            console.log('🧪 Testing closed leads API call...');
-            testAuthenticatedCall();
-          }
           
           // More lenient check - only redirect if critical data is missing
           if (!finalUserId || !finalUserRole) {
@@ -126,7 +117,7 @@ function Dashboard() {
       case 'Notes': return <AddNoteFormWrapper />;
       case 'Task': return <AddTaskForm />;
       case 'ViewAdmins': return <ViewAdmins />;
-      case 'ViewDirector': return <DirectorSection />;
+      case 'ViewDirectors': return <DirectorSection />;
       case 'logout':
         handleLogout();
         return null;

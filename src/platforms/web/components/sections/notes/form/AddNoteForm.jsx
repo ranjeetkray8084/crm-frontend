@@ -37,26 +37,38 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
   const [availableUsers, setAvailableUsers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { users: allUsers, loading, loadUsers } = useUsers(companyId, role, userId);
-
-  useEffect(() => {
-    const vis = formData.visibility;
-    if ((vis === 'SPECIFIC_USERS' || vis === 'SPECIFIC_ADMIN') && companyId && userId && role) {
-      loadUsers();
-    } else {
-      setAvailableUsers([]);
-      setSelectedUsers([]);
-    }
-  }, [formData.visibility, companyId, userId, role, loadUsers]);
+  const { 
+    users: allUsers, 
+    loading, 
+    loadUsers, 
+    getUsersByRoleAndCompany, 
+    getAdminsByCompany 
+  } = useUsers(companyId, role, userId);
 
   useEffect(() => {
     const vis = formData.visibility;
     if (vis === 'SPECIFIC_USERS') {
-      setAvailableUsers(allUsers.filter(u => u.role === 'USER'));
+      const fetchSpecificUsers = async () => {
+        await getUsersByRoleAndCompany('USER');
+      };
+      fetchSpecificUsers();
     } else if (vis === 'SPECIFIC_ADMIN') {
-      setAvailableUsers(allUsers.filter(u => u.role === 'ADMIN'));
+      const fetchAdmins = async () => {
+        await getAdminsByCompany();
+      };
+      fetchAdmins();
+    } else {
+      setAvailableUsers([]);
+      setSelectedUsers([]);
     }
-  }, [allUsers, formData.visibility]);
+  }, [formData.visibility, companyId, getUsersByRoleAndCompany, getAdminsByCompany]);
+
+  // Use the hook's users state when it changes
+  useEffect(() => {
+    if (allUsers.length > 0) {
+      setAvailableUsers(allUsers);
+    }
+  }, [allUsers]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -186,7 +198,7 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
         {(formData.visibility === 'SPECIFIC_USERS' || formData.visibility === 'SPECIFIC_ADMIN') && (
           <div className="p-4 bg-gray-50 border rounded-lg">
             <label className="block text-sm font-medium mb-2">
-              Select {formData.visibility === 'SPECIFIC_USERS' ? 'Users' : 'Admins'}
+              Select {formData.visibility === 'SPECIFIC_USERS' ? 'Users' : 'Admin Users'}
             </label>
 
             {availableUsers.length > 0 && (

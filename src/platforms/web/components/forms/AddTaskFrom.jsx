@@ -10,7 +10,7 @@ const AddTaskForm = () => {
   const userId = user?.userId || user?.id;
   const role = user?.role;
 
-  // Debug logging to identify missing companyId issues
+
   React.useEffect(() => {
     if (user && !companyId) {
       console.error('User authenticated but missing companyId:', user);

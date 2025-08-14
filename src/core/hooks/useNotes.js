@@ -2,11 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { NoteService } from '../services/note.service';
 import { customAlert } from '../utils/alertUtils';
 import axios from '../../legacy/api/axios';
+import { useNotesContext } from '../../shared/contexts/NotesContext';
 
 export const useNotes = (companyId, userId, role) => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Get context to update shared notes data
+  const { updateNotesData } = useNotesContext();
 
   const loadNotes = useCallback(async () => {
     if (!companyId || !userId || !role) {
@@ -106,8 +110,14 @@ export const useNotes = (companyId, userId, role) => {
       });
 
       setNotes(sortedNotes);
+      
+      // Update the shared context with the loaded notes data
+
+      updateNotesData(sortedNotes, false, null);
     } catch (err) {
       setError('A critical error occurred while loading notes.');
+      // Update context with error state
+      updateNotesData([], false, err.message);
     } finally {
       setLoading(false);
     }

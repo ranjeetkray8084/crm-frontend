@@ -250,6 +250,30 @@ export class DashboardService {
   }
 
   /**
+   * Get notes visible to admin.
+   */
+  static getNotesVisibleToAdmin(companyId, adminId) {
+    return this._request(
+      () => axios.get(API_ENDPOINTS.NOTES.GET_PUBLIC_AND_ADMIN(companyId), {
+        params: { adminId }
+      }),
+      'Failed to load admin visible notes'
+    );
+  }
+
+  /**
+   * Get today's events for admin (including director-created events).
+   */
+  static getTodayEventsForAdmin(companyId, adminId) {
+    return this._request(
+      () => axios.get(API_ENDPOINTS.NOTES.GET_TODAY_EVENTS_ADMIN(companyId), {
+        params: { adminId }
+      }),
+      'Failed to load today events for admin'
+    );
+  }
+
+  /**
    * Get username by user ID.
    */
   static getUsernameById(userId) {

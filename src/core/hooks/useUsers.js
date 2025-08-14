@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { UserService } from '../services';
 import { customAlert } from '../utils/alertUtils';
 
-export const useUsers = (companyId, role, userId) => {
+export const useUsers = (companyId, role, userId, includeAdmins = false) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -37,18 +37,9 @@ export const useUsers = (companyId, role, userId) => {
         if (role === 'ADMIN') {
           // Admin should only see USER role users assigned to them
           filteredUsers = filteredUsers.filter(user => user.role === 'USER');
-          console.log('🔍 useUsers - Admin filtering:', {
-            original: result.data?.length,
-            filtered: filteredUsers.length,
-            users: filteredUsers.map(u => ({ name: u.name, role: u.role }))
-          });
         } else if (role === 'DIRECTOR') {
           // Director should see USER role users in company
           filteredUsers = filteredUsers.filter(user => user.role === 'USER');
-          console.log('🔍 useUsers - Director filtering:', {
-            original: result.data?.length,
-            filtered: filteredUsers.length
-          });
         }
         // DEVELOPER role already gets filtered data from backend
         
@@ -65,6 +56,99 @@ export const useUsers = (companyId, role, userId) => {
       setLoading(false);
     }
   }, [companyId, role, userId]);
+
+  // --- Load All Users Including Admins and Directors ---
+  const loadAllUsersIncludingAdmins = useCallback(async () => {
+    if (!companyId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await UserService.getAllUsersByCompany(companyId);
+      
+      if (result.success) {
+        // Don't filter by role - include all users (ADMIN, DIRECTOR, USER)
+        const allUsers = result.data || [];
+        setUsers(allUsers);
+      } else {
+        setError(result.error);
+        customAlert('❌ ' + result.error);
+      }
+    } catch (err) {
+      const errorMsg = 'Failed to load all users';
+      setError(errorMsg);
+      customAlert('❌ ' + errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId]);
+
+  // --- Load Only Admin and Director Users ---
+  const loadAdminAndDirectorUsers = useCallback(async () => {
+    if (!companyId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Get ADMIN users by company
+      const adminResult = await UserService.getAdminRoleByCompany(companyId);
+      // Get DIRECTOR users (global)
+      const directorResult = await UserService.getUsersWithDirectorRole();
+      
+      let adminDirectorUsers = [];
+      
+      if (adminResult.success) {
+        adminDirectorUsers = adminDirectorUsers.concat(adminResult.data || []);
+      }
+      
+      if (directorResult.success) {
+        adminDirectorUsers = adminDirectorUsers.concat(directorResult.data || []);
+      }
+      
+      setUsers(adminDirectorUsers);
+    } catch (err) {
+      const errorMsg = 'Failed to load admin and director users';
+      setError(errorMsg);
+      customAlert('❌ ' + errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId]);
+
+  // --- Load Only User Role Users ---
+  const loadUserRoleUsers = useCallback(async () => {
+    if (!companyId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Use the specific API for USER role users by company
+      const result = await UserService.getUserRoleByCompany(companyId);
+      
+      if (result.success) {
+        const userRoleUsers = result.data || [];
+        setUsers(userRoleUsers);
+      } else {
+        setError(result.error);
+        customAlert('❌ ' + result.error);
+      }
+    } catch (err) {
+      const errorMsg = 'Failed to load user role users';
+      setError(errorMsg);
+      customAlert('❌ ' + errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId]);
 
   // --- Action Handler Helper ---
   const executeUserAction = useCallback(async (apiCall, successMsg, errorMsg, shouldReload = true) => {
@@ -191,15 +275,36 @@ export const useUsers = (companyId, role, userId) => {
   const countUsersByAdmin = useCallback((adminId) =>
     fetchUserData(() => UserService.countUsersByAdmin(adminId, companyId), 'Failed to count users'), [fetchUserData, companyId]);
 
-  const getAdminsByCompany = useCallback(() =>
-    fetchUserData(() => UserService.getAdminsByCompany(companyId), 'Failed to load admins'), [fetchUserData, companyId]);
+  const getAdminsByCompany = useCallback(async () => {
+    try {
+      const result = await UserService.getAdminsByCompany(companyId);
+      if (result.success) {
+        setUsers(result.data || []);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: 'Failed to load admins' };
+    }
+  }, [companyId]);
 
   // --- Effect ---
   useEffect(() => {
     if (companyId || role === 'DEVELOPER') {
-      loadUsers();
+      if (includeAdmins === 'admin-director') {
+        // Load only ADMIN and DIRECTOR users for Created By filter
+        loadAdminAndDirectorUsers();
+      } else if (includeAdmins === 'user-only') {
+        // Load only USER role users for Assigned To filter
+        loadUserRoleUsers();
+      } else if (includeAdmins === true) {
+        // Load all users including admins (legacy support)
+        loadAllUsersIncludingAdmins();
+      } else {
+        // Default behavior - load users based on role
+        loadUsers();
+      }
     }
-  }, [loadUsers]);
+  }, [loadUsers, loadAllUsersIncludingAdmins, loadAdminAndDirectorUsers, loadUserRoleUsers, includeAdmins, companyId, role]);
 
   // --- Return All Methods & States ---
   return {
@@ -227,6 +332,9 @@ export const useUsers = (companyId, role, userId) => {
     getUserByAdmin,
     countUsersByAdmin,
     getAdminsByCompany,
-    getAllUsersByCompany
+    getAllUsersByCompany,
+    loadAllUsersIncludingAdmins,
+    loadAdminAndDirectorUsers,
+    loadUserRoleUsers
   };
 };

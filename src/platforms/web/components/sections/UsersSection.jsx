@@ -427,8 +427,8 @@ const UsersSection = () => {
         </>
       )}
 
-      {/* Show Update Modal if selected - Only for Director */}
-      {selectedUser && role === 'DIRECTOR' && (
+      {/* Show Update Modal if selected - For Director, Admin, and Developer roles */}
+      {selectedUser && (role?.toUpperCase() === 'DIRECTOR' || role?.toUpperCase() === 'ADMIN' || role?.toUpperCase() === 'DEVELOPER') && (
         <UpdateUserModal
           user={selectedUser}
           onClose={handleUpdateModalClose}

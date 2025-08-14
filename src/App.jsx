@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./shared/contexts/AuthContext";
+import { NotesProvider } from "./shared/contexts/NotesContext";
 import Dashboard from "./platforms/web/pages/Dashboard";
 import Login from "./platforms/web/pages/Login";
 import ExcelEditorPage from "./platforms/web/pages/ExcelEditorPage";
@@ -19,17 +20,19 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/excel-preview/:taskId" element={<ExcelEditorPage />} />
-          <Route path="/security-test" element={<SecurityTest />} />
-        </Routes>
-      </Router>
+      <NotesProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/excel-preview/:taskId" element={<ExcelEditorPage />} />
+            <Route path="/security-test" element={<SecurityTest />} />
+          </Routes>
+        </Router>
 
-      {/* Global Custom Alert */}
-      <CustomAlert message={alertMsg} onClose={() => setAlertMsg("")} />
+        {/* Global Custom Alert */}
+        <CustomAlert message={alertMsg} onClose={() => setAlertMsg("")} />
+      </NotesProvider>
     </AuthProvider>
   );
 }

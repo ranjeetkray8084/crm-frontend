@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
-import { UserPlus, ArrowLeft } from 'lucide-react'
+import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react'
+
+
 import { useUsers } from '../../../../core/hooks/useUsers'
 import { useAuth } from '../../../../shared/contexts/AuthContext'
 import { customAlert } from '../../../../core/utils/alertUtils'
@@ -235,11 +237,11 @@ const AddUserForm = ({ onSuccess }) => {
         onSuccess?.();
       } else {
         // Show error message if result is not successful
-        customAlert('❌ Error: ' + (result.error || 'Failed to create user'));
+        customAlert(result.error || 'Failed to create user');
       }
     } catch (error) {
 
-      customAlert('❌ Error adding user: ' + error.message);
+      customAlert(error.message || 'Error adding user');
     }
   }, [formData, companyId, createUserHook, onSuccess, userRole, userId]);
 
@@ -277,6 +279,7 @@ const AddUserForm = ({ onSuccess }) => {
         </div>
 
         <div className="p-6">
+
           {!companyId && userRole !== 'DEVELOPER' && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
               ⚠️ Company ID not found. Please login again.
@@ -294,8 +297,6 @@ const AddUserForm = ({ onSuccess }) => {
               ℹ️ As a Developer, you can create Directors for any company. Please select the company first.
             </div>
           )}
-
-
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -513,10 +514,16 @@ const AddUserForm = ({ onSuccess }) => {
               <button
                 type="submit"
                 disabled={loading || !isFormValid()}
-                className="flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors"
+                className={`flex items-center px-6 py-3 text-white font-medium rounded-lg transition-colors duration-200 ${
+                  loading 
+                    ? 'bg-blue-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                } ${
+                  !isFormValid() && !loading ? 'bg-gray-400 cursor-not-allowed' : ''
+                }`}
               >
                 <UserPlus size={18} className="mr-2" />
-                {loading ? 'Adding User...' : 'Add User'}
+                {loading ? 'Adding...' : 'Add User'}
               </button>
             </div>
           </form>

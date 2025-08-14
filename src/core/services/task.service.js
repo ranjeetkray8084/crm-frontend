@@ -126,17 +126,39 @@ export class TaskService {
   // ✅ Assign/Unassign a task
   static async assignTask(taskId, companyId, userId = null) {
     try {
+      const endpoint = API_ENDPOINTS.TASKS.ASSIGN(taskId);
       const params = { companyId };
-      if (userId) {
+      
+      if (userId !== null && userId !== undefined) {
         params.userId = userId;
       }
       
-      const response = await axios.put(
-        buildUrl(API_ENDPOINTS.TASKS.ASSIGN(taskId), params)
-      );
+      const url = buildUrl(endpoint, params);
+      const response = await axios.put(url);
+      
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Failed to assign/unassign task' };
+      return { success: false, error: error.response?.data || 'Failed to assign/unassign task' };
+    }
+  }
+
+  // ✅ Update task status
+  static async updateTaskStatus(taskId, companyId, status) {
+    try {
+      const endpoint = API_ENDPOINTS.TASKS.UPDATE_STATUS(taskId);
+      const params = { companyId, status };
+      const fullUrl = buildUrl(endpoint, params);
+
+      const response = await axios.put(fullUrl);
+      
+      // Check if the response indicates success
+      if (response.status === 200) {
+        return { success: true, data: response.data };
+      } else {
+        return { success: false, error: `Backend returned status ${response.status}` };
+      }
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Failed to update task status' };
     }
   }
 }

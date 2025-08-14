@@ -2,6 +2,7 @@
 import axios from "axios";
 
 // ✅ Backend API base URL - pointing to Spring Boot backend
+// Force localhost for development
 const BASE_URL = "https://backend.leadstracker.in";
 
 // ✅ Security configuration
@@ -65,10 +66,6 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
-      // Debug: Log token attachment
-      console.log('🔑 Token attached to request:', config.url, token.substring(0, 20) + '...');
-    } else {
-      console.warn('⚠️ No token found for request:', config.url);
     }
 
     // Add request timestamp for security
@@ -118,6 +115,12 @@ axiosInstance.interceptors.response.use(
         // Redirect to login
         window.location.href = "/";
       }
+    }
+
+    // Handle 400 errors (validation errors like duplicate email/phone)
+    if (error.response?.status === 400) {
+      // Let the service layer handle these specific validation errors
+      // Don't modify the error here, just pass it through
     }
 
     // Handle 500 errors (like your JPA parameter binding issue)

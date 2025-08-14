@@ -15,16 +15,24 @@ const NoteForm = ({ companyId, userId, createNote }) => {
         if (visibility === 'SPECIFIC_USERS' || visibility === 'SPECIFIC_ADMIN') {
             const fetchUsers = async () => {
                 try {
-                    const res = await fetch(`/api/users/company/${companyId}`);
+                    let endpoint;
+                    if (visibility === 'SPECIFIC_USERS') {
+                        endpoint = `/api/users/user-role/${companyId}`;
+                    } else if (visibility === 'SPECIFIC_ADMIN') {
+                        endpoint = `/api/users/admin-role/${companyId}`;
+                    }
+                    
+                    const res = await fetch(endpoint);
                     if (res.ok) {
-                        const allUsers = await res.json();
-                        const filteredUsers = allUsers.filter(u =>
-                            visibility === 'SPECIFIC_USERS' ? u.role === 'USER' : u.role === 'ADMIN'
-                        );
-                        setAvailableUsers(filteredUsers);
+                        const users = await res.json();
+                        setAvailableUsers(users);
+                    } else {
+                        console.error('Failed to fetch users:', res.status);
+                        setAvailableUsers([]);
                     }
                 } catch (error) {
-            
+                    console.error('Error fetching users:', error);
+                    setAvailableUsers([]);
                 }
             };
             fetchUsers();
