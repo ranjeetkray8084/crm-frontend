@@ -207,6 +207,128 @@
         .column-selected {
             background-color: #dbeafe !important;
         }
+
+        /* Custom Modal Styles */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        .custom-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #dc2626;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+
+        .modal-btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .modal-btn-danger:hover {
+            background-color: #b91c1c;
+            transform: translateY(-1px);
+        }
+
+        .modal-btn-cancel {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+
+        .modal-btn-cancel:hover {
+            background-color: #e2e8f0;
+            color: #475569;
+            transform: translateY(-1px);
+        }
+
+        /* Custom Alert Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
     </style>
 </head>
 
@@ -217,6 +339,25 @@
         <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
         <button onclick="scrollTableRight()">➡️ Scroll Right</button>
         <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
+    </div>
+
+    <!-- Custom Delete Confirmation Modal -->
+    <div id="deleteModal" class="custom-modal">
+        <div class="modal-content">
+            <div class="modal-icon">🗑️</div>
+            <div class="modal-title">Delete Column</div>
+            <div class="modal-message" id="deleteModalMessage">
+                Are you sure you want to delete this column?
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="hideDeleteModal()">
+                    Cancel
+                </button>
+                <button class="modal-btn modal-btn-danger" onclick="confirmDeleteColumn()">
+                    Delete
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="scrollContainer">
@@ -304,6 +445,10 @@
                 const token = localStorage.getItem('token');
                 if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;
+                    // Debug: Log token info (first 20 chars only for security)
+                    console.log('Using token:', token.substring(0, 20) + '...');
+                } else {
+                    console.warn('No authentication token found in localStorage');
                 }
 
                 // Add request timestamp for security
@@ -531,14 +676,7 @@
                 return;
             }
 
-            // Add event listener as fallback for add column button
-            const addColumnBtn = document.getElementById('addColumnBtn');
-            if (addColumnBtn) {
-                addColumnBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    addNewColumn();
-                });
-            }
+            // Add Column button already has onclick handler in HTML, no need for additional event listener
 
             // Load Excel data directly without role-based access validation
             loadExcelData();
@@ -800,32 +938,136 @@
                 // Re-render the table immediately
                 renderTable();
 
-                // Try to make API call to persist the column (but don't block if it fails)
+                // Optional: Try to make API call to persist the column (disabled for now)
+                // Uncomment the code below if you want to save changes to the backend
+                /*
                 try {
                     const endpoint = `/api/task-files/${taskId}/add-column?companyId=${companyId}`;
                     await makeApiCall(endpoint, 'POST');
+                    console.log('Column added successfully to backend');
                 } catch (apiError) {
-                    // Don't show alert to user since column was added locally
+                    console.error('Failed to add column to backend:', apiError);
                 }
+                */
+                console.log('Column added locally only (backend sync disabled)');
 
             } catch (e) {
                 alert(`Error adding column: ${e.message}`);
             }
         }
 
-        async function deleteSelectedColumn() {
+        // Custom alert function
+        function showCustomAlert(message, type = 'info') {
+            // Remove any existing alerts
+            const existingAlert = document.querySelector('.custom-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'custom-alert';
+            
+            let icon = '💡';
+            let bgColor = '#dbeafe';
+            let borderColor = '#60a5fa';
+            let textColor = '#1e40af';
+            
+            if (type === 'success') {
+                icon = '✅';
+                bgColor = '#dcfce7';
+                borderColor = '#22c55e';
+                textColor = '#166534';
+            } else if (type === 'error') {
+                icon = '❌';
+                bgColor = '#fef2f2';
+                borderColor = '#ef4444';
+                textColor = '#dc2626';
+            } else if (type === 'warning') {
+                icon = '⚠️';
+                bgColor = '#fef3c7';
+                borderColor = '#f59e0b';
+                textColor = '#92400e';
+            }
+            
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${bgColor};
+                border: 2px solid ${borderColor};
+                color: ${textColor};
+                padding: 15px 20px;
+                border-radius: 8px;
+                z-index: 1001;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                animation: slideDown 0.3s ease-out;
+                max-width: 400px;
+                text-align: center;
+            `;
+            
+            alertDiv.innerHTML = `${icon} ${message}`;
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.style.animation = 'slideUp 0.3s ease-in';
+                    setTimeout(() => alertDiv.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        // Custom modal functions
+        function showDeleteModal() {
             if (selectedColumn === null) {
-                alert('Please select a column to delete');
+                showCustomAlert('Please select a column to delete', 'warning');
                 return;
             }
 
-            if (!confirm(`Are you sure you want to delete column ${getColumnLetter(selectedColumn)}?`)) {
-                return;
+            const columnLetter = getColumnLetter(selectedColumn);
+            document.getElementById('deleteModalMessage').textContent = 
+                `Are you sure you want to delete column ${columnLetter}? This action cannot be undone.`;
+            
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('show');
+            
+            // Add escape key listener
+            document.addEventListener('keydown', handleModalEscape);
+        }
+
+        function hideDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.remove('show');
+            
+            // Remove escape key listener
+            document.removeEventListener('keydown', handleModalEscape);
+        }
+
+        function handleModalEscape(event) {
+            if (event.key === 'Escape') {
+                hideDeleteModal();
             }
+        }
+
+        async function confirmDeleteColumn() {
+            hideDeleteModal();
+            await performDeleteColumn();
+        }
+
+        async function deleteSelectedColumn() {
+            showDeleteModal();
+        }
+
+        async function performDeleteColumn() {
 
             try {
+                // Optional: Try to make API call to delete column from backend (disabled for now)
+                /*
                 const endpoint = `/api/task-files/${taskId}/delete-column?companyId=${companyId}&colIndex=${selectedColumn}`;
                 await makeApiCall(endpoint, 'DELETE');
+                */
 
                 // Remove column from local data
                 currentData.forEach(row => {
@@ -838,13 +1080,15 @@
                 document.getElementById('deleteBtn').disabled = true;
                 renderTable();
 
+                showCustomAlert('Column deleted successfully!', 'success');
+
             } catch (error) {
                 if (error.response?.status === 401) {
-                    alert('Session expired. Please refresh the page and login again.');
+                    showCustomAlert('Session expired. Please refresh the page and login again.', 'error');
                 } else if (error.response?.status === 400) {
-                    alert('Invalid column index or column does not exist.');
+                    showCustomAlert('Invalid column index or column does not exist.', 'error');
                 } else if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
-                    alert('Cannot connect to server. Please check your connection.');
+                    showCustomAlert('Cannot connect to server. Please check your connection.', 'error');
                 } else {
                     alert(`Failed to delete column: ${error.message || 'Unknown error'}`);
                 }
