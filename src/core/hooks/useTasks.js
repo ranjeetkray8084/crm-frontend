@@ -239,21 +239,47 @@ export const useTasks = (companyId, userId, role) => {
 
   // Upload Excel file
   const uploadExcelFile = useCallback(async (taskData) => {
+    console.log('useTasks: Upload called with:', {
+      title: taskData.title,
+      fileName: taskData.file?.name,
+      companyId,
+      userId
+    });
+
     if (!companyId) {
+      console.error('useTasks: Missing companyId');
       return { success: false, error: 'Company ID is required' };
     }
 
+    if (!userId) {
+      console.error('useTasks: Missing userId');
+      return { success: false, error: 'User ID is required' };
+    }
+
     try {
-      const result = await TaskService.uploadExcelFile(taskData);
+      const uploadData = {
+        ...taskData,
+        companyId,
+        uploadedBy: userId
+      };
+      
+      console.log('useTasks: Calling TaskService with:', uploadData);
+      const result = await TaskService.uploadExcelFile(uploadData);
+      
       if (result.success) {
+        console.log('useTasks: Upload successful, refreshing tasks');
         // Refresh tasks after upload
         await refreshTasks();
+      } else {
+        console.error('useTasks: Upload failed:', result.error);
       }
+      
       return result;
     } catch (error) {
+      console.error('useTasks: Upload error in hook:', error);
       return { success: false, error: 'Failed to upload Excel file' };
     }
-  }, [companyId, refreshTasks]);
+  }, [companyId, userId, refreshTasks]);
 
   // Download Excel file
   const downloadExcelFile = useCallback(async (taskId) => {

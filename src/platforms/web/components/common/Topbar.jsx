@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import NotificationDropdown from './NotificationDropdown';
 import { UserService } from '../../../../core/services';
+import { createFallbackAvatar } from '../../../../core/utils/avatarUtils';
 
 function Topbar({
   onAddAction = () => {},
@@ -13,7 +14,7 @@ function Topbar({
   onSectionChange = () => {}
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('https://via.placeholder.com/44x44/6B7280/FFFFFF?text=U');
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const timeoutRef = useRef(null);
   const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const phoneDropdownRef = useRef(null);
@@ -71,11 +72,11 @@ function Topbar({
         if (result.success && result.data) {
           setAvatarUrl(result.data);
         } else {
-          setAvatarUrl(`https://via.placeholder.com/44x44/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`);
+          setAvatarUrl(null); // Will use fallback
         }
       }
     } catch (error) {
-      setAvatarUrl(`https://via.placeholder.com/44x44/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`);
+      setAvatarUrl(null); // Will use fallback
     }
   };
 
@@ -180,18 +181,12 @@ function Topbar({
               <div className="text-xs md:text-sm text-blue-100">{userRole || 'User'}</div>
             </div>
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 cursor-pointer">
-              {avatarUrl && avatarUrl !== 'https://via.placeholder.com/44x44/6B7280/FFFFFF?text=U' ? (
-                <img
-                  src={avatarUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  onError={() => setAvatarUrl(`https://via.placeholder.com/44x44/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`)}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
-                  {userName ? userName.charAt(0).toUpperCase() : 'U'}
-                </div>
-              )}
+              <img
+                src={avatarUrl || createFallbackAvatar(userName, 48)}
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={() => setAvatarUrl(createFallbackAvatar(userName, 48))}
+              />
             </div>
           </div>
         </div>
@@ -223,10 +218,10 @@ function Topbar({
             {/* Mobile Profile Picture - Right Side */}
             <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-300 flex items-center justify-center flex-shrink-0">
               <img
-                src={avatarUrl}
+                src={avatarUrl || createFallbackAvatar(userName, 32)}
                 alt="Profile"
                 className="w-full h-full object-cover"
-                onError={() => setAvatarUrl(`https://via.placeholder.com/32x32/6B7280/FFFFFF?text=${userName ? userName.charAt(0).toUpperCase() : 'U'}`)}
+                onError={() => setAvatarUrl(createFallbackAvatar(userName, 32))}
               />
             </div>
           </div>

@@ -107,19 +107,59 @@ export class TaskService {
   // ✅ Upload Excel file
   static async uploadExcelFile(taskData) {
     try {
+      console.log('TaskService: Starting upload with data:', {
+        title: taskData.title,
+        fileName: taskData.file?.name,
+        fileSize: taskData.file?.size,
+        companyId: taskData.companyId,
+        uploadedBy: taskData.uploadedBy
+      });
+
+      if (!taskData.file) {
+        return { success: false, error: 'No file provided' };
+      }
+
+      if (!taskData.companyId) {
+        return { success: false, error: 'Company ID is required' };
+      }
+
+      if (!taskData.uploadedBy) {
+        return { success: false, error: 'Uploader ID is required' };
+      }
+
       const formData = new FormData();
       formData.append('file', taskData.file);
       formData.append('title', taskData.title);
-      formData.append('companyId', taskData.companyId);
-      formData.append('uploadedBy', taskData.uploadedBy);
-   
+      formData.append('companyId', taskData.companyId.toString());
+      formData.append('uploadedBy', taskData.uploadedBy.toString());
+
+      console.log('TaskService: Sending request to:', API_ENDPOINTS.TASKS.UPLOAD);
 
       const response = await axios.post(API_ENDPOINTS.TASKS.UPLOAD, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000 // 30 second timeout for file uploads
       });
+
+      console.log('TaskService: Upload successful:', response.data);
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Failed to upload file' };
+      console.error('TaskService: Upload error:', error);
+      
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 
+                           error.response.data || 
+                           `Server error: ${error.response.status}`;
+        return { success: false, error: errorMessage };
+      } else if (error.request) {
+        // Request was made but no response received
+        return { success: false, error: 'Network error: Unable to reach server' };
+      } else {
+        // Something else happened
+        return { success: false, error: error.message || 'Upload failed' };
+      }
     }
   }
 

@@ -3,7 +3,7 @@ export const securityConfig = {
   // Production environment
   production: {
     api: {
-      baseURL: 'https://backend.leadstracker.in/api',
+      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in') + '/api',
       timeout: 30000,
       maxRetries: 3,
       enableHTTPS: true,
@@ -35,7 +35,7 @@ export const securityConfig = {
   // Development environment
   development: {
     api: {
-      baseURL: '',
+      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in') + '/api',
       timeout: 30000,
       maxRetries: 3,
       enableHTTPS: false,

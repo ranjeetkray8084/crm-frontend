@@ -22,29 +22,43 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
   const validateAndSetFile = async (selectedFile) => {
     setError('');
 
+    console.log('TaskUploadForm: Validating file:', {
+      name: selectedFile.name,
+      type: selectedFile.type,
+      size: selectedFile.size
+    });
+
     if (!allowedTypes.includes(selectedFile.type) &&
         !selectedFile.name.match(/\.(xlsx|xls)$/i)) {
+      console.error('TaskUploadForm: Invalid file type');
       setError('❌ Please select a valid Excel file (.xlsx or .xls)');
       return;
     }
 
     if (selectedFile.size > 10 * 1024 * 1024) {
+      console.error('TaskUploadForm: File too large');
       setError('❌ File size must be under 10MB');
       return;
     }
 
     // Validate Excel file dimensions
     try {
+      console.log('TaskUploadForm: Validating Excel dimensions');
       const dimensions = await validateExcelDimensions(selectedFile);
+      console.log('TaskUploadForm: Dimension validation result:', dimensions);
+      
       if (!dimensions.valid) {
+        console.error('TaskUploadForm: Dimension validation failed:', dimensions.error);
         setError(`❌ ${dimensions.error}`);
         return;
       }
+      
+      console.log('TaskUploadForm: File validation successful');
       setFile(selectedFile);
       setFileDimensions({ columns: dimensions.columns, rows: dimensions.rows });
     } catch (error) {
+      console.error('TaskUploadForm: File validation error:', error);
       setError('❌ Error validating file dimensions. Please try again.');
-      console.error('File validation error:', error);
     }
   };
 
@@ -124,6 +138,8 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log('TaskUploadForm: Submit started');
+
     if (!title.trim()) {
       setError('❌ Task title is required');
       return;
@@ -139,15 +155,31 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
       file
     };
 
-    const result = await onUpload(taskData);
-    if (result?.success) {
-      setTitle('');
-      setFile(null);
-      setFileDimensions(null);
-      resetFileInput();
-      setError('');
-    } else {
-      setError(result?.error || '❌ Upload failed');
+    console.log('TaskUploadForm: Calling onUpload with:', {
+      title: taskData.title,
+      fileName: taskData.file.name,
+      fileSize: taskData.file.size,
+      fileType: taskData.file.type
+    });
+
+    try {
+      const result = await onUpload(taskData);
+      console.log('TaskUploadForm: Upload result:', result);
+      
+      if (result?.success) {
+        setTitle('');
+        setFile(null);
+        setFileDimensions(null);
+        resetFileInput();
+        setError('');
+      } else {
+        const errorMsg = result?.error || '❌ Upload failed';
+        console.error('TaskUploadForm: Upload failed:', errorMsg);
+        setError(errorMsg);
+      }
+    } catch (error) {
+      console.error('TaskUploadForm: Upload exception:', error);
+      setError('❌ Upload error: ' + error.message);
     }
   };
 

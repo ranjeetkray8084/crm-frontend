@@ -22,39 +22,57 @@ const AddTaskForm = () => {
 
   // ✅ Always define as a stable function using useCallback
   const handleUpload = useCallback(async (taskData) => {
+    console.log('AddTaskForm: Upload started with:', {
+      title: taskData.title,
+      fileName: taskData.file?.name,
+      fileSize: taskData.file?.size,
+      companyId,
+      userId,
+      role
+    });
+
     if (!companyId) {
+      console.error('AddTaskForm: Missing companyId');
       customAlert('❌ Company ID is required. Please log in again.');
       return { success: false, error: 'Missing company ID' };
     }
 
     if (!userId) {
+      console.error('AddTaskForm: Missing userId');
       customAlert('❌ User ID is required. Please log in again.');
       return { success: false, error: 'Missing user ID' };
     }
 
     if (typeof uploadExcelFile !== 'function') {
+      console.error('AddTaskForm: Upload function not available');
       customAlert('❌ Upload function not available.');
       return { success: false, error: 'Upload handler not ready' };
     }
 
     setUploadLoading(true);
     try {
-      const result = await uploadExcelFile({
-        ...taskData,
-        uploadedBy: userId  // ✅ Ensure backend receives uploadedBy param
-      });
+      console.log('AddTaskForm: Calling uploadExcelFile');
+      const result = await uploadExcelFile(taskData);
+
+      console.log('AddTaskForm: Upload result:', result);
 
       if (result.success) {
         customAlert('✅ Task uploaded successfully!');
       } else {
-        customAlert('❌ Failed to upload task: ' + (result.error || 'Unknown error'));
+        const errorMsg = result.error || 'Unknown error';
+        console.error('AddTaskForm: Upload failed:', errorMsg);
+        customAlert('❌ Failed to upload task: ' + errorMsg);
       }
 
       return result;
+    } catch (error) {
+      console.error('AddTaskForm: Upload exception:', error);
+      customAlert('❌ Upload error: ' + error.message);
+      return { success: false, error: error.message };
     } finally {
       setUploadLoading(false);
     }
-  }, [uploadExcelFile, userId, companyId]);
+  }, [uploadExcelFile, userId, companyId, role]);
 
   if (authLoading) {
     return (

@@ -109,7 +109,7 @@ const UsersSection = () => {
   // Different filtering based on role
   const filteredUsers = users.filter((user) => {
     const search = searchQuery.toLowerCase();
-    
+
     if (role === 'DEVELOPER') {
       // Developer search includes User ID and Company
       return (
@@ -224,9 +224,8 @@ const UsersSection = () => {
                             <td className="border border-gray-300 px-4 py-2">{user.email}</td>
                             <td className="border border-gray-300 px-4 py-2">{companyName}</td>
                             <td className="border border-gray-300 px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                              }`}>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                }`}>
                                 {isActive ? "Active" : "Inactive"}
                               </span>
                             </td>
@@ -249,7 +248,7 @@ const UsersSection = () => {
                   filteredUsers.map((user) => {
                     const companyName = user.company?.name || user.companyName || "No Company";
                     const isActive = user.status === true || user.status === 'active';
-                    
+
                     return (
                       <div
                         key={user.userId}
@@ -276,9 +275,8 @@ const UsersSection = () => {
                           </div>
                           <div className="flex items-center">
                             <span className="font-medium text-gray-500 w-20">Status:</span>
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                            }`}>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              }`}>
                               {isActive ? "Active" : "Inactive"}
                             </span>
                           </div>
@@ -292,7 +290,7 @@ const UsersSection = () => {
           ) : (
             /* Full User Table for Director */
             <>
-              <div className="hidden md:block max-h-[300px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
+              <div className="hidden md:block max-h-[500px] overflow-y-auto rounded-lg border border-gray-200 shadow-sm">
                 <table className="min-w-full table-auto border-collapse bg-white">
                   <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 text-sm text-gray-800 sticky top-0 z-10">
                     <tr>
@@ -361,29 +359,29 @@ const UsersSection = () => {
                               },
                               isActive
                                 ? {
-                                    label: 'Deactivate',
-                                    icon: <UserX size={14} />,
-                                    onClick: () => handleDeactivateUser(user.userId),
-                                    danger: true
-                                  }
+                                  label: 'Deactivate',
+                                  icon: <UserX size={14} />,
+                                  onClick: () => handleDeactivateUser(user.userId),
+                                  danger: true
+                                }
                                 : {
-                                    label: 'Activate',
-                                    icon: <UserCheck size={14} />,
-                                    onClick: () => handleActivateUser(user.userId)
-                                  },
+                                  label: 'Activate',
+                                  icon: <UserCheck size={14} />,
+                                  onClick: () => handleActivateUser(user.userId)
+                                },
                               ...(isDirector ? [
                                 hasAdmin
                                   ? {
-                                      label: 'Unassign Admin',
-                                      icon: <UserMinus size={14} />,
-                                      onClick: () => handleUnassignAdmin(user.userId),
-                                      danger: true
-                                    }
+                                    label: 'Unassign Admin',
+                                    icon: <UserMinus size={14} />,
+                                    onClick: () => handleUnassignAdmin(user.userId),
+                                    danger: true
+                                  }
                                   : {
-                                      label: 'Assign Admin',
-                                      icon: <UserPlus size={14} />,
-                                      onClick: () => setAssigningUser(user)
-                                    }
+                                    label: 'Assign Admin',
+                                    icon: <UserPlus size={14} />,
+                                    onClick: () => setAssigningUser(user)
+                                  }
                               ] : [])
                             ]}
                           />

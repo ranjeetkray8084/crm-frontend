@@ -144,7 +144,7 @@ VITE_ENABLE_RATE_LIMITING=true
 
 # Development
 NODE_ENV=development
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=https://backend.leadstracker.in
 VITE_ENABLE_HTTPS=false
 VITE_ENABLE_DEBUG_MODE=true
 ```

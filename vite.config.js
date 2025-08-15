@@ -56,9 +56,9 @@ export default defineConfig(({ command, mode }) => {
       },
       proxy: {
         '/api': {
-          target: 'http://localhost:8082',
+          target: 'https://backend.leadstracker.in',
           changeOrigin: true,
-          secure: false,
+          secure: true,
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, _res) => {
               // Handle proxy errors silently
