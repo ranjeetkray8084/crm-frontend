@@ -11,6 +11,7 @@ export * from './useContact';
 export * from './useFollowUp';
 export * from './useLeads';
 export * from './useNotes';
+export * from './useDashboardEvents';
 export * from './useNotifications';
 export * from './useProperties';
 export * from './useTasks';

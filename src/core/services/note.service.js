@@ -545,4 +545,28 @@ export class NoteService {
       };
     }
   }
+
+  /**
+   * Get today's events for dashboard - optimized for dashboard loading
+   * @param {number} companyId 
+   * @param {number} userId 
+   * @param {string} role 
+   * @returns {Promise<Object>} API response
+   */
+  static async getTodayEventsForDashboard(companyId, userId, role) {
+    try {
+      const response = await axios.get(`/api/companies/${companyId}/notes/dashboard/today-events`, {
+        params: { userId, role }
+      });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load today\'s events'
+      };
+    }
+  }
 }

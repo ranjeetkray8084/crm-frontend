@@ -1,7 +1,7 @@
 import { BarChart3, Building, TrendingUp, Calendar, Users, Phone, Home, ShoppingCart, Key, CheckCircle, XCircle, UserCheck, Shield, Clock } from 'lucide-react';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import { useDashboardStats } from '../../../../core/hooks/useDashboardStats';
-import { useTodayEventsFromContext } from '../../../../core/hooks/useTodayEventsFromContext';
+import { useDashboardEvents } from '../../../../core/hooks/useDashboardEvents';
 import { useTodayFollowUps } from '../../../../core/hooks/useTodayFollowUps';
 
 
@@ -44,7 +44,7 @@ const DashboardStats = () => {
       todayEvents,
       loading: eventsLoading,
       error: eventsError
-    } = useTodayEventsFromContext(companyId, userId, role);
+    } = useDashboardEvents(companyId, userId, role);
 
     const {
       todayFollowUps,
