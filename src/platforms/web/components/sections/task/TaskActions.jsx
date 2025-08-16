@@ -32,7 +32,10 @@ const TaskActions = ({
       task.assignedTo 
         ? { label: 'Unassign Task', icon: <UserMinus size={16} />, onClick: () => onUnassign(task.id) }
         : { label: 'Assign Task', icon: <UserPlus size={16} />, onClick: () => onAssign(task.id) },
-      { label: 'Delete Task', icon: <Trash2 size={16} />, onClick: () => onDelete(task.id), danger: true }
+      { label: 'Delete Task', icon: <Trash2 size={16} />, onClick: () => {
+        console.log('Delete action clicked for task:', task.id);
+        onDelete(task.id);
+      }, danger: true }
     ] : [])
   ];
 

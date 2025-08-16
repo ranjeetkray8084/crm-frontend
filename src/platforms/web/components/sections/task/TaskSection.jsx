@@ -80,7 +80,7 @@ const TaskSection = () => {
         updateTaskStatus,
 
         // Excel Operations
-        downloadFile,
+        downloadExcelFile,
 
         // Utilities
         canManageTask,
@@ -409,23 +409,47 @@ const TaskSection = () => {
 
     const handleDownload = async (taskId) => {
         try {
-            await downloadFile(taskId);
-            customAlert({
-                title: 'Success',
-                message: 'Task file downloaded successfully!',
-                type: 'success'
-            });
+            const result = await downloadExcelFile(taskId);
+            if (result.success) {
+                // Create a blob URL and trigger download
+                const blob = new Blob([result.data], { 
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `task-${taskId}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                customAlert({
+                    title: 'Success',
+                    message: 'Task file downloaded successfully!',
+                    type: 'success'
+                });
+            } else {
+                throw new Error(result.error || 'Failed to download file');
+            }
         } catch (error) {
+            console.error('Download error:', error);
             customAlert({
                 title: 'Error',
-                message: 'Failed to download task file. Please try again.',
+                message: error.message || 'Failed to download task file. Please try again.',
                 type: 'error'
             });
         }
     };
 
     const handleDelete = async (taskId) => {
+        console.log('handleDelete called with taskId:', taskId);
+        console.log('Current tasks:', tasks);
+        console.log('Current userInfo:', userInfo);
+        
         const task = tasks.find(t => t.id === taskId);
+        console.log('Found task:', task);
+        
         if (!task) {
             customAlert({
                 title: 'Error',
@@ -435,6 +459,9 @@ const TaskSection = () => {
             return;
         }
 
+        console.log('Task creator ID:', task.uploadedBy?.userId);
+        console.log('Can manage task:', canManageTask(task.uploadedBy?.userId));
+        
         if (!canManageTask(task.uploadedBy?.userId)) {
             customAlert({
                 title: 'Permission Denied',

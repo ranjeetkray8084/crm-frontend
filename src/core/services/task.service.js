@@ -44,10 +44,16 @@ export class TaskService {
 
   // ✅ Delete a task
   static async deleteTask(taskId, companyId) {
+    console.log('TaskService deleteTask called with:', { taskId, companyId });
+    console.log('TaskService deleteTask URL:', buildUrl(API_ENDPOINTS.TASKS.DELETE(taskId), { companyId }));
+    
     try {
       const response = await axios.delete(buildUrl(API_ENDPOINTS.TASKS.DELETE(taskId), { companyId }));
+      console.log('TaskService deleteTask response:', response);
       return { success: true, data: response.data };
     } catch (error) {
+      console.error('TaskService deleteTask error:', error);
+      console.error('TaskService deleteTask error response:', error.response);
       return { success: false, error: error.response?.data?.message || 'Failed to delete task' };
     }
   }

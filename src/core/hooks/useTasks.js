@@ -221,18 +221,26 @@ export const useTasks = (companyId, userId, role) => {
 
   // Delete task
   const deleteTask = useCallback(async (taskId) => {
+    console.log('useTasks deleteTask called with:', { taskId, companyId });
+    
     if (!companyId) {
+      console.error('useTasks deleteTask: Missing companyId');
       return { success: false, error: 'Company ID is required' };
     }
 
     try {
+      console.log('useTasks deleteTask: Calling TaskService.deleteTask');
       const result = await TaskService.deleteTask(taskId, companyId);
+      console.log('useTasks deleteTask: Result:', result);
+      
       if (result.success) {
         // Remove task from local state
         setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+        console.log('useTasks deleteTask: Task removed from local state');
       }
       return result;
     } catch (error) {
+      console.error('useTasks deleteTask: Error:', error);
       return { success: false, error: 'Failed to delete task' };
     }
   }, [companyId]);
@@ -283,13 +291,20 @@ export const useTasks = (companyId, userId, role) => {
 
   // Download Excel file
   const downloadExcelFile = useCallback(async (taskId) => {
+    console.log('useTasks downloadExcelFile called with:', { taskId, companyId });
+    
     if (!companyId) {
+      console.error('useTasks downloadExcelFile: Missing companyId');
       return { success: false, error: 'Company ID is required' };
     }
 
     try {
-      return await TaskService.downloadExcelFile(taskId, companyId);
+      console.log('useTasks downloadExcelFile: Calling TaskService.downloadFile');
+      const result = await TaskService.downloadFile(taskId, companyId);
+      console.log('useTasks downloadExcelFile: Result:', result);
+      return result;
     } catch (error) {
+      console.error('useTasks downloadExcelFile: Error:', error);
       return { success: false, error: 'Failed to download Excel file' };
     }
   }, [companyId]);
@@ -300,6 +315,28 @@ export const useTasks = (companyId, userId, role) => {
       loadTasksByRole();
     }
   }, [companyId, role, loadTasksByRole]);
+
+  // Check if user can manage a task (ADMIN, DIRECTOR, or task creator)
+  const canManageTask = useCallback((taskCreatorId) => {
+    if (!userId || !role) return false;
+    
+    // ADMIN and DIRECTOR can manage all tasks
+    if (role === 'ADMIN' || role === 'DIRECTOR') return true;
+    
+    // Task creator can manage their own tasks
+    return taskCreatorId === userId;
+  }, [userId, role]);
+
+  // Check if task is assigned to current user
+  const isTaskAssignedToUser = useCallback((taskAssigneeId) => {
+    if (!userId) return false;
+    return taskAssigneeId === userId;
+  }, [userId]);
+
+  // Clear error function
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   return {
     tasks,
@@ -319,6 +356,9 @@ export const useTasks = (companyId, userId, role) => {
     updateTaskStatus,
     deleteTask,
     uploadExcelFile,
-    downloadExcelFile
+    downloadExcelFile,
+    canManageTask,
+    isTaskAssignedToUser,
+    clearError
   };
 };

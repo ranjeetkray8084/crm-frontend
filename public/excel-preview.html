@@ -111,6 +111,25 @@
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
         }
 
+        /* Search input focus styles */
+        #searchInput:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Highlighted search results */
+        .search-highlight {
+            background-color: #fef08a !important;
+            color: #92400e !important;
+            font-weight: 600;
+        }
+
+        /* Hidden rows during search */
+        .search-hidden {
+            display: none !important;
+        }
+
         /* Style for the Row column */
         th:first-child,
         td:first-child {
@@ -334,11 +353,34 @@
 
 <body>
     <div id="toolbar">
-        <button onclick="addNewColumn()" id="addColumnBtn">➕ Add Column</button>
-        <button onclick="deleteSelectedColumn()" id="deleteBtn" disabled>🗑️ Delete Column</button>
-        <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
-        <button onclick="scrollTableRight()">➡️ Scroll Right</button>
-        <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 0 0 auto;">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 Search in Excel data..." 
+                    style="
+                        padding: 10px 16px;
+                        border: 2px solid #cbd5e1;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        width: 200px;
+                        background-color: white;
+                        color: #1e293b;
+                        transition: border-color 0.2s ease;
+                    "
+                    oninput="handleSearch()"
+                >
+                <button onclick="clearSearch()" id="clearSearchBtn" style="background-color: #6b7280; display: none;">❌ Clear</button>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="addNewColumn()" id="addColumnBtn">➕ Add Column</button>
+                <button onclick="deleteSelectedColumn()" id="deleteBtn" disabled>🗑️ Delete Column</button>
+                <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
+                <button onclick="scrollTableRight()">➡️ Scroll Right</button>
+                <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
+            </div>
+        </div>
     </div>
 
     <!-- Custom Delete Confirmation Modal -->
@@ -380,6 +422,8 @@
         let isUpdating = false;
         let updateTimeout = null;
         let isRendering = false;
+        let searchTerm = '';
+        let originalData = [];
 
         // ✅ Backend API base URL - pointing to Spring Boot backend (from legacy/api/axios.js)
         const BASE_URL = "https://backend.leadstracker.in";
@@ -710,6 +754,7 @@
             try {
                 const data = await loadExcelDataWithAxios();
                 currentData = JSON.parse(JSON.stringify(data));
+                originalData = JSON.parse(JSON.stringify(data)); // Store original data for search
                 renderTable();
             } catch (error) {
                 let errorMessage = error.message;
@@ -1108,6 +1153,131 @@
                 behavior: 'smooth'
             });
         }
+
+        // Search functionality
+        function handleSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            searchTerm = searchInput.value.trim().toLowerCase();
+
+            if (searchTerm === '') {
+                clearSearch();
+                return;
+            }
+
+            // Show clear button
+            clearBtn.style.display = 'block';
+
+            // Filter and highlight data
+            filterAndHighlightData();
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            searchInput.value = '';
+            searchTerm = '';
+            clearBtn.style.display = 'none';
+
+            // Restore original data and remove highlights
+            if (originalData.length > 0) {
+                currentData = JSON.parse(JSON.stringify(originalData));
+            }
+            
+            renderTable();
+        }
+
+        function filterAndHighlightData() {
+            if (!currentData || currentData.length === 0) return;
+
+            // Store original data if not already stored
+            if (originalData.length === 0) {
+                originalData = JSON.parse(JSON.stringify(currentData));
+            }
+
+            // Filter data based on search term
+            const filteredData = [];
+            const searchTermLower = searchTerm.toLowerCase();
+
+            currentData.forEach((row, rowIndex) => {
+                let rowHasMatch = false;
+                const newRow = [...row];
+
+                // Check each cell in the row
+                row.forEach((cell, colIndex) => {
+                    const cellValue = String(cell || '').toLowerCase();
+                    if (cellValue.includes(searchTermLower)) {
+                        rowHasMatch = true;
+                        // Highlight the matching cell
+                        newRow[colIndex] = `<span class="search-highlight">${cell}</span>`;
+                    }
+                });
+
+                if (rowHasMatch) {
+                    filteredData.push(newRow);
+                }
+            });
+
+            // Update current data with filtered results
+            currentData = filteredData;
+            renderTable();
+
+            // Show search results count
+            showSearchResultsCount(filteredData.length);
+        }
+
+        function showSearchResultsCount(count) {
+            // Remove existing count display
+            const existingCount = document.querySelector('.search-count');
+            if (existingCount) {
+                existingCount.remove();
+            }
+
+            if (searchTerm && count > 0) {
+                const countDiv = document.createElement('div');
+                countDiv.className = 'search-count';
+                countDiv.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    background: #3b82f6;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    z-index: 1000;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                `;
+                countDiv.textContent = `Found ${count} row${count > 1 ? 's' : ''}`;
+                document.body.appendChild(countDiv);
+
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    if (countDiv.parentNode) {
+                        countDiv.remove();
+                    }
+                }, 3000);
+            }
+        }
+
+        // Add keyboard shortcuts for search
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+F or Cmd+F to focus search
+            if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+                event.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+            
+            // Escape to clear search
+            if (event.key === 'Escape') {
+                const searchInput = document.getElementById('searchInput');
+                if (document.activeElement === searchInput) {
+                    clearSearch();
+                }
+            }
+        });
     </script>
 </body>
 
