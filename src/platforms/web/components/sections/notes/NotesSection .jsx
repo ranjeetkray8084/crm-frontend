@@ -41,6 +41,8 @@ const NotesSection = () => {
     setUserInfo({ companyId, userId, role: userRole });
   }, []);
 
+
+
   const {
     notes,
     loading,
@@ -118,6 +120,30 @@ const NotesSection = () => {
 
     return matchesSearch && matchesStatus && matchesPriority && matchesType;
   });
+
+  // Status-based sorting logic: NEW -> PROCESSING -> COMPLETED
+  // This ensures that:
+  // 1. NEW notes appear at the top (highest priority)
+  // 2. PROCESSING notes appear in the middle (medium priority)  
+  // 3. COMPLETED notes appear at the bottom (lowest priority)
+  const sortedNotes = [...filteredNotes].sort((a, b) => {
+    const statusPriority = {
+      'NEW': 1,        // Top priority - appears first
+      'PROCESSING': 2, // Medium priority - appears second
+      'COMPLETED': 3   // Bottom priority - appears last
+    };
+    
+    // Handle undefined/null status values and make case-insensitive
+    const statusA = (a.status || 'COMPLETED').toUpperCase(); // Default to COMPLETED if no status
+    const statusB = (b.status || 'COMPLETED').toUpperCase(); // Default to COMPLETED if no status
+    
+    const priorityA = statusPriority[statusA] || 4; // Default to bottom for unknown statuses
+    const priorityB = statusPriority[statusB] || 4;
+    
+    return priorityA - priorityB;
+  });
+
+
 
   // Get unique types for filter dropdown
   const uniqueTypes = [...new Set(notes.map(note => note.typeStr).filter(Boolean))];
@@ -232,16 +258,16 @@ const NotesSection = () => {
             </div>
           </div>
 
-          {/* Filter Summary */}
+                    {/* Filter Summary */}
           <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
             <div className="text-sm text-gray-600">
-              Showing {filteredNotes.length} of {notes.length} notes
+              Showing {sortedNotes.length} of {notes.length} notes
             </div>
             {(searchTerm || statusFilter || priorityFilter || typeFilter) && (
               <button
                 onClick={clearFilters}
                 className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-              >
+            >
                 Clear Filters
               </button>
             )}
@@ -309,7 +335,7 @@ const NotesSection = () => {
             {/* Mobile Filter Summary */}
             <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
               <div className="text-sm text-gray-600">
-                Showing {filteredNotes.length} of {notes.length} notes
+                Showing {sortedNotes.length} of {notes.length} notes
               </div>
               {(searchTerm || statusFilter || priorityFilter || typeFilter) && (
                 <button
@@ -342,7 +368,7 @@ const NotesSection = () => {
         )}
 
         {/* Empty State */}
-        {!loading && !error && filteredNotes.length === 0 && (
+        {!loading && !error && sortedNotes.length === 0 && (
           <div className="text-center p-8 text-gray-500">
             <div className="text-lg font-medium">No notes found</div>
             <div className="text-sm mt-1">
@@ -351,11 +377,13 @@ const NotesSection = () => {
           </div>
         )}
 
+
+
         {/* Notes Display */}
-        {!loading && !error && filteredNotes.length > 0 && (
+        {!loading && !error && sortedNotes.length > 0 && (
           <>
             <NoteTable
-              notes={filteredNotes}
+              notes={sortedNotes}
               onEdit={handleEdit}
               onDelete={deleteNote}
               onUpdateStatus={updateNoteStatus}
@@ -365,7 +393,7 @@ const NotesSection = () => {
             />
             <div className="block md:hidden">
               <NoteCardList
-                notes={filteredNotes}
+                notes={sortedNotes}
                 onEdit={handleEdit}
                 onDelete={deleteNote}
                 onUpdateStatus={updateNoteStatus}

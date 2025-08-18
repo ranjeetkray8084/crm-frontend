@@ -11,7 +11,7 @@ const NoteTable = ({
     onAddRemark,
     onViewRemarks
 }) => {
-    const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [showContentModal, setShowContentModal] = useState(false);
     const [selectedContent, setSelectedContent] = useState('');
     const [showAlert, setShowAlert] = useState(false);
@@ -34,7 +34,9 @@ const NoteTable = ({
 
     // Sorting logic
     const sortedNotes = [...notes].sort((a, b) => {
-        if (!sortConfig.key) return 0;
+        if (!sortConfig.key) {
+            return 0; // Keep original order (status-based sorting from parent)
+        }
         
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
