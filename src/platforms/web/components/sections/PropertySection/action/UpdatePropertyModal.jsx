@@ -48,6 +48,8 @@ const SelectField = ({ label, name, value, onChange, options, required = false }
  */
 const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) => {
     const [formData, setFormData] = useState({});
+    const [showReference, setShowReference] = useState(false);
+    const [isBroker, setIsBroker] = useState(false);
 
     // ✅ UPDATED: Reset form data whenever the modal is opened with a new property.
     // This ensures previous unsaved changes are discarded.
@@ -66,6 +68,13 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
             }
         }
     }, [formData.type, formData.bhk]);
+
+    // Toggle reference/broker UI based on source
+    useEffect(() => {
+        const source = formData.source;
+        setShowReference(source === 'Reference');
+        setIsBroker(source === 'Broker');
+    }, [formData.source]);
 
     if (!isOpen || !propertyToUpdate) {
         return null;
@@ -92,7 +101,9 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
             ownerName: formData.ownerName,
             price: formData.price,
             sector: formData.sector,
-            status: formData.status
+            status: formData.status,
+            source: formData.source,
+            referenceName: formData.source === 'Reference' ? (formData.referenceName || '') : ''
         };
         
         await onUpdate(updateData);
@@ -111,6 +122,14 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
         { value: 'AVAILABLE_FOR_RENT', label: 'Available for Rent' },
         { value: 'RENT_OUT', label: 'Rent Out' },
         { value: 'SOLD_OUT', label: 'Sold Out' }
+    ];
+
+    const sourceOptions = [
+        { value: 'Social Media', label: 'Social Media' },
+        { value: 'Cold Call', label: 'Cold Call' },
+        { value: 'Project Call', label: 'Project Call' },
+        { value: 'Reference', label: 'Reference' },
+        { value: 'Broker', label: 'Broker' }
     ];
 
     const isBhkDisabled = formData.type === 'Office' || formData.type === 'Retail';
@@ -135,12 +154,16 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                         <InputField label="Unit Details" name="unitDetails" value={formData.unitDetails} onChange={handleChange} />
                         <InputField label="Floor" name="floor" value={formData.floor} onChange={handleChange} />
                         <InputField label="Size (sqft)" name="size" value={formData.size} onChange={handleChange} type="text" />
-                        <InputField label="Owner Name" name="ownerName" value={formData.ownerName} onChange={handleChange} />
-                        <InputField label="Owner Contact" name="ownerContact" value={formData.ownerContact} onChange={handleChange} />
+                        <InputField label={isBroker ? 'Broker Name' : 'Owner Name'} name="ownerName" value={formData.ownerName} onChange={handleChange} />
+                        <InputField label={isBroker ? 'Broker Contact' : 'Owner Contact'} name="ownerContact" value={formData.ownerContact} onChange={handleChange} />
                         <InputField label="Location" name="location" value={formData.location} onChange={handleChange} />
                         <InputField label="Price" name="price" value={formData.price} onChange={handleChange} type="text" />
                         <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={statusOptions} required />
                         <InputField label="Sector" name="sector" value={formData.sector} onChange={handleChange} required />
+                        <SelectField label="Source" name="source" value={formData.source} onChange={handleChange} options={sourceOptions} />
+                        {showReference && (
+                            <InputField label="Reference Name" name="referenceName" value={formData.referenceName} onChange={handleChange} />
+                        )}
                     </div>
                 </form>
 
