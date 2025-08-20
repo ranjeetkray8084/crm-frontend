@@ -43,12 +43,25 @@ import {
       });
     };
   
-    const formatBudget = (budget) => {
-      if (!budget) return 'N/A';
-      return new Intl.NumberFormat('en-IN', {
-        maximumFractionDigits: 0
-      }).format(budget);
+      const formatBudget = (budget) => {
+    if (!budget) return 'N/A';
+    return new Intl.NumberFormat('en-IN', {
+      maximumFractionDigits: 0
+    }).format(budget);
+  };
+
+  const formatSource = (source) => {
+    if (!source) return 'N/A';
+    const sourceMap = {
+      "INSTAGRAM": "Instagram",
+      "FACEBOOK": "Facebook",
+      "YOUTUBE": "YouTube", 
+      "REFERENCE": "Reference",
+      "NINETY_NINE_ACRES": "99acres",
+      "MAGIC_BRICKS": "MagicBricks"
     };
+    return sourceMap[source] || source;
+  };
   
     const getStatusColor = (status) => {
       switch (status) {
@@ -164,7 +177,7 @@ import {
           )}
           <div>
             <span className="text-xs text-gray-500">Source</span>
-            <p className="text-sm font-medium">{lead.source || 'N/A'}</p>
+            <p className="text-sm font-medium">{formatSource(lead.source)}</p>
           </div>
         </div>
 
