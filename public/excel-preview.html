@@ -74,6 +74,8 @@
         table {
             border-collapse: collapse;
             min-width: 100%;
+            table-layout: fixed;
+            width: auto;
         }
 
         /* Styles for table header and data cells */
@@ -97,10 +99,266 @@
             top: 0;
             z-index: 5;
             cursor: pointer;
+            position: relative;
         }
 
         th.selected {
             background-color: #dbeafe;
+        }
+
+        /* Sort button styles */
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 6px;
+            margin-left: 6px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #6b7280;
+            transition: all 0.2s ease;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .sort-btn:hover {
+            background-color: #e5e7eb;
+            color: #374151;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .sort-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .sort-btn.asc {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+
+        .sort-btn.desc {
+            background-color: #f59e0b;
+            color: white;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Column header container */
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 80px;
+        }
+
+        .column-title {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Column context menu */
+        .column-context-menu {
+            position: fixed;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            min-width: 150px;
+        }
+
+        .column-context-menu.show {
+            display: block;
+        }
+
+        .column-context-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+        }
+
+        .column-context-menu-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .column-context-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Column resizing styles */
+        .column-resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: transparent;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s ease;
+        }
+
+        .column-resizer:hover {
+            background-color: #3b82f6;
+        }
+
+        .column-resizer.resizing {
+            background-color: #1d4ed8;
+            width: 2px;
+        }
+
+        /* Hide column data during resize */
+        .column-resizing {
+            opacity: 0.2;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .column-resizing::before {
+            content: "📏";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #3b82f6;
+            z-index: 5;
+            animation: resizePulse 1.5s infinite;
+        }
+
+        .column-resizing th,
+        .column-resizing td {
+            color: transparent !important;
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        .column-resizing th .column-header,
+        .column-resizing td {
+            pointer-events: none;
+        }
+
+        /* Resize animation */
+        @keyframes resizePulse {
+            0%, 100% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        /* Resize in progress indicator */
+        .resize-in-progress {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1001;
+            display: none;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .resize-in-progress.show {
+            display: block;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Table cell width control */
+        .resizable-column {
+            position: relative;
+            min-width: 80px;
+            max-width: 500px;
+        }
+
+        .resizable-column th,
+        .resizable-column td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Table layout - allow natural content flow */
+        table {
+            border-collapse: collapse;
+            min-width: 100%;
+            table-layout: auto;
+            width: auto;
+        }
+
+        /* Column content handling - like Excel */
+        th, td {
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+            padding: 8px 12px;
+        }
+
+        /* Show ellipsis when content is truncated */
+        .content-truncated {
+            position: relative;
+        }
+
+        .content-truncated::after {
+            content: "...";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        /* Column width constraints */
+        .column-width-constrained {
+            min-width: 80px !important;
+            max-width: 500px !important;
+        }
+
+        /* Resize indicator */
+        .resize-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100vh;
+            background-color: #3b82f6;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        .resize-indicator.show {
+            display: block;
         }
 
         /* Focus styles for editable cells */
@@ -109,6 +367,77 @@
             outline: 2px solid #60a5fa;
             background-color: #eff6ff;
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
+        }
+
+        /* Duplicate cell styles */
+        .duplicate-cell {
+            cursor: pointer !important;
+            background-color: #fef3c7 !important;
+            border: 2px solid #f59e0b !important;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .duplicate-cell:hover {
+            background-color: #fde68a !important;
+            border-color: #d97706 !important;
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .duplicate-cell::after {
+            content: "🔍";
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
+            color: #92400e;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .duplicate-highlight {
+            background-color: #fbbf24 !important;
+            border: 3px solid #d97706 !important;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
+            z-index: 5;
+            position: relative;
+        }
+
+        .duplicate-highlight::before {
+            content: "⭐";
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            font-size: 16px;
+            color: #92400e;
+            background: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            animation: duplicatePulse 2s infinite;
+        }
+
+        @keyframes duplicatePulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
         }
 
         /* Search input focus styles */
@@ -359,6 +688,7 @@
                     type="text" 
                     id="searchInput" 
                     placeholder="🔍 Search in Excel data..." 
+                    title="Search in Excel data (Ctrl+F to focus, Esc to clear)"
                     style="
                         padding: 10px 16px;
                         border: 2px solid #cbd5e1;
@@ -372,10 +702,28 @@
                     oninput="handleSearch()"
                 >
                 <button onclick="clearSearch()" id="clearSearchBtn" style="background-color: #6b7280; display: none;">❌ Clear</button>
+                <div id="duplicateCounter" style="
+                    padding: 8px 12px;
+                    background: #fef3c7;
+                    border: 1px solid #f59e0b;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #92400e;
+                    display: none;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                " onclick="showDuplicateStats()" title="Click to view phone number duplicate details">
+                    📱 <span id="duplicateCount">0</span> phone duplicates
+                </div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="addNewColumn()" id="addColumnBtn">➕ Add Column</button>
                 <button onclick="deleteSelectedColumn()" id="deleteBtn" disabled>🗑️ Delete Column</button>
+                <button onclick="clearAllSorting()" id="clearSortBtn" title="Clear all column sorting (Ctrl+R)">🔄 Clear Sorting</button>
+                <button onclick="autoFitAllColumns()" id="autoFitBtn" title="Auto-fit all columns to content">📏 Auto-fit All</button>
+                <button onclick="showDuplicateStats()" id="duplicateStatsBtn" title="Show phone number duplicate statistics">📱 Phone Duplicates</button>
+                <button onclick="clearDuplicateHighlights()" id="clearDuplicatesBtn" title="Clear all phone number duplicate highlights">✨ Clear Highlights</button>
                 <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
                 <button onclick="scrollTableRight()">➡️ Scroll Right</button>
                 <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
@@ -409,6 +757,21 @@
         </div>
     </div>
 
+    <!-- Resize indicator -->
+    <div id="resizeIndicator" class="resize-indicator"></div>
+
+    <!-- Column context menu -->
+    <div id="columnContextMenu" class="column-context-menu">
+        <div class="column-context-menu-item" onclick="autoFitCurrentColumn()">📏 Auto-fit Column</div>
+        <div class="column-context-menu-item" onclick="resetCurrentColumnWidth()">🔄 Reset Width</div>
+        <div class="column-context-menu-item" onclick="hideColumnContextMenu()">❌ Close</div>
+    </div>
+
+    <!-- Resize progress indicator -->
+    <div id="resizeProgress" class="resize-in-progress">
+        📏 Resizing Column...
+    </div>
+
     <script>
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -424,9 +787,15 @@
         let isRendering = false;
         let searchTerm = '';
         let originalData = [];
+        let sortState = {}; // Track sorting state for each column
+        let columnWidths = {}; // Track column widths
+        let isResizing = false;
+        let currentResizer = null;
+        let startX = 0;
+        let startWidth = 0;
 
         // ✅ Backend API base URL - pointing to Spring Boot backend (from legacy/api/axios.js)
-        const BASE_URL = "https://backend.leadstracker.in";
+        const BASE_URL = "http://localhost:8082";
 
         // ✅ Security configuration (from legacy/api/axios.js)
         const SECURITY_CONFIG = {
@@ -491,8 +860,16 @@
                     config.headers['Authorization'] = `Bearer ${token}`;
                     // Debug: Log token info (first 20 chars only for security)
                     console.log('Using token:', token.substring(0, 20) + '...');
+                    console.log('Request URL:', config.url);
+                    console.log('Request headers:', config.headers);
                 } else {
                     console.warn('No authentication token found in localStorage');
+                    // Try to get token from sessionStorage as fallback
+                    const sessionToken = sessionStorage.getItem('token');
+                    if (sessionToken) {
+                        config.headers['Authorization'] = `Bearer ${sessionToken}`;
+                        console.log('Using session token:', sessionToken.substring(0, 20) + '...');
+                    }
                 }
 
                 // Add request timestamp for security
@@ -642,12 +1019,19 @@
 
         // Session validation helper
         function validateSession() {
-            const user = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
+            // Check for token in both localStorage and sessionStorage
+            let token = localStorage.getItem('token');
+            if (!token) {
+                token = sessionStorage.getItem('token');
+            }
+            
+            let user = localStorage.getItem('user');
+            if (!user) {
+                user = sessionStorage.getItem('user');
+            }
 
             if (!user || !token) {
-                alert('Session expired. Please login again.');
-                window.close();
+                console.warn('No user or token found in storage');
                 return false;
             }
 
@@ -656,13 +1040,18 @@
                 const userIdFromStorage = userData.userId || userData.id;
                 const companyIdFromStorage = userData.companyId;
 
+                // Log for debugging
+                console.log('Stored user ID:', userIdFromStorage);
+                console.log('URL user ID:', userId);
+                console.log('Stored company ID:', companyIdFromStorage);
+                console.log('URL company ID:', companyId);
+
                 if (userIdFromStorage != userId || companyIdFromStorage != companyId) {
-                    alert('Session data mismatch. Please refresh and try again.');
+                    console.warn('Session data mismatch');
                     return false;
                 }
             } catch (e) {
-                alert('Invalid session data. Please login again.');
-                window.close();
+                console.error('Error parsing user data:', e);
                 return false;
             }
 
@@ -671,10 +1060,19 @@
 
         // Function to check authentication and provide login option if needed
         function checkAuthentication() {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
+            // Check for token in both localStorage and sessionStorage
+            let token = localStorage.getItem('token');
+            let user = localStorage.getItem('user');
+            
+            if (!token) {
+                token = sessionStorage.getItem('token');
+            }
+            if (!user) {
+                user = sessionStorage.getItem('user');
+            }
 
             if (!token || !user) {
+                console.warn('Authentication check failed - no token or user found');
                 document.getElementById('scrollContainer').innerHTML = `
                     <div class="error-container">
                         <div class="error-icon">⚠️</div>
@@ -682,13 +1080,38 @@
                         <div class="error-details">
                             <p>You need to be logged in to view this task.</p>
                             <p>Please log in to your account and try again.</p>
+                            <p><strong>Debug Info:</strong></p>
+                            <p>Token: ${token ? 'Found' : 'Missing'}</p>
+                            <p>User: ${user ? 'Found' : 'Missing'}</p>
                         </div>
                         <button onclick="redirectToLogin()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 16px;">Login</button>
+                        <button onclick="retryAuthentication()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 16px; margin-left: 8px;">Retry</button>
                     </div>
                 `;
                 return false;
             }
-            return true;
+
+            // Validate the token format
+            try {
+                if (token.split('.').length !== 3) {
+                    console.warn('Invalid token format');
+                    return false;
+                }
+                
+                // Check if token is expired
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const currentTime = Date.now() / 1000;
+                if (payload.exp < currentTime) {
+                    console.warn('Token expired');
+                    return false;
+                }
+                
+                console.log('Authentication check passed');
+                return true;
+            } catch (e) {
+                console.error('Error validating token:', e);
+                return false;
+            }
         }
 
         // Function to redirect to login page
@@ -701,8 +1124,450 @@
             window.location.href = '/login';
         }
 
+        // Function to retry authentication
+        function retryAuthentication() {
+            console.log('Retrying authentication...');
+            // Clear any existing error display
+            document.getElementById('scrollContainer').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span style="margin-left: 10px;">Retrying authentication...</span>
+                </div>
+            `;
+            
+            // Wait a moment and try again
+            setTimeout(() => {
+                if (checkAuthentication()) {
+                    loadExcelData();
+                }
+            }, 1000);
+        }
+
+        // Function to refresh authentication
+        function refreshAuthentication() {
+            console.log('Attempting to refresh authentication...');
+            
+            // Check if we can get a fresh token from the main application
+            try {
+                // Try to communicate with parent window if this is in an iframe
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'REQUEST_AUTH_REFRESH' }, '*');
+                }
+                
+                // Also try to refresh from localStorage/sessionStorage
+                const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+                if (refreshToken) {
+                    console.log('Found refresh token, attempting to use it');
+                    // You could implement refresh token logic here
+                }
+                
+                // Try to get a fresh token from the main app
+                const mainAppToken = localStorage.getItem('mainAppToken') || sessionStorage.getItem('mainAppToken');
+                if (mainAppToken) {
+                    console.log('Found main app token, updating local token');
+                    localStorage.setItem('token', mainAppToken);
+                    sessionStorage.setItem('token', mainAppToken);
+                }
+                
+                // For now, just retry the authentication check
+                retryAuthentication();
+            } catch (error) {
+                console.error('Error refreshing authentication:', error);
+                retryAuthentication();
+            }
+        }
+
+        // Function to manually check token validity
+        function checkTokenValidity() {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) {
+                console.log('No token found');
+                return false;
+            }
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    console.log('Invalid token format');
+                    return false;
+                }
+
+                const payload = JSON.parse(atob(parts[1]));
+                const currentTime = Date.now() / 1000;
+                const isValid = payload.exp > currentTime;
+                
+                console.log('Token validity check:', {
+                    issuedAt: new Date(payload.iat * 1000),
+                    expiresAt: new Date(payload.exp * 1000),
+                    currentTime: new Date(currentTime * 1000),
+                    timeRemaining: Math.floor((payload.exp - currentTime) / 60) + ' minutes'
+                });
+                
+                return isValid;
+            } catch (error) {
+                console.error('Error checking token validity:', error);
+                return false;
+            }
+        }
+
+        // Column resizing functions
+        function startColumnResize(event, colIndex) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            isResizing = true;
+            currentResizer = event.target;
+            startX = event.clientX;
+            
+            // Get current column width
+            const column = document.querySelector(`th[data-col="${colIndex}"]`);
+            startWidth = column.offsetWidth;
+            
+            // Add resizing class
+            currentResizer.classList.add('resizing');
+            
+            // Hide column data during resize
+            const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
+            columnCells.forEach(cell => {
+                cell.classList.add('column-resizing');
+            });
+            
+            // Show resize indicator
+            const indicator = document.getElementById('resizeIndicator');
+            if (indicator) {
+                indicator.style.left = event.clientX + 'px';
+                indicator.classList.add('show');
+            }
+            
+            // Show resize progress indicator
+            const progressIndicator = document.getElementById('resizeProgress');
+            if (progressIndicator) {
+                progressIndicator.textContent = `📏 Resizing Column ${getColumnLetter(colIndex)}...`;
+                progressIndicator.classList.add('show');
+            }
+            
+            // Add event listeners
+            document.addEventListener('mousemove', handleColumnResize);
+            document.addEventListener('mouseup', stopColumnResize);
+            
+            // Prevent text selection
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'col-resize';
+        }
+
+        function handleColumnResize(event) {
+            if (!isResizing) return;
+            
+            const deltaX = event.clientX - startX;
+            const newWidth = Math.max(80, Math.min(500, startWidth + deltaX));
+            
+            // Update column width
+            const colIndex = parseInt(currentResizer.getAttribute('data-col'));
+            columnWidths[colIndex] = newWidth;
+            
+            // Update all cells in this column - content will be hidden based on width
+            const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
+            columnCells.forEach(cell => {
+                // Set exact width - content will be hidden if it doesn't fit
+                cell.style.width = newWidth + 'px';
+                cell.style.minWidth = newWidth + 'px';
+                cell.style.maxWidth = newWidth + 'px';
+                
+                // Excel-like content handling
+                cell.style.overflow = 'hidden';
+                cell.style.textOverflow = 'ellipsis';
+                cell.style.whiteSpace = 'nowrap';
+                
+                // Add tooltip to show full content when hovering over truncated text
+                const fullText = cell.textContent || cell.innerText;
+                if (fullText.length > 0) {
+                    cell.title = fullText;
+                }
+                
+                // Check if content is truncated after resize
+                setTimeout(() => checkContentTruncation(cell), 10);
+            });
+            
+            // Update resize indicator
+            const indicator = document.getElementById('resizeIndicator');
+            if (indicator) {
+                indicator.style.left = event.clientX + 'px';
+            }
+            
+            // Update progress indicator with width info
+            const progressIndicator = document.getElementById('resizeProgress');
+            if (progressIndicator) {
+                progressIndicator.textContent = `📏 Column ${getColumnLetter(colIndex)}: ${newWidth}px`;
+            }
+        }
+
+        function stopColumnResize() {
+            if (!isResizing) return;
+            
+            isResizing = false;
+            
+            // Remove resizing class
+            if (currentResizer) {
+                currentResizer.classList.remove('resizing');
+            }
+            
+            // Show column data again after resize
+            const colIndex = parseInt(currentResizer.getAttribute('data-col'));
+            const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
+            columnCells.forEach(cell => {
+                cell.classList.remove('column-resizing');
+            });
+            
+            // Hide resize indicator
+            const indicator = document.getElementById('resizeIndicator');
+            if (indicator) {
+                indicator.classList.remove('show');
+            }
+            
+            // Hide resize progress indicator
+            const progressIndicator = document.getElementById('resizeProgress');
+            if (progressIndicator) {
+                progressIndicator.classList.remove('show');
+            }
+            
+            // Remove event listeners
+            document.removeEventListener('mousemove', handleColumnResize);
+            document.removeEventListener('mouseup', stopColumnResize);
+            
+            // Restore cursor and selection
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+            
+            // Save column widths to localStorage
+            localStorage.setItem('excelColumnWidths', JSON.stringify(columnWidths));
+            
+            currentResizer = null;
+        }
+
+        // Cancel column resize and restore original width
+        function cancelColumnResize() {
+            if (!isResizing || !currentResizer) return;
+            
+            const colIndex = parseInt(currentResizer.getAttribute('data-col'));
+            
+            // Restore original width
+            const originalWidth = startWidth;
+            columnWidths[colIndex] = originalWidth;
+            
+            // Update all cells in this column
+            const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
+            columnCells.forEach(cell => {
+                cell.style.width = originalWidth + 'px';
+                cell.style.minWidth = originalWidth + 'px';
+                cell.style.maxWidth = originalWidth + 'px';
+            });
+            
+            // Stop resizing
+            stopColumnResize();
+            
+            showCustomAlert(`Column ${getColumnLetter(colIndex)} resize cancelled`, 'info');
+        }
+
+        // Simple table structure maintenance - like Excel
+        function maintainTableStructure() {
+            const table = document.querySelector('table');
+            if (!table) return;
+            
+            // Apply saved widths to all columns
+            const maxCols = Math.max(...currentData.map(row => row.length));
+            
+            for (let colIndex = 0; colIndex < maxCols; colIndex++) {
+                const savedWidth = columnWidths[colIndex] || 80;
+                const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
+                
+                columnCells.forEach(cell => {
+                    // Set exact width - content will be hidden if it doesn't fit
+                    cell.style.width = savedWidth + 'px';
+                    cell.style.minWidth = savedWidth + 'px';
+                    cell.style.maxWidth = savedWidth + 'px';
+                    
+                    // Excel-like content handling
+                    cell.style.overflow = 'hidden';
+                    cell.style.textOverflow = 'ellipsis';
+                    cell.style.whiteSpace = 'nowrap';
+                    
+                    // Add tooltip for full content
+                    const fullText = cell.textContent || cell.innerText;
+                    if (fullText.length > 0) {
+                        cell.title = fullText;
+                    }
+                    
+                    // Check if content is truncated and add visual indicator
+                    checkContentTruncation(cell);
+                });
+            }
+        }
+
+        // Check if content is truncated and add visual indicator
+        function checkContentTruncation(cell) {
+            const cellWidth = cell.offsetWidth;
+            const contentWidth = cell.scrollWidth;
+            
+            // Remove previous truncation indicator
+            cell.classList.remove('content-truncated');
+            
+            // If content is wider than cell, it's truncated
+            if (contentWidth > cellWidth) {
+                cell.classList.add('content-truncated');
+            }
+        }
+
+        // Auto-fit column width based on content - like Excel
+        function autoFitColumn(colIndex) {
+            const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
+            let maxWidth = 80; // Minimum width
+            
+            columnCells.forEach(cell => {
+                const content = cell.textContent || cell.innerText;
+                const tempSpan = document.createElement('span');
+                tempSpan.style.visibility = 'hidden';
+                tempSpan.style.position = 'absolute';
+                tempSpan.style.whiteSpace = 'nowrap';
+                tempSpan.style.fontFamily = window.getComputedStyle(cell).fontFamily;
+                tempSpan.style.fontSize = window.getComputedStyle(cell).fontSize;
+                tempSpan.style.fontWeight = window.getComputedStyle(cell).fontWeight;
+                tempSpan.textContent = content;
+                document.body.appendChild(tempSpan);
+                
+                const contentWidth = tempSpan.offsetWidth;
+                maxWidth = Math.max(maxWidth, contentWidth + 24); // Add padding like Excel
+                
+                document.body.removeChild(tempSpan);
+            });
+            
+            // Update column width
+            columnWidths[colIndex] = maxWidth;
+            
+            // Apply to all cells in column - content will be visible now
+            columnCells.forEach(cell => {
+                cell.style.width = maxWidth + 'px';
+                cell.style.minWidth = maxWidth + 'px';
+                cell.style.maxWidth = maxWidth + 'px';
+                
+                // Content is now fully visible
+                cell.style.overflow = 'hidden';
+                cell.style.textOverflow = 'ellipsis';
+                cell.style.whiteSpace = 'nowrap';
+                
+                // Update tooltip
+                const fullText = cell.textContent || cell.innerText;
+                if (fullText.length > 0) {
+                    cell.title = fullText;
+                }
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('excelColumnWidths', JSON.stringify(columnWidths));
+            
+            showCustomAlert(`Column ${getColumnLetter(colIndex)} auto-fitted to ${maxWidth}px`, 'success');
+        }
+
+        // Reset all column widths to default
+        function resetColumnWidths() {
+            columnWidths = {};
+            localStorage.removeItem('excelColumnWidths');
+            
+            // Reset all column widths
+            const allCells = document.querySelectorAll('th, td');
+            allCells.forEach(cell => {
+                cell.style.width = '';
+                cell.style.minWidth = '';
+                cell.style.maxWidth = '';
+            });
+            
+            renderTable();
+            showCustomAlert('All column widths reset to default', 'info');
+        }
+
+        // Load saved column widths
+        function loadColumnWidths() {
+            try {
+                const saved = localStorage.getItem('excelColumnWidths');
+                if (saved) {
+                    columnWidths = JSON.parse(saved);
+                }
+            } catch (error) {
+                console.warn('Failed to load saved column widths:', error);
+                columnWidths = {};
+            }
+        }
+
+        // Auto-fit all columns
+        function autoFitAllColumns() {
+            if (!currentData || currentData.length === 0) {
+                showCustomAlert('No data to auto-fit', 'warning');
+                return;
+            }
+
+            const maxCols = Math.max(...currentData.map(row => row.length));
+            
+            for (let colIndex = 0; colIndex < maxCols; colIndex++) {
+                autoFitColumn(colIndex);
+            }
+            
+            showCustomAlert('All columns auto-fitted to content', 'success');
+        }
+
+        // Context menu functions
+        let currentContextColumn = null;
+
+        function showColumnContextMenu(event, colIndex) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            currentContextColumn = colIndex;
+            const menu = document.getElementById('columnContextMenu');
+            
+            menu.style.left = event.clientX + 'px';
+            menu.style.top = event.clientY + 'px';
+            menu.classList.add('show');
+            
+            // Hide menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', hideColumnContextMenu);
+            }, 100);
+        }
+
+        function hideColumnContextMenu() {
+            const menu = document.getElementById('columnContextMenu');
+            menu.classList.remove('show');
+            document.removeEventListener('click', hideColumnContextMenu);
+        }
+
+        function autoFitCurrentColumn() {
+            if (currentContextColumn !== null) {
+                autoFitColumn(currentContextColumn);
+                hideColumnContextMenu();
+            }
+        }
+
+        function resetCurrentColumnWidth() {
+            if (currentContextColumn !== null) {
+                delete columnWidths[currentContextColumn];
+                localStorage.setItem('excelColumnWidths', JSON.stringify(columnWidths));
+                
+                // Reset column width
+                const columnCells = document.querySelectorAll(`[data-col="${currentContextColumn}"]`);
+                columnCells.forEach(cell => {
+                    cell.style.width = '';
+                    cell.style.minWidth = '';
+                    cell.style.maxWidth = '';
+                });
+                
+                showCustomAlert(`Column ${getColumnLetter(currentContextColumn)} width reset`, 'info');
+                hideColumnContextMenu();
+            }
+        }
+
         // Load Excel data on page load
         window.onload = function () {
+            console.log('Page loaded with parameters:', { taskId, companyId, userId, userRole });
+            
             if (!taskId || !companyId) {
                 document.getElementById('scrollContainer').innerHTML =
                     '<div class="error">❌ Missing task ID or company ID</div>';
@@ -715,6 +1580,12 @@
                 return;
             }
 
+            // Load saved column widths
+            loadColumnWidths();
+
+            // Debug authentication state
+            debugAuthenticationState();
+
             // Check authentication before proceeding
             if (!checkAuthentication()) {
                 return;
@@ -725,6 +1596,32 @@
             // Load Excel data directly without role-based access validation
             loadExcelData();
         };
+
+        // Debug function to show authentication state
+        function debugAuthenticationState() {
+            console.log('=== Authentication Debug Info ===');
+            const localToken = localStorage.getItem('token');
+            const sessionToken = sessionStorage.getItem('token');
+            const localUser = localStorage.getItem('user');
+            const sessionUser = sessionStorage.getItem('user');
+            
+            console.log('Local Storage Token:', localToken ? localToken.substring(0, 20) + '...' : 'Not found');
+            console.log('Session Storage Token:', sessionToken ? sessionToken.substring(0, 20) + '...' : 'Not found');
+            console.log('Local Storage User:', localUser ? 'Found' : 'Not found');
+            console.log('Session Storage User:', sessionUser ? 'Found' : 'Not found');
+            
+            if (localToken) {
+                try {
+                    const payload = JSON.parse(atob(localToken.split('.')[1]));
+                    console.log('Token Payload:', payload);
+                    console.log('Token Expires:', new Date(payload.exp * 1000));
+                    console.log('Token Valid:', payload.exp > Date.now() / 1000);
+                } catch (e) {
+                    console.error('Error parsing token:', e);
+                }
+            }
+            console.log('================================');
+        }
 
         async function loadExcelDataWithAxios() {
             try {
@@ -752,11 +1649,18 @@
 
         async function loadExcelData() {
             try {
+                // Double-check authentication before making the request
+                if (!checkAuthentication()) {
+                    console.log('Authentication check failed, stopping data load');
+                    return;
+                }
+
                 const data = await loadExcelDataWithAxios();
                 currentData = JSON.parse(JSON.stringify(data));
                 originalData = JSON.parse(JSON.stringify(data)); // Store original data for search
                 renderTable();
             } catch (error) {
+                console.error('Error loading Excel data:', error);
                 let errorMessage = error.message;
 
                 if (error.message.includes('Network Error')) {
@@ -770,7 +1674,11 @@
                 }
 
                 // Check if token might be expired or invalid
-                const token = localStorage.getItem('token');
+                let token = localStorage.getItem('token');
+                if (!token) {
+                    token = sessionStorage.getItem('token');
+                }
+                
                 if (token) {
                     try {
                         // Basic JWT expiration check
@@ -784,14 +1692,23 @@
                     }
                 }
 
-                // Create error message
+                // Create error message with better debugging
                 document.getElementById('scrollContainer').innerHTML =
                     `<div class="error">❌ Failed to load Excel data: ${errorMessage}<br><br>
+                     <p><strong>Debug Information:</strong></p>
+                     <p>Error Status: ${error.response?.status || 'Unknown'}</p>
+                     <p>Error Message: ${error.message || 'No message'}</p>
+                     <p>Token Present: ${token ? 'Yes' : 'No'}</p>
+                     <p>Task ID: ${taskId}</p>
+                     <p>Company ID: ${companyId}</p>
+                     <p>User ID: ${userId}</p><br>
                      <p>Please ensure you are logged in and have permission to view this task.</p>
                      <p>If the problem persists, try logging out and logging back in.</p><br>
 
-                     <button onclick="loadExcelData()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🔄 Retry</button>
-                     <button onclick="window.close()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
+                     <button onclick="retryAuthentication()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🔄 Retry Authentication</button>
+                     <button onclick="refreshAuthentication()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🔄 Refresh Auth</button>
+                     <button onclick="loadExcelData()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">🔄 Retry Load</button>
+                     <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
                      </div>`;
             }
         }
@@ -804,6 +1721,115 @@
                 tempIndex = Math.floor(tempIndex / 26) - 1;
             }
             return letter;
+        }
+
+        // Sort data by column
+        function sortColumn(colIndex) {
+            if (!currentData || currentData.length === 0) return;
+
+            // Get current sort state for this column
+            const currentSort = sortState[colIndex] || 'none';
+            
+            // Determine new sort direction
+            let newSort;
+            if (currentSort === 'none' || currentSort === 'desc') {
+                newSort = 'asc';
+            } else if (currentSort === 'asc') {
+                newSort = 'desc';
+            } else {
+                newSort = 'none'; // Remove sorting
+            }
+
+            // Clear other column sorts
+            Object.keys(sortState).forEach(key => {
+                if (parseInt(key) !== colIndex) {
+                    sortState[key] = 'none';
+                }
+            });
+
+            // Update sort state for current column
+            sortState[colIndex] = newSort;
+
+            if (newSort === 'none') {
+                // Remove sorting - restore original order
+                if (originalData.length > 0) {
+                    currentData = JSON.parse(JSON.stringify(originalData));
+                }
+                renderTable();
+                showCustomAlert(`Sorting removed from column ${getColumnLetter(colIndex)}`, 'info');
+                return;
+            }
+
+            // Sort the data
+            const sortedData = [...currentData].sort((a, b) => {
+                const aVal = a[colIndex] || '';
+                const bVal = b[colIndex] || '';
+
+                // Handle numeric values
+                const aNum = parseFloat(aVal);
+                const bNum = parseFloat(bVal);
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    // Numeric comparison
+                    return newSort === 'asc' ? aNum - bNum : bNum - aNum;
+                } else {
+                    // String comparison
+                    const aStr = String(aVal).toLowerCase();
+                    const bStr = String(bVal).toLowerCase();
+                    if (newSort === 'asc') {
+                        return aStr.localeCompare(bStr);
+                    } else {
+                        return bStr.localeCompare(aStr);
+                    }
+                }
+            });
+
+            // Update current data
+            currentData = sortedData;
+            
+            // Re-render table to show new sort state
+            renderTable();
+            
+            // Show sort confirmation
+            const columnLetter = getColumnLetter(colIndex);
+            const sortDirection = newSort === 'asc' ? 'ascending' : 'descending';
+            showCustomAlert(`Column ${columnLetter} sorted ${sortDirection}`, 'success');
+        }
+
+        // Get sort button HTML
+        function getSortButtonHTML(colIndex) {
+            const currentSort = sortState[colIndex] || 'none';
+            let buttonClass = 'sort-btn';
+            let buttonText = '↕️';
+            let tooltip = 'Click to sort column';
+            
+            if (currentSort === 'asc') {
+                buttonClass += ' asc';
+                buttonText = '↑';
+                tooltip = 'Sorted ascending - Click to sort descending';
+            } else if (currentSort === 'desc') {
+                buttonClass += ' desc';
+                buttonText = '↓';
+                tooltip = 'Sorted descending - Click to remove sorting';
+            }
+            
+            return `<button class="${buttonClass}" onclick="sortColumn(${colIndex})" title="${tooltip}">${buttonText}</button>`;
+        }
+
+        // Clear all sorting and restore original order
+        function clearAllSorting() {
+            // Clear sort state
+            sortState = {};
+            
+            // Restore original data order if available
+            if (originalData.length > 0) {
+                currentData = JSON.parse(JSON.stringify(originalData));
+            }
+            
+            // Re-render table
+            renderTable();
+            
+            showCustomAlert('All sorting cleared', 'info');
         }
 
         function selectColumn(colIndex) {
@@ -856,6 +1882,9 @@
                 maxCols = 5;
             }
 
+            // Find phone number duplicates before rendering
+            const duplicates = findPhoneDuplicates();
+
             let html = '<table id="editableExcel">';
 
             // Header Row
@@ -863,9 +1892,25 @@
             html += `<th>Row</th>`;
             for (let colIndex = 0; colIndex < maxCols; colIndex++) {
                 const colLetter = getColumnLetter(colIndex);
-                html += `<th data-col="${colIndex}" onclick="selectColumn(${colIndex})" style="cursor: pointer;">
-                            ${colLetter}<br>
-                            <small style="font-size: 10px; color: #6b7280;">Click to select</small>
+                const savedWidth = columnWidths[colIndex];
+                const widthStyle = savedWidth ? `width: ${savedWidth}px; min-width: ${savedWidth}px; max-width: ${savedWidth}px;` : 'min-width: 80px; max-width: 500px;';
+                
+                html += `<th data-col="${colIndex}" 
+                            onclick="selectColumn(${colIndex})" 
+                            oncontextmenu="showColumnContextMenu(event, ${colIndex})"
+                            style="cursor: pointer; position: relative; ${widthStyle}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <div class="column-header">
+                                <div class="column-title">
+                                    ${colLetter}<br>
+                                    <small style="font-size: 10px; color: #6b7280;">Click to select, Right-click for options</small>
+                                </div>
+                                ${getSortButtonHTML(colIndex)}
+                            </div>
+                            <div class="column-resizer" 
+                                 onmousedown="startColumnResize(event, ${colIndex})" 
+                                 data-col="${colIndex}"
+                                 title="Drag to resize column (Press Esc to cancel)">
+                            </div>
                         </th>`;
             }
             html += "</tr>";
@@ -877,9 +1922,25 @@
 
                 for (let colIndex = 0; colIndex < maxCols; colIndex++) {
                     const safeCell = row[colIndex] ?? "";
-                    html += `<td data-col="${colIndex}" data-row="${rowIndex}" contenteditable="true" 
+                    const savedWidth = columnWidths[colIndex];
+                    const widthStyle = savedWidth ? `width: ${savedWidth}px; min-width: ${savedWidth}px; max-width: ${savedWidth}px;` : 'min-width: 80px; max-width: 500px;';
+                    
+                    // Check if this cell has phone number duplicates
+                    const cellValue = safeCell.toString().trim();
+                    const normalizedPhone = cellValue.replace(/[\s\-\(\)\.]/g, '');
+                    const isDuplicate = safeCell && duplicates[normalizedPhone] && duplicates[normalizedPhone].length > 1;
+                    const duplicateClass = isDuplicate ? 'duplicate-cell' : '';
+                    const duplicateClickHandler = isDuplicate ? `onclick="handleDuplicateClick(event, '${normalizedPhone}')"` : '';
+                    const duplicateStyle = isDuplicate ? 'cursor: pointer; background-color: #fef3c7; border: 2px solid #f59e0b;' : '';
+                    const duplicateTitle = isDuplicate ? `title="Click to see all ${duplicates[normalizedPhone].length} occurrences of this phone number duplicate"` : '';
+                    
+                    html += `<td data-col="${colIndex}" data-row="${rowIndex}" data-value="${normalizedPhone}" contenteditable="true" 
+                                class="${duplicateClass}"
+                                ${duplicateClickHandler}
                                 onblur="debouncedUpdateCell(${rowIndex}, ${colIndex}, this.innerText)"
-                                onkeydown="handleCellKeyDown(event, ${rowIndex}, ${colIndex})">
+                                onkeydown="handleCellKeyDown(event, ${rowIndex}, ${colIndex})"
+                                style="${widthStyle}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${duplicateStyle}"
+                                ${duplicateTitle}>
                                 ${safeCell}
                             </td>`;
                 }
@@ -889,7 +1950,93 @@
             html += '</table>';
             document.getElementById('scrollContainer').innerHTML = html;
 
+            // Maintain table structure after rendering
+            setTimeout(() => {
+                maintainTableStructure();
+            }, 100);
+
+            // Update duplicate counter after rendering
+            setTimeout(() => {
+                updateDuplicateCounter();
+            }, 200);
+
             isRendering = false;
+        }
+
+        // Function to refresh duplicate detection when data changes
+        function refreshDuplicateDetection() {
+            if (!isRendering) {
+                updateDuplicateCounter();
+                
+                // Re-apply duplicate styling to cells
+                const duplicates = findPhoneDuplicates();
+                Object.keys(duplicates).forEach(value => {
+                    const cells = document.querySelectorAll(`td[data-value="${value}"]`);
+                    cells.forEach(cell => {
+                        cell.classList.add('duplicate-cell');
+                        cell.onclick = (event) => handleDuplicateClick(event, value);
+                        cell.title = `Click to see all ${duplicates[value].length} occurrences of this phone number duplicate`;
+                    });
+                });
+            }
+        }
+
+        function exportDuplicateData() {
+            const duplicates = findPhoneDuplicates();
+            if (Object.keys(duplicates).length === 0) {
+                showCustomAlert('No duplicates to export', 'info');
+                return;
+            }
+
+            let csvContent = 'Value,Count,Locations\n';
+            
+            Object.keys(duplicates).forEach(value => {
+                const locations = duplicates[value];
+                const locationStr = locations.map(loc => 
+                    `Row ${loc.row + 1}, Col ${getColumnLetter(loc.col)}`
+                ).join('; ');
+                
+                csvContent += `"${value}",${locations.length},"${locationStr}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `duplicates_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showCustomAlert('Phone number duplicate data exported successfully', 'success');
+        }
+
+        // Enhanced phone number duplicate cell styling with better visual feedback
+        function enhanceDuplicateVisualization() {
+            const duplicates = findPhoneDuplicates();
+            const duplicateValues = Object.keys(duplicates);
+            
+            // Add different colors for different duplicate groups
+            duplicateValues.forEach((value, index) => {
+                const colorIndex = index % 5; // 5 different colors
+                const colors = [
+                    { bg: '#fef3c7', border: '#f59e0b' }, // Yellow
+                    { bg: '#fce7f3', border: '#ec4899' }, // Pink
+                    { bg: '#dbeafe', border: '#3b82f6' }, // Blue
+                    { bg: '#dcfce7', border: '#22c55e' }, // Green
+                    { bg: '#fef2f2', border: '#ef4444' }  // Red
+                ];
+                
+                const cells = document.querySelectorAll(`td[data-value="${value}"]`);
+                cells.forEach(cell => {
+                    const color = colors[colorIndex];
+                    cell.style.backgroundColor = color.bg;
+                    cell.style.borderColor = color.border;
+                    cell.style.borderWidth = '2px';
+                    cell.style.borderStyle = 'solid';
+                });
+            });
         }
 
         async function makeApiCall(endpoint, method = 'GET', data = null) {
@@ -1262,7 +2409,7 @@
             }
         }
 
-        // Add keyboard shortcuts for search
+        // Add keyboard shortcuts for search and sorting
         document.addEventListener('keydown', function(event) {
             // Ctrl+F or Cmd+F to focus search
             if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
@@ -1276,6 +2423,320 @@
                 if (document.activeElement === searchInput) {
                     clearSearch();
                 }
+            }
+            
+            // Ctrl+S to sort selected column
+            if ((event.ctrlKey || event.metaKey) && event.key === 's' && selectedColumn !== null) {
+                event.preventDefault();
+                sortColumn(selectedColumn);
+            }
+            
+            // Ctrl+R to clear all sorting
+            if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+                event.preventDefault();
+                clearAllSorting();
+            }
+            
+            // Ctrl+A to auto-fit all columns
+            if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+                event.preventDefault();
+                autoFitAllColumns();
+            }
+            
+            // Ctrl+Shift+R to reset all column widths
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'R') {
+                event.preventDefault();
+                resetColumnWidths();
+            }
+            
+            // Ctrl+D to show phone number duplicate statistics
+            if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+                event.preventDefault();
+                showDuplicateStats();
+            }
+            
+            // Ctrl+Shift+D to highlight all phone number duplicates
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'D') {
+                event.preventDefault();
+                highlightAllDuplicatesInTable();
+            }
+            
+            // Escape key to cancel column resizing
+            if (event.key === 'Escape' && isResizing) {
+                event.preventDefault();
+                cancelColumnResize();
+            }
+        });
+
+        // Phone number duplicate detection and display functions
+        function findPhoneDuplicates() {
+            const duplicates = {};
+            
+            if (!currentData || currentData.length === 0) return duplicates;
+            
+            // Phone number regex patterns (various formats)
+            const phonePatterns = [
+                /^\+?[\d\s\-\(\)\.]{7,15}$/, // International format
+                /^[\d\s\-\(\)\.]{7,15}$/,     // Local format
+                /^\d{10}$/,                   // 10 digits
+                /^\d{11}$/,                   // 11 digits
+                /^\d{12}$/,                   // 12 digits
+                /^\d{13}$/,                   // 13 digits
+                /^\d{14}$/,                   // 14 digits
+                /^\d{15}$/                    // 15 digits
+            ];
+            
+            // Check each cell in the data for phone number duplicates
+            currentData.forEach((row, rowIndex) => {
+                row.forEach((cellValue, colIndex) => {
+                    if (cellValue && cellValue.toString().trim() !== '') {
+                        const value = cellValue.toString().trim();
+                        
+                        // Check if this value looks like a phone number
+                        const isPhoneNumber = phonePatterns.some(pattern => pattern.test(value));
+                        
+                        if (isPhoneNumber) {
+                            // Normalize phone number for comparison (remove spaces, dashes, parentheses)
+                            const normalizedPhone = value.replace(/[\s\-\(\)\.]/g, '');
+                            
+                            if (!duplicates[normalizedPhone]) {
+                                duplicates[normalizedPhone] = [];
+                            }
+                            duplicates[normalizedPhone].push({ 
+                                row: rowIndex, 
+                                col: colIndex, 
+                                value: value,
+                                normalized: normalizedPhone 
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // Filter out non-duplicates (keep only phone numbers that appear more than once)
+            const filteredDuplicates = {};
+            Object.keys(duplicates).forEach(key => {
+                if (duplicates[key].length > 1) {
+                    filteredDuplicates[key] = duplicates[key];
+                }
+            });
+            
+            return filteredDuplicates;
+        }
+
+        function showDuplicatesModal(duplicateValue, duplicateLocations) {
+            // Remove existing modal if any
+            const existingModal = document.getElementById('duplicatesModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'duplicatesModal';
+            modal.className = 'custom-modal show';
+            
+            let locationsHtml = '';
+            duplicateLocations.forEach((location, index) => {
+                const rowNum = location.row + 1;
+                const colLetter = getColumnLetter(location.col);
+                locationsHtml += `
+                    <div style="padding: 8px; margin: 4px 0; background: #f8fafc; border-radius: 4px; border-left: 3px solid #3b82f6;">
+                        <strong>Row ${rowNum}, Column ${colLetter}</strong> (${location.value})
+                    </div>
+                `;
+            });
+
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                    <div class="modal-icon">📱</div>
+                    <div class="modal-title">Phone Number Duplicate Found: ${duplicateValue}</div>
+                    <div class="modal-message">
+                        This phone number appears ${duplicateLocations.length} times in the following locations:
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
+                        ${locationsHtml}
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="modal-btn modal-btn-cancel" onclick="hideDuplicatesModal()">
+                            Close
+                        </button>
+                        <button class="modal-btn" onclick="highlightAllDuplicates('${duplicateValue}')" style="background-color: #3b82f6; color: white;">
+                            Highlight All
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function hideDuplicatesModal() {
+            const modal = document.getElementById('duplicatesModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function highlightAllDuplicates(value) {
+            // Remove previous highlights
+            document.querySelectorAll('.duplicate-highlight').forEach(el => {
+                el.classList.remove('duplicate-highlight');
+            });
+            
+            // Highlight all cells with this duplicate value
+            const cells = document.querySelectorAll(`td[data-value="${value}"]`);
+            cells.forEach(cell => {
+                cell.classList.add('duplicate-highlight');
+            });
+            
+            // Scroll to first occurrence
+            if (cells.length > 0) {
+                cells[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            hideDuplicatesModal();
+            showCustomAlert(`Highlighted ${cells.length} duplicate cells`, 'success');
+        }
+
+        function clearDuplicateHighlights() {
+            document.querySelectorAll('.duplicate-highlight').forEach(el => {
+                el.classList.remove('duplicate-highlight');
+            });
+        }
+
+        function handleDuplicateClick(event, value) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const duplicates = findPhoneDuplicates();
+            if (duplicates[value]) {
+                showDuplicatesModal(value, duplicates[value]);
+            }
+        }
+
+        function showDuplicateStats() {
+            const duplicates = findPhoneDuplicates();
+            const duplicateCount = Object.keys(duplicates).length;
+            
+            if (duplicateCount === 0) {
+                showCustomAlert('No phone number duplicates found in the data', 'info');
+                return;
+            }
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('duplicatesModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'duplicatesModal';
+            modal.className = 'custom-modal show';
+            
+            let statsHtml = '';
+            let totalDuplicateCells = 0;
+            
+            Object.keys(duplicates).forEach((value, index) => {
+                const locations = duplicates[value];
+                totalDuplicateCells += locations.length;
+                const rowNums = locations.map(loc => loc.row + 1).join(', ');
+                const colLetters = locations.map(loc => getColumnLetter(loc.col)).join(', ');
+                
+                statsHtml += `
+                    <div style="padding: 10px; margin: 8px 0; background: #f8fafc; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                        <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;">
+                            ${index + 1}. Phone: <strong>${value}</strong>
+                        </div>
+                        <div style="font-size: 14px; color: #64748b;">
+                            Appears ${locations.length} times in Row(s): ${rowNums}, Column(s): ${colLetters}
+                        </div>
+                        <button onclick="showDuplicatesModal('${value}', ${JSON.stringify(locations)})" 
+                                style="margin-top: 6px; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            🔍 View Details
+                        </button>
+                    </div>
+                `;
+            });
+
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+                    <div class="modal-icon">📱</div>
+                    <div class="modal-title">Phone Number Duplicate Statistics</div>
+                    <div class="modal-message">
+                        Found <strong>${duplicateCount}</strong> unique duplicate phone numbers across <strong>${totalDuplicateCells}</strong> cells.
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto; margin: 15px 0;">
+                        ${statsHtml}
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="modal-btn modal-btn-cancel" onclick="hideDuplicatesModal()">
+                            Close
+                        </button>
+                        <button class="modal-btn" onclick="highlightAllDuplicatesInTable()" style="background-color: #10b981; color: white;">
+                            🎨 Highlight All Phone Duplicates
+                        </button>
+                        <button class="modal-btn" onclick="enhanceDuplicateVisualization()" style="background-color: #8b5cf6; color: white;">
+                            🌈 Color Code Phone Duplicates
+                        </button>
+                        <button class="modal-btn" onclick="exportDuplicateData()" style="background-color: #f59e0b; color: white;">
+                            📊 Export Phone Duplicates to CSV
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function highlightAllDuplicatesInTable() {
+            const duplicates = findPhoneDuplicates();
+            
+            // Remove previous highlights
+            clearDuplicateHighlights();
+            
+            let totalHighlighted = 0;
+            Object.keys(duplicates).forEach(value => {
+                const cells = document.querySelectorAll(`td[data-value="${value}"]`);
+                cells.forEach(cell => {
+                    cell.classList.add('duplicate-highlight');
+                    totalHighlighted++;
+                });
+            });
+            
+            hideDuplicatesModal();
+            showCustomAlert(`Highlighted ${totalHighlighted} phone number duplicate cells across ${Object.keys(duplicates).length} unique phone numbers`, 'success');
+        }
+
+        function updateDuplicateCounter() {
+            const duplicates = findPhoneDuplicates();
+            const duplicateCount = Object.keys(duplicates).length;
+            const counter = document.getElementById('duplicateCounter');
+            const countSpan = document.getElementById('duplicateCount');
+            
+            if (duplicateCount > 0) {
+                counter.style.display = 'block';
+                countSpan.textContent = duplicateCount;
+                
+                // Add animation effect
+                counter.style.animation = 'duplicatePulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    counter.style.animation = '';
+                }, 500);
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+
+        // Listen for messages from parent window (for authentication refresh)
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'AUTH_REFRESHED') {
+                console.log('Received auth refresh message from parent');
+                // Try to load data again
+                setTimeout(() => {
+                    if (checkAuthentication()) {
+                        loadExcelData();
+                    }
+                }, 500);
             }
         });
     </script>
