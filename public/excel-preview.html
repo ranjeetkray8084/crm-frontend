@@ -75,7 +75,7 @@
             border-collapse: collapse;
             min-width: 100%;
             table-layout: fixed;
-            width: auto;
+            width: 100%;
         }
 
         /* Styles for table header and data cells */
@@ -87,7 +87,9 @@
             background-color: white;
             color: #1e293b;
             white-space: nowrap;
-            min-width: 80px;
+            min-width: 150px;
+            width: 150px;
+            max-width: 150px;
             box-sizing: border-box;
         }
 
@@ -293,8 +295,8 @@
         /* Table cell width control */
         .resizable-column {
             position: relative;
-            min-width: 80px;
-            max-width: 500px;
+            min-width: 150px;
+            max-width: 400px;
         }
 
         .resizable-column th,
@@ -304,15 +306,15 @@
             white-space: nowrap;
         }
 
-        /* Table layout - allow natural content flow */
+        /* Table layout - fixed layout for consistent column widths */
         table {
             border-collapse: collapse;
             min-width: 100%;
-            table-layout: auto;
-            width: auto;
+            table-layout: fixed;
+            width: 100%;
         }
 
-        /* Column content handling - like Excel */
+        /* Column content handling - like Excel with fixed widths */
         th, td {
             box-sizing: border-box;
             overflow: hidden;
@@ -320,6 +322,9 @@
             white-space: nowrap;
             position: relative;
             padding: 8px 12px;
+            width: 150px; /* Increased default fixed width for better content visibility */
+            min-width: 150px;
+            max-width: 150px;
         }
 
         /* Show ellipsis when content is truncated */
@@ -340,8 +345,8 @@
 
         /* Column width constraints */
         .column-width-constrained {
-            min-width: 80px !important;
-            max-width: 500px !important;
+            min-width: 150px !important;
+            max-width: 400px !important;
         }
 
         /* Resize indicator */
@@ -467,12 +472,17 @@
             z-index: 6;
             background-color: #e2e8f0;
             border-right: 2px solid #64748b;
-            min-width: 60px;
+            min-width: 50px;
+            width: 50px;
+            max-width: 50px;
         }
 
         th:first-child {
             z-index: 7;
             background-color: #cbd5e1;
+            min-width: 50px;
+            width: 50px;
+            max-width: 50px;
         }
 
         /* Loading spinner */
@@ -722,6 +732,7 @@
                 <button onclick="deleteSelectedColumn()" id="deleteBtn" disabled>🗑️ Delete Column</button>
                 <button onclick="clearAllSorting()" id="clearSortBtn" title="Clear all column sorting (Ctrl+R)">🔄 Clear Sorting</button>
                 <button onclick="autoFitAllColumns()" id="autoFitBtn" title="Auto-fit all columns to content">📏 Auto-fit All</button>
+                <button onclick="resetColumnWidths()" id="resetWidthsBtn" title="Reset all columns to default fixed width (120px)">📐 Reset Widths</button>
                 <button onclick="showDuplicateStats()" id="duplicateStatsBtn" title="Show phone number duplicate statistics">📱 Phone Duplicates</button>
                 <button onclick="clearDuplicateHighlights()" id="clearDuplicatesBtn" title="Clear all phone number duplicate highlights">✨ Clear Highlights</button>
                 <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
@@ -1259,7 +1270,7 @@
             if (!isResizing) return;
             
             const deltaX = event.clientX - startX;
-            const newWidth = Math.max(80, Math.min(500, startWidth + deltaX));
+            const newWidth = Math.max(150, Math.min(400, startWidth + deltaX));
             
             // Update column width
             const colIndex = parseInt(currentResizer.getAttribute('data-col'));
@@ -1377,7 +1388,7 @@
             const maxCols = Math.max(...currentData.map(row => row.length));
             
             for (let colIndex = 0; colIndex < maxCols; colIndex++) {
-                const savedWidth = columnWidths[colIndex] || 80;
+                const savedWidth = columnWidths[colIndex] || 150;
                 const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
                 
                 columnCells.forEach(cell => {
@@ -1393,9 +1404,7 @@
                     
                     // Add tooltip for full content
                     const fullText = cell.textContent || cell.innerText;
-                    if (fullText.length > 0) {
-                        cell.title = fullText;
-                    }
+                    cell.title = fullText;
                     
                     // Check if content is truncated and add visual indicator
                     checkContentTruncation(cell);
@@ -1420,7 +1429,7 @@
         // Auto-fit column width based on content - like Excel
         function autoFitColumn(colIndex) {
             const columnCells = document.querySelectorAll(`[data-col="${colIndex}"]`);
-            let maxWidth = 80; // Minimum width
+            let maxWidth = 150; // Increased default fixed width
             
             columnCells.forEach(cell => {
                 const content = cell.textContent || cell.innerText;
@@ -1439,6 +1448,9 @@
                 
                 document.body.removeChild(tempSpan);
             });
+            
+            // Constrain width to reasonable limits
+            maxWidth = Math.max(150, Math.min(400, maxWidth));
             
             // Update column width
             columnWidths[colIndex] = maxWidth;
@@ -1467,21 +1479,29 @@
             showCustomAlert(`Column ${getColumnLetter(colIndex)} auto-fitted to ${maxWidth}px`, 'success');
         }
 
-        // Reset all column widths to default
+        // Reset all column widths to default fixed width
         function resetColumnWidths() {
             columnWidths = {};
             localStorage.removeItem('excelColumnWidths');
             
-            // Reset all column widths
+            // Reset all column widths to default fixed width
             const allCells = document.querySelectorAll('th, td');
             allCells.forEach(cell => {
-                cell.style.width = '';
-                cell.style.minWidth = '';
-                cell.style.maxWidth = '';
+                // Check if it's the Row column (first column)
+                if (cell === cell.parentElement?.firstElementChild || 
+                    (cell.parentElement?.tagName === 'TR' && cell === cell.parentElement.children[0])) {
+                    cell.style.width = '50px';
+                    cell.style.minWidth = '50px';
+                    cell.style.maxWidth = '50px';
+                } else {
+                    cell.style.width = '150px';
+                    cell.style.minWidth = '150px';
+                    cell.style.maxWidth = '150px';
+                }
             });
             
             renderTable();
-            showCustomAlert('All column widths reset to default', 'info');
+            showCustomAlert('Column widths reset - Row column: 50px, Data columns: 150px', 'info');
         }
 
         // Load saved column widths
@@ -1889,11 +1909,11 @@
 
             // Header Row
             html += "<tr>";
-            html += `<th>Row</th>`;
+            html += `<th style="width: 50px; min-width: 50px; max-width: 50px;">Row</th>`;
             for (let colIndex = 0; colIndex < maxCols; colIndex++) {
                 const colLetter = getColumnLetter(colIndex);
-                const savedWidth = columnWidths[colIndex];
-                const widthStyle = savedWidth ? `width: ${savedWidth}px; min-width: ${savedWidth}px; max-width: ${savedWidth}px;` : 'min-width: 80px; max-width: 500px;';
+                const savedWidth = columnWidths[colIndex] || 150;
+                const widthStyle = `width: ${savedWidth}px; min-width: ${savedWidth}px; max-width: ${savedWidth}px;`;
                 
                 html += `<th data-col="${colIndex}" 
                             onclick="selectColumn(${colIndex})" 
@@ -1918,12 +1938,12 @@
             // Data Rows
             currentData.forEach((row, rowIndex) => {
                 html += "<tr>";
-                html += `<td>${rowIndex + 1}</td>`;
+                html += `<td style="width: 50px; min-width: 50px; max-width: 50px;">${rowIndex + 1}</td>`;
 
                 for (let colIndex = 0; colIndex < maxCols; colIndex++) {
                     const safeCell = row[colIndex] ?? "";
-                    const savedWidth = columnWidths[colIndex];
-                    const widthStyle = savedWidth ? `width: ${savedWidth}px; min-width: ${savedWidth}px; max-width: ${savedWidth}px;` : 'min-width: 80px; max-width: 500px;';
+                    const savedWidth = columnWidths[colIndex] || 150;
+                    const widthStyle = `width: ${savedWidth}px; min-width: ${savedWidth}px; max-width: ${savedWidth}px;`;
                     
                     // Check if this cell has phone number duplicates
                     const cellValue = safeCell.toString().trim();
