@@ -201,6 +201,7 @@ const UsersSection = () => {
                       <th className="border border-gray-300 px-4 py-2 text-left">User ID</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Phone</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Company</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
                       <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
@@ -222,6 +223,7 @@ const UsersSection = () => {
                             <td className="border border-gray-300 px-4 py-2">{user.userId}</td>
                             <td className="border border-gray-300 px-4 py-2">{user.name}</td>
                             <td className="border border-gray-300 px-4 py-2">{user.email}</td>
+                            <td className="border border-gray-300 px-4 py-2">{user.phone}</td>
                             <td className="border border-gray-300 px-4 py-2">{companyName}</td>
                             <td className="border border-gray-300 px-4 py-2">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"

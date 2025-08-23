@@ -179,6 +179,7 @@ const AdminSection = () => {
                       <th className="border border-gray-300 px-4 py-2 text-left">Admin ID</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Phone</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Company</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
                       <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
@@ -200,6 +201,7 @@ const AdminSection = () => {
                             <td className="border border-gray-300 px-4 py-2">{admin.userId}</td>
                             <td className="border border-gray-300 px-4 py-2">{admin.name}</td>
                             <td className="border border-gray-300 px-4 py-2">{admin.email}</td>
+                            <td className="border border-gray-300 px-4 py-2">{admin.phone}</td>
                             <td className="border border-gray-300 px-4 py-2">{companyName}</td>
                             <td className="border border-gray-300 px-4 py-2">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
