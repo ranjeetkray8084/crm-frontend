@@ -135,6 +135,10 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
                 <span className="text-xs text-gray-500">Source</span>
                 <p className="text-sm font-medium">{property.source || 'N/A'}</p>
               </div>
+              <div>
+                <span className="text-xs text-gray-500">Unit Details</span>
+                <p className="text-sm font-medium">{property.unitDetails || 'N/A'}</p>
+              </div>
             </div>
 
             {/* Status */}
