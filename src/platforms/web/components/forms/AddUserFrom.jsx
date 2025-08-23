@@ -149,9 +149,9 @@ const AddUserForm = ({ onSuccess }) => {
       availableRoles.length > 0
     );
 
-    // For DIRECTOR creating USER, admin selection is required
+    // For DIRECTOR creating USER, admin selection is optional
     if (userRole === 'DIRECTOR' && formData.role === 'USER') {
-      return baseValid && formData.adminId;
+      return baseValid; // Admin assignment is now optional
     }
 
     // For ADMIN creating USER, no admin selection needed (auto-assigned to themselves)
@@ -440,14 +440,13 @@ const AddUserForm = ({ onSuccess }) => {
               {formData.role === 'USER' && userRole === 'DIRECTOR' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Admin *
+                    Select Admin (Optional)
                   </label>
                   <select
                     name="adminId"
                     value={formData.adminId}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
                     disabled={loadingAdmins}
                   >
                     <option value="">
