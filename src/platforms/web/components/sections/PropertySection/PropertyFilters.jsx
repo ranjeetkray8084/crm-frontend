@@ -132,6 +132,7 @@ const PropertyFilters = ({
           <option value="">Source</option>
           <option value="Social Media">Social Media</option>
           <option value="Cold Call">Cold Call</option>
+          <option value="Project Call">Project Call</option>
           <option value="Reference">Reference</option>
           <option value="Broker">Broker</option>
         </select>
