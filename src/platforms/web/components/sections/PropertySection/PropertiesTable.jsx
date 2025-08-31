@@ -52,18 +52,18 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
       <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
         <thead className="bg-gray-50">
           <tr>
-            <SortableHeader columnKey="propertyName" title="Name" />
+            <SortableHeader columnKey="propertyName" title="Project Name" />
             <SortableHeader columnKey="status" title="Status" />
             <SortableHeader columnKey="type" title="Type" />
             <SortableHeader columnKey="price" title="Price" />
-            <SortableHeader columnKey="location" title="Location" />
-            <SortableHeader columnKey="sector" title="Sector" />
             <SortableHeader columnKey="bhk" title="BHK" />
             <SortableHeader columnKey="size" title="Size" />
             <SortableHeader columnKey="unitDetails" title="Unit" />
             <SortableHeader columnKey="floor" title="Floor" />
             <SortableHeader columnKey="ownerName" title="Owner/Broker" />
             <SortableHeader columnKey="ownerNumber" title="Owner No." />
+            <SortableHeader columnKey="sector" title="Sector" />
+            <SortableHeader columnKey="location" title="Location" />
             <SortableHeader columnKey="createdAt" title="Created" />
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
               Actions

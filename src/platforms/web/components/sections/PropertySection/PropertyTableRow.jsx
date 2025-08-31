@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { MoreVertical, Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
 
-const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange }) => {
+const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox }) => {
   const [showActions, setShowActions] = useState(false);
 
   const statusOptions = [
@@ -52,6 +52,7 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
 
   return (
     <tr className="hover:bg-gray-50">
+      {/* Project Name */}
       <td className="px-4 py-4 whitespace-nowrap">
         <div className="text-sm font-medium text-gray-900" title={property.propertyName}>
           {property.propertyName}
@@ -60,6 +61,8 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
           {property.source && `Source: ${property.source}`}
         </div>
       </td>
+      
+      {/* Status */}
       <td className="px-4 py-4 whitespace-nowrap">
         <select
           value={property.status}
@@ -74,24 +77,40 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
           ))}
         </select>
       </td>
+      
+      {/* Type */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 truncate">
           {property.type || 'N/A'}
         </span>
       </td>
+      
+      {/* Price */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
         {formatPrice(property.price)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-900 truncate" title={property.location}>
-        {property.location || 'N/A'}
+      
+      {/* BHK */}
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">
+        {property.bhk || 'N/A'}
       </td>
-      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.sector || 'N/A'}</td>
-      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.bhk || 'N/A'}</td>
-      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.size || 'N/A'}</td>
+      
+      {/* Size */}
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">
+        {property.size || 'N/A'}
+      </td>
+      
+      {/* Unit */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
         {property.unit || property.unitDetails || 'N/A'}
       </td>
-      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">{property.floor || 'N/A'}</td>
+      
+      {/* Floor */}
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">
+        {property.floor || 'N/A'}
+      </td>
+      
+      {/* Owner/Broker */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
         <div className="font-medium" title={property.ownerName}>
           {property.ownerName || 'N/A'}
@@ -102,9 +121,23 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
           </div>
         )}
       </td>
+      
+      {/* Owner No. */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate">
         {property.ownerContact || property.ownerNumber || 'N/A'}
       </td>
+      
+      {/* Sector */}
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">
+        {property.sector || 'N/A'}
+      </td>
+      
+      {/* Location */}
+      <td className="px-4 py-4 text-sm text-gray-900 truncate" title={property.location}>
+        {property.location || 'N/A'}
+      </td>
+      
+      {/* Created */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
         <div className="text-sm text-gray-900">{formatDate(property.createdAt)}</div>
         <div className="text-xs text-gray-500">
@@ -112,6 +145,7 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
         </div>
       </td>
 
+      {/* Actions */}
       <td className="px-2 py-2 whitespace-nowrap text-right text-sm font-medium">
         <ThreeDotMenu
           item={property}
