@@ -9,7 +9,7 @@ const LeadTableRow = ({
     lead,
     searchTerm,
     onStatusUpdate,
-    onDelete,
+
     onAddRemark,
     onGetRemarks,
     onAssign,
@@ -193,7 +193,6 @@ const LeadTableRow = ({
                         isAssigned 
                             ? { label: 'Unassign Lead', icon: <UserMinus size={14} />, onClick: () => onUnassign(leadId) }
                             : { label: 'Assign Lead', icon: <UserPlus size={14} />, onClick: () => onAssign(leadId) },
-                        { label: 'Delete Lead', icon: <Trash2 size={14} />, onClick: () => onDelete(leadId), danger: true }
                     ]}
                 />
             </td>

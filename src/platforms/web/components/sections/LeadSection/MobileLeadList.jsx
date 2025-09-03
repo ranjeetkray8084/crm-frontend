@@ -24,7 +24,6 @@ const MobileLeadList = ({
             key={leadId}
             lead={lead}
             onStatusUpdate={onStatusUpdate}
-            onDelete={onDelete}
             onAddRemark={onAddRemark}
             onViewRemarks={onGetRemarks}
             onAssign={onAssign}

@@ -17,7 +17,6 @@ import {
   const MobileLeadCard = ({
     lead,
     onStatusUpdate,
-    onDelete,
     onAddRemark,
     onViewRemarks,
     onAssign,
@@ -128,12 +127,8 @@ import {
         icon: <UserPlus size={14} />,
         onClick: () => onAssign(leadId)
       }]),
-      {
-        label: 'Delete Lead',
-        icon: <Trash2 size={14} />,
-        onClick: () => onDelete(leadId),
-        danger: true
-      }
+      
+    
     ];
   
     return (

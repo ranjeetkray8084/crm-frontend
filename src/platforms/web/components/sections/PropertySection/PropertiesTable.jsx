@@ -75,7 +75,6 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
             <PropertyTableRow
               key={property.propertyId || property.id}
               property={property}
-              onDelete={onDelete}
               onAddRemark={onAddRemark}
               onViewRemarks={onViewRemarks}
               onUpdate={onUpdate}

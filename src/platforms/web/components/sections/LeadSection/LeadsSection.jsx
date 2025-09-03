@@ -125,16 +125,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
     handleRefresh();
   };
 
-  const handleDeleteLead = (leadId) => {
-    showConfirmModal(
-      'Delete Lead',
-      'Are you sure you want to delete this lead?',
-      async () => {
-        await deleteLead(leadId);
-        handleRefresh();
-      }
-    );
-  };
+ 
 
   const handleAssignLead = (leadId) => {
     setAssignModal({ isOpen: true, leadId });
@@ -171,7 +162,6 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
 
   const actionHandlers = {
     onStatusUpdate: handleStatusUpdate,
-    onDelete: handleDeleteLead,
     onAssign: handleAssignLead,
     onUnassign: handleUnassignLead,
     onUpdate: handleUpdateLead,

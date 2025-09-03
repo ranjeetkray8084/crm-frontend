@@ -137,16 +137,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     }
   };
 
-  const handleDeleteProperty = (propertyId) => {
-    showConfirmModal(
-      'Delete Property',
-      'Are you sure you want to delete this property?',
-      async () => {
-        await deleteProperty(propertyId);
-        handleRefresh();
-      }
-    );
-  };
+
 
   const handleOutOfBox = (property) => {
     // Handle Out of Box action
@@ -176,7 +167,6 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
 
   const actionHandlers = {
     onStatusChange: handleStatusUpdate,
-    onDelete: handleDeleteProperty,
     onUpdate: handleUpdateProperty,
     onAddRemark: handleAddRemark,
     onViewRemarks: handleGetRemarks,

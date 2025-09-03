@@ -153,7 +153,6 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
             { label: 'Update Property', icon: <Edit size={14} />, onClick: () => onUpdate(property) },
             { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(property) },
             { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onViewRemarks(property) },
-            { label: 'Delete Property', icon: <Trash2 size={14} />, onClick: () => onDelete(property.propertyId || property.id), danger: true }
           ]}
         />
       </td>

@@ -67,12 +67,7 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
       icon: <Eye size={14} />,
       onClick: (property) => { onViewRemarks(property); setActiveProperty(null); }
     },
-    {
-      label: 'Delete Property',
-      icon: <Trash2 size={14} />,
-      onClick: (property) => { onDelete(property.propertyId || property.id); setActiveProperty(null); },
-      danger: true
-    }
+ 
   ];
 
   return (
