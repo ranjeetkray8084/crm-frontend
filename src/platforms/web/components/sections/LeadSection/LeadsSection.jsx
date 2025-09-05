@@ -3,6 +3,7 @@ import { useLeads } from "../../../../../core/hooks/useLeads";
 import { useLeadSearch } from "../../../../../core/hooks/useLeadSearch";
 import { useUsers } from "../../../../../core/hooks/useUsers";
 import { exportLeads } from "../../../../../core/utils/excelExport";
+import { customAlert } from "../../../../../core/utils/alertUtils";
 
 // Import all necessary components
 import LeadToolbar from './LeadToolbar';
@@ -25,7 +26,6 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [autoSearch] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const [editingLead, setEditingLead] = useState(null);
   const [remarkingLead, setRemarkingLead] = useState(null);
@@ -58,27 +58,54 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
 
   const { users: filterUsers } = useUsers(companyId);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshKey(prevKey => prevKey + 1);
-  }, []);
+  const handleClearAll = useCallback(() => {
+    clearAll();
+    setCurrentPage(0);
+    // Force reload of original data after clearing
+    setTimeout(() => {
+      loadLeads(0, pageSize);
+    }, 0);
+  }, [clearAll, loadLeads, pageSize]);
 
-  useEffect(() => {
-    if (!companyId) return;
+  const handleManualSearch = useCallback(() => {
+    if (companyId && (searchTags.length > 0 || hasActiveFilters || searchTerm.trim())) {
+      // Reset to first page when manually searching
+      setCurrentPage(0);
+      applySearch();
+    }
+  }, [companyId, searchTags.length, hasActiveFilters, searchTerm, applySearch]);
+
+  const handleRefresh = useCallback(() => {
+    // Maintain current page position when refreshing
     if (isSearchActive && activeSearchParams) {
       searchLeads(activeSearchParams, currentPage, pageSize);
     } else {
       loadLeads(currentPage, pageSize);
     }
-  }, [companyId, currentPage, isSearchActive, activeSearchParams, refreshKey, searchLeads, loadLeads]);
+  }, [isSearchActive, activeSearchParams, currentPage, pageSize, searchLeads, loadLeads]);
 
+  // Main data loading effect - handles both search and regular loading
   useEffect(() => {
-    if (autoSearch) {
+    if (!companyId) return;
+    
+    if (isSearchActive && activeSearchParams) {
+      searchLeads(activeSearchParams, currentPage, pageSize);
+    } else {
+      loadLeads(currentPage, pageSize);
+    }
+  }, [companyId, currentPage, isSearchActive, activeSearchParams, searchLeads, loadLeads, pageSize]);
+
+  // Auto-search when filters change (if autoSearch is enabled)
+  useEffect(() => {
+    if (autoSearch && companyId && hasActiveFilters) {
       const timeoutId = setTimeout(() => {
+        // Reset to first page when filters change
+        setCurrentPage(0);
         applySearch();
       }, 500);
       return () => clearTimeout(timeoutId);
     }
-  }, [autoSearch, searchParams, applySearch]);
+  }, [autoSearch, companyId, filters, hasActiveFilters, applySearch]);
 
   const handleUpdateLead = (lead) => setEditingLead(lead);
 
@@ -183,7 +210,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
           onSearchTermChange={setSearchTerm}
           onSearchEnter={handleSearchEnter}
           onRemoveSearchTag={removeSearchTag}
-          onSearch={applySearch}
+          onSearch={handleManualSearch}
           onExport={handleExport}
           onRefresh={handleRefresh}
           onClearSearch={clearSearch}
@@ -198,7 +225,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
           <LeadFilters
             filters={filters}
             onFilterChange={updateFilter}
-            onClearFilters={clearAll}
+            onClearFilters={handleClearAll}
             isMobile={false}
             hasActiveFilters={hasActiveFilters}
             activeFiltersSummary={getActiveFiltersSummary()}
@@ -216,7 +243,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
             <LeadFilters
               filters={filters}
               onFilterChange={updateFilter}
-              onClearFilters={clearAll}
+              onClearFilters={handleClearAll}
               isMobile={true}
               hasActiveFilters={hasActiveFilters}
               activeFiltersSummary={getActiveFiltersSummary()}
@@ -237,7 +264,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
             pageSize={pageSize}
             hasActiveFilters={hasActiveFilters}
             activeFiltersSummary={getActiveFiltersSummary()}
-            onClearAll={clearAll}
+            onClearAll={handleClearAll}
           />
         )}
 

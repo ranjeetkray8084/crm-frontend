@@ -40,6 +40,17 @@ export const useProperties = (companyId, userId, userRole) => {
       setLoading(true);
       setError(null);
 
+      // Debug logging
+      console.log('🔍 Properties API Call:', {
+        page,
+        size,
+        searchParams,
+        hasSearchParams: searchParams && Object.keys(searchParams).some(key => {
+          const value = searchParams[key];
+          return value && value.toString().trim() !== '';
+        })
+      });
+
       try {
         let result;
 

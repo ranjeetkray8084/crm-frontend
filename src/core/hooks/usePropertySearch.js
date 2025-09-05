@@ -50,12 +50,8 @@ export const usePropertySearch = () => {
     return isSearchActive ? searchParams : null;
   }, [isSearchActive, searchParams]);
 
-  // Auto-trigger search when filters change
-  useEffect(() => {
-    if (hasActiveFilters || searchTags.length > 0) {
-      setSearchTrigger(prev => prev + 1);
-    }
-  }, [filters, searchTags, hasActiveFilters]);
+  // Note: Auto-trigger removed to prevent duplicate API calls
+  // The component handles triggering search when needed
 
   // Actions
   const handleSearchEnter = useCallback(() => {

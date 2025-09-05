@@ -35,6 +35,17 @@ export const useLeads = (companyId, userId, userRole) => {
     setLoading(true);
     setError(null);
 
+    // Debug logging
+    console.log('🔍 Leads API Call:', {
+      page,
+      size,
+      searchParams,
+      hasSearchParams: searchParams && Object.keys(searchParams).some(key => {
+        const value = searchParams[key];
+        return value && value.toString().trim() !== '';
+      })
+    });
+
     try {
       let result;
       const isSearching = searchParams && Object.keys(searchParams).length > 0;

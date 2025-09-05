@@ -22,7 +22,6 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [autoSearch] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const [editingProperty, setEditingProperty] = useState(null);
   const [remarkingProperty, setRemarkingProperty] = useState(null);
@@ -51,8 +50,13 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const { users: filterUsers } = useUsers(companyId);
 
   const handleRefresh = useCallback(() => {
-    setRefreshKey(prevKey => prevKey + 1);
-  }, []);
+    // Maintain current page position when refreshing
+    if (isSearchActive && activeSearchParams) {
+      searchProperties(activeSearchParams, currentPage, pageSize);
+    } else {
+      loadProperties(currentPage, pageSize);
+    }
+  }, [isSearchActive, activeSearchParams, currentPage, pageSize, searchProperties, loadProperties]);
 
   const handleClearAll = useCallback(() => {
     clearAll();
@@ -63,31 +67,23 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     }, 0);
   }, [clearAll, loadProperties, pageSize]);
 
-  // Initial load and page changes
-  useEffect(() => {
-    if (!companyId) {
-      return;
-    }
-    
-    loadProperties(currentPage, pageSize);
-  }, [companyId, currentPage, refreshKey, loadProperties]);
-
-  // Handle search when search params change or search is triggered
+  // Main data loading effect - handles both search and regular loading
   useEffect(() => {
     if (!companyId) return;
     
     if (isSearchActive && activeSearchParams) {
       searchProperties(activeSearchParams, currentPage, pageSize);
-    } else if (!isSearchActive) {
-      // When search becomes inactive (cleared), reload original data
+    } else {
       loadProperties(currentPage, pageSize);
     }
-  }, [companyId, isSearchActive, activeSearchParams, currentPage, searchProperties, searchTrigger, loadProperties, pageSize]);
+  }, [companyId, currentPage, isSearchActive, activeSearchParams, searchProperties, loadProperties, pageSize]);
 
   // Auto-search when filters change (if autoSearch is enabled)
   useEffect(() => {
     if (autoSearch && companyId && hasActiveFilters) {
       const timeoutId = setTimeout(() => {
+        // Reset to first page when filters change
+        setCurrentPage(0);
         applySearch();
       }, 500);
       return () => clearTimeout(timeoutId);
@@ -97,6 +93,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   // Manual search trigger
   const handleManualSearch = useCallback(() => {
     if (companyId && (searchTags.length > 0 || hasActiveFilters || searchTerm.trim())) {
+      // Reset to first page when manually searching
+      setCurrentPage(0);
       applySearch();
     }
   }, [companyId, searchTags.length, hasActiveFilters, searchTerm, applySearch]);
@@ -132,7 +130,6 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
       }
       handleRefresh();
     } catch (error) {
-
       customAlert(`❌ Failed to update property status: ${error.message}`);
     }
   };
