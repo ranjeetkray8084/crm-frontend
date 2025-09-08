@@ -11,6 +11,8 @@ const ForgetPassword = ({ onBack }) => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   const { sendOtp, verifyOtp, resetPasswordWithOtp } = useAuth();
 
@@ -19,7 +21,12 @@ const ForgetPassword = ({ onBack }) => {
     setOtpLoading(true);
     const result = await sendOtp(email);
     setOtpLoading(false);
-    customAlert(result.success ? "📨 OTP sent to your email" : `❌ ${result.error}`);
+    if (result.success) {
+      setOtpSent(true);
+      customAlert("📨 OTP sent to your email");
+    } else {
+      customAlert(`❌ ${result.error}`);
+    }
   };
 
   const verifyOTP = async () => {
@@ -31,6 +38,7 @@ const ForgetPassword = ({ onBack }) => {
       setVerifying(false);
 
       if (result.success && result.valid) {
+        setOtpVerified(true);
         customAlert("✅ OTP Verified");
       } else {
         customAlert(`❌ ${result.error || "Invalid OTP"}`);
@@ -109,9 +117,9 @@ const ForgetPassword = ({ onBack }) => {
           />
           <button
             onClick={verifyOTP}
-            disabled={verifying}
+            disabled={verifying || !otpSent}
             className={`bg-[#1c69ff] text-white text-xs px-3 py-1 rounded ml-2 ${
-              verifying ? "opacity-50 cursor-not-allowed" : ""
+              verifying || !otpSent ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {verifying ? "Verifying..." : "Verify"}
@@ -146,9 +154,9 @@ const ForgetPassword = ({ onBack }) => {
       {/* Save Button */}
       <button
         onClick={handleChangePassword}
-        disabled={saving}
+        disabled={saving || !otpVerified}
         className={`w-full bg-[#1c69ff] hover:bg-[#1554cc] text-white font-bold py-2 rounded text-sm ${
-          saving ? "opacity-50 cursor-not-allowed" : ""
+          saving || !otpVerified ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >
         {saving ? "Saving..." : "SAVE CHANGES"}
