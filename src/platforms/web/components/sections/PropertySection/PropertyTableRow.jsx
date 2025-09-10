@@ -50,6 +50,25 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
     onStatusChange(property.propertyId || property.id, newStatus);
   };
 
+
+  // Extract only numeric part from size (remove "sqft", "sq", "sqm" or other text)
+  const getNumericSize = (size) => {
+    if (!size) return 0;
+    console.log('Raw size data:', size, 'Type:', typeof size);
+    
+    // Remove common size units: sqft, sq, sqm, square feet, etc.
+    const cleanSize = size.toString()
+      .replace(/\s*(sqft|sq|sqm|square\s*feet|square\s*meters?)\s*/gi, '')
+      .trim();
+    
+    const numericPart = cleanSize.match(/\d+/);
+    const result = numericPart ? parseInt(numericPart[0]) : 0;
+    return result;
+  };
+
+  const numericSize = getNumericSize(property.size);
+  const parsqrfrate = property.price && numericSize ? (property.price / numericSize) : 0;
+
   return (
     <tr className="hover:bg-gray-50">
       {/* Project Name */}
@@ -97,7 +116,14 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
       
       {/* Size */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">
-        {property.size || 'N/A'}
+        <div className="font-medium">
+          {numericSize > 0 ? numericSize : 'N/A'}
+        </div>
+        {parsqrfrate > 0 && (
+          <div className="text-xs text-gray-500">
+            ₹{Math.round(parsqrfrate).toLocaleString()}/sqft
+          </div>
+        )}
       </td>
       
       {/* Unit */}

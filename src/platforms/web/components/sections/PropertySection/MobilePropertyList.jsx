@@ -14,6 +14,19 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
     });
   };
 
+  // Extract only numeric part from size (remove "sqft", "sq", "sqm" or other text)
+  const getNumericSize = (size) => {
+    if (!size) return 0;
+    
+    // Remove common size units: sqft, sq, sqm, square feet, etc.
+    const cleanSize = size.toString()
+      .replace(/\s*(sqft|sq|sqm|square\s*feet|square\s*meters?)\s*/gi, '')
+      .trim();
+    
+    const numericPart = cleanSize.match(/\d+/);
+    return numericPart ? parseInt(numericPart[0]) : 0;
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'AVAILABLE_FOR_SALE':
@@ -110,7 +123,21 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
               </div>
               <div>
                 <span className="text-xs text-gray-500">Size</span>
-                <p className="text-sm font-medium">{property.size || 'N/A'}</p>
+                <p className="text-sm font-medium">
+                  {(() => {
+                    const numericSize = getNumericSize(property.size);
+                    return numericSize > 0 ? numericSize : 'N/A';
+                  })()}
+                </p>
+                {(() => {
+                  const numericSize = getNumericSize(property.size);
+                  const parsqrfrate = property.price && numericSize ? (property.price / numericSize) : 0;
+                  return parsqrfrate > 0 ? (
+                    <p className="text-xs text-gray-500">
+                      ₹{Math.round(parsqrfrate).toLocaleString()}/sqft
+                    </p>
+                  ) : null;
+                })()}
               </div>
               <div>
                 <span className="text-xs text-gray-500">Price</span>
