@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { MoreVertical, Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
 
-const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox }) => {
+const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox, currentUserId, userRole }) => {
   const [showActions, setShowActions] = useState(false);
 
   const statusOptions = [
@@ -11,6 +11,44 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
     { value: 'SOLD_OUT', label: 'Sold Out' },
     { value: 'RENT_OUT', label: 'Rented Out' }
   ];
+
+  // Get user data from localStorage
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+      return null;
+    }
+  };
+
+  const userData = getUserData();
+  const currentUserRole = userRole || userData?.role;
+  const currentUserIdFromStorage = currentUserId || userData?.userId || userData?.id;
+
+  // Access control logic
+  const canUpdateProperty = () => {
+    // Director role can update any property
+    if (currentUserRole === 'DIRECTOR') {
+      return true;
+    }
+    
+    // Only the creator can update their own property
+    const propertyCreatorId = property.createdBy?.id || property.createdBy?.userId || property.createdById;
+    return propertyCreatorId && propertyCreatorId.toString() === currentUserIdFromStorage?.toString();
+  };
+
+  const canChangeStatus = () => {
+    // Director role can change status of any property
+    if (currentUserRole === 'DIRECTOR') {
+      return true;
+    }
+    
+    // Only the creator can change status of their own property
+    const propertyCreatorId = property.createdBy?.id || property.createdBy?.userId || property.createdById;
+    return propertyCreatorId && propertyCreatorId.toString() === currentUserIdFromStorage?.toString();
+  };
 
   const formatPrice = (price) => {
     if (!price) return 'N/A';
@@ -86,8 +124,14 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
         <select
           value={property.status}
           onChange={handleStatusChange}
-          className={`px-2 py-1 border rounded-full text-xs font-semibold appearance-none focus:outline-none focus:ring-2 ${getStatusStyles(property.status)}`}
+          disabled={!canChangeStatus()}
+          className={`px-2 py-1 border rounded-full text-xs font-semibold appearance-none focus:outline-none focus:ring-2 ${
+            canChangeStatus() 
+              ? getStatusStyles(property.status) 
+              : 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed'
+          }`}
           onClick={(e) => e.stopPropagation()}
+          title={!canChangeStatus() ? 'Only the creator or director can change status' : 'Change status'}
         >
           {statusOptions.map(option => (
             <option key={option.value} value={option.value}>
@@ -176,7 +220,7 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
         <ThreeDotMenu
           item={property}
           actions={[
-            { label: 'Update Property', icon: <Edit size={14} />, onClick: () => onUpdate(property) },
+            ...(canUpdateProperty() ? [{ label: 'Update Property', icon: <Edit size={14} />, onClick: () => onUpdate(property) }] : []),
             { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(property) },
             { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onViewRemarks(property) },
           ]}

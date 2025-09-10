@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Edit, MessageSquare, Eye, Trash2, MoreVertical } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
 
-const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox }) => {
+const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox, onStatusChange, currentUserId, userRole }) => {
   const [activeProperty, setActiveProperty] = useState(null);
 
   const formatDate = (dateString) => {
@@ -57,6 +57,44 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
     }
   };
 
+  // Get user data from localStorage
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+      return null;
+    }
+  };
+
+  const userData = getUserData();
+  const currentUserRole = userRole || userData?.role;
+  const currentUserIdFromStorage = currentUserId || userData?.userId || userData?.id;
+
+  // Access control logic
+  const canUpdateProperty = (property) => {
+    // Director role can update any property
+    if (currentUserRole === 'DIRECTOR') {
+      return true;
+    }
+    
+    // Only the creator can update their own property
+    const propertyCreatorId = property.createdBy?.id || property.createdBy?.userId || property.createdById;
+    return propertyCreatorId && propertyCreatorId.toString() === currentUserIdFromStorage?.toString();
+  };
+
+  const canChangeStatus = (property) => {
+    // Director role can change status of any property
+    if (currentUserRole === 'DIRECTOR') {
+      return true;
+    }
+    
+    // Only the creator can change status of their own property
+    const propertyCreatorId = property.createdBy?.id || property.createdBy?.userId || property.createdById;
+    return propertyCreatorId && propertyCreatorId.toString() === currentUserIdFromStorage?.toString();
+  };
+
   const handleOutOfBox = (property) => {
     if (onOutOfBox) {
       onOutOfBox(property);
@@ -64,24 +102,31 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
     setActiveProperty(null);
   };
 
-  const actions = [
-    {
-      label: 'Update Property',
-      icon: <Edit size={14} />,
-      onClick: (property) => { onUpdate(property); setActiveProperty(null); }
-    },
-    {
-      label: 'Add Remark',
-      icon: <MessageSquare size={14} />,
-      onClick: (property) => { onAddRemark(property); setActiveProperty(null); }
-    },
-    {
-      label: 'View Remarks',
-      icon: <Eye size={14} />,
-      onClick: (property) => { onViewRemarks(property); setActiveProperty(null); }
-    },
- 
-  ];
+  const getActionsForProperty = (property) => {
+    const baseActions = [
+      {
+        label: 'Add Remark',
+        icon: <MessageSquare size={14} />,
+        onClick: (property) => { onAddRemark(property); setActiveProperty(null); }
+      },
+      {
+        label: 'View Remarks',
+        icon: <Eye size={14} />,
+        onClick: (property) => { onViewRemarks(property); setActiveProperty(null); }
+      }
+    ];
+
+    // Only add update action if user has permission
+    if (canUpdateProperty(property)) {
+      baseActions.unshift({
+        label: 'Update Property',
+        icon: <Edit size={14} />,
+        onClick: (property) => { onUpdate(property); setActiveProperty(null); }
+      });
+    }
+
+    return baseActions;
+  };
 
   return (
     <div className="md:hidden space-y-4">
@@ -105,7 +150,7 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
               {/* Three Dot Menu */}
               <ThreeDotMenu
                 item={property}
-                actions={actions}
+                actions={getActionsForProperty(property)}
                 onOutOfBox={handleOutOfBox}
                 position="right-0"
               />
@@ -165,7 +210,23 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
 
             {/* Status */}
             <div className="mb-3">
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(property.status)}`}>
+              <span 
+                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  canChangeStatus(property) 
+                    ? `${getStatusColor(property.status)} cursor-pointer hover:opacity-80 transition-opacity` 
+                    : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                }`}
+                onClick={() => {
+                  if (canChangeStatus(property) && onStatusChange) {
+                    // Simple status cycling for mobile
+                    const statusOptions = ['AVAILABLE_FOR_SALE', 'AVAILABLE_FOR_RENT', 'RENT_OUT', 'SOLD_OUT'];
+                    const currentIndex = statusOptions.indexOf(property.status);
+                    const nextIndex = (currentIndex + 1) % statusOptions.length;
+                    onStatusChange(property.propertyId || property.id, statusOptions[nextIndex]);
+                  }
+                }}
+                title={canChangeStatus(property) ? 'Click to change status' : 'Only creator or director can change status'}
+              >
                 {getStatusLabel(property.status)}
               </span>
             </div>
