@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 
 // A reusable input field component to keep the form clean.
-const InputField = ({ label, name, value, onChange, placeholder = '', type = 'text', required = false, disabled = false }) => (
+const InputField = ({ label, name, value, onChange, placeholder = '', type = 'text', required = false, disabled = false, error = '' }) => (
     <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
         <input
             type={type}
             id={name}
@@ -14,25 +17,36 @@ const InputField = ({ label, name, value, onChange, placeholder = '', type = 'te
             placeholder={placeholder}
             required={required}
             disabled={disabled}
-            className={`w-full p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'}`}
+            className={`w-full p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                disabled ? 'bg-gray-100 cursor-not-allowed' : 
+                error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+            }`}
         />
+        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
 );
 
 // A reusable select field component.
-const SelectField = ({ label, name, value, onChange, options, required = false }) => (
+const SelectField = ({ label, name, value, onChange, options, required = false, error = '' }) => (
     <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
         <select
             id={name}
             name={name}
             value={value || ''}
             onChange={onChange}
             required={required}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            className={`w-full p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white ${
+                error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+            }`}
         >
+            <option value="">Select {label}</option>
             {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
         </select>
+        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
 );
 
@@ -50,12 +64,16 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
     const [formData, setFormData] = useState({});
     const [showReference, setShowReference] = useState(false);
     const [isBroker, setIsBroker] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
 
     // ✅ UPDATED: Reset form data whenever the modal is opened with a new property.
     // This ensures previous unsaved changes are discarded.
     useEffect(() => {
         if (isOpen && propertyToUpdate) {
             setFormData(propertyToUpdate);
+            setErrors({});
+            setIsSubmitting(false);
         }
     }, [isOpen, propertyToUpdate]);
 
@@ -80,34 +98,86 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
         return null;
     }
 
+    const validateForm = () => {
+        const newErrors = {};
+        
+        if (!formData.propertyName?.trim()) {
+            newErrors.propertyName = 'Property name is required';
+        }
+        
+        if (!formData.type) {
+            newErrors.type = 'Property type is required';
+        }
+        
+        if (!formData.status) {
+            newErrors.status = 'Status is required';
+        }
+        
+        if (!formData.sector?.trim()) {
+            newErrors.sector = 'Sector is required';
+        }
+        
+        if (formData.price && isNaN(Number(formData.price))) {
+            newErrors.price = 'Price must be a valid number';
+        }
+        
+        if (formData.size && isNaN(Number(formData.size))) {
+            newErrors.size = 'Size must be a valid number';
+        }
+        
+        if (formData.ownerContact && !/^[\d\s\-\+\(\)]+$/.test(formData.ownerContact)) {
+            newErrors.ownerContact = 'Contact must contain only numbers, spaces, and common phone characters';
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Prepare the data in the exact format required
-        const updateData = {
-            propertyName: formData.propertyName,
-            type: formData.type,
-            bhk: formData.bhk,
-            unitDetails: formData.unitDetails,
-            floor: formData.floor,
-            size: formData.size ? parseInt(formData.size) : null,
-            location: formData.location,
-            ownerContact: formData.ownerContact,
-            ownerName: formData.ownerName,
-            price: formData.price,
-            sector: formData.sector,
-            status: formData.status,
-            source: formData.source,
-            referenceName: formData.source === 'Reference' ? (formData.referenceName || '') : ''
-        };
+        if (!validateForm()) {
+            return;
+        }
         
-        await onUpdate(updateData);
-        onClose(); // Close modal after successful update
+        setIsSubmitting(true);
+        
+        try {
+            // Prepare the data in the exact format required
+            const updateData = {
+                propertyName: formData.propertyName?.trim(),
+                type: formData.type,
+                bhk: formData.bhk?.trim() || '',
+                unitDetails: formData.unitDetails?.trim() || '',
+                floor: formData.floor?.trim() || '',
+                size: formData.size ? parseInt(formData.size) : null,
+                location: formData.location?.trim() || '',
+                ownerContact: formData.ownerContact?.trim() || '',
+                ownerName: formData.ownerName?.trim() || '',
+                price: formData.price ? Number(formData.price) : null,
+                sector: formData.sector?.trim(),
+                status: formData.status,
+                source: formData.source || '',
+                referenceName: formData.source === 'Reference' ? (formData.referenceName?.trim() || '') : ''
+            };
+            
+            await onUpdate(updateData);
+            onClose(); // Close modal after successful update
+        } catch (error) {
+            console.error('Error updating property:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const typeOptions = [
@@ -148,32 +218,131 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                 {/* Modal Body with Form */}
                 <form id="updatePropertyForm" onSubmit={handleSubmit} className="p-6 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputField label="Property Name" name="propertyName" value={formData.propertyName} onChange={handleChange} required />
-                        <SelectField label="Type" name="type" value={formData.type} onChange={handleChange} options={typeOptions} required />
-                        <InputField label="BHK" name="bhk" value={formData.bhk} onChange={handleChange} placeholder="e.g., 2BHK" disabled={isBhkDisabled} />
-                        <InputField label="Unit Details" name="unitDetails" value={formData.unitDetails} onChange={handleChange} />
-                        <InputField label="Floor" name="floor" value={formData.floor} onChange={handleChange} />
-                        <InputField label="Size (sqft)" name="size" value={formData.size} onChange={handleChange} type="text" />
-                        <InputField label={isBroker ? 'Broker Name' : 'Owner Name'} name="ownerName" value={formData.ownerName} onChange={handleChange} />
-                        <InputField label={isBroker ? 'Broker Contact' : 'Owner Contact'} name="ownerContact" value={formData.ownerContact} onChange={handleChange} />
-                        <InputField label="Location" name="location" value={formData.location} onChange={handleChange} />
-                        <InputField label="Price" name="price" value={formData.price} onChange={handleChange} type="text" />
-                        <SelectField label="Status" name="status" value={formData.status} onChange={handleChange} options={statusOptions} required />
-                        <InputField label="Sector" name="sector" value={formData.sector} onChange={handleChange} required />
-                        <SelectField label="Source" name="source" value={formData.source} onChange={handleChange} options={sourceOptions} />
+                        <InputField 
+                            label="Property Name" 
+                            name="propertyName" 
+                            value={formData.propertyName} 
+                            onChange={handleChange} 
+                            required 
+                            error={errors.propertyName}
+                        />
+                        <SelectField 
+                            label="Type" 
+                            name="type" 
+                            value={formData.type} 
+                            onChange={handleChange} 
+                            options={typeOptions} 
+                            required 
+                            error={errors.type}
+                        />
+                        <InputField 
+                            label="BHK" 
+                            name="bhk" 
+                            value={formData.bhk} 
+                            onChange={handleChange} 
+                            placeholder="e.g., 2BHK" 
+                            disabled={isBhkDisabled} 
+                        />
+                        <InputField 
+                            label="Unit Details" 
+                            name="unitDetails" 
+                            value={formData.unitDetails} 
+                            onChange={handleChange} 
+                        />
+                        <InputField 
+                            label="Floor" 
+                            name="floor" 
+                            value={formData.floor} 
+                            onChange={handleChange} 
+                        />
+                        <InputField 
+                            label="Size (sqft)" 
+                            name="size" 
+                            value={formData.size} 
+                            onChange={handleChange} 
+                            type="text" 
+                            error={errors.size}
+                        />
+                        <InputField 
+                            label={isBroker ? 'Broker Name' : 'Owner Name'} 
+                            name="ownerName" 
+                            value={formData.ownerName} 
+                            onChange={handleChange} 
+                        />
+                        <InputField 
+                            label={isBroker ? 'Broker Contact' : 'Owner Contact'} 
+                            name="ownerContact" 
+                            value={formData.ownerContact} 
+                            onChange={handleChange} 
+                            error={errors.ownerContact}
+                        />
+                        <InputField 
+                            label="Location" 
+                            name="location" 
+                            value={formData.location} 
+                            onChange={handleChange} 
+                        />
+                        <InputField 
+                            label="Price" 
+                            name="price" 
+                            value={formData.price} 
+                            onChange={handleChange} 
+                            type="text" 
+                            error={errors.price}
+                        />
+                        <SelectField 
+                            label="Status" 
+                            name="status" 
+                            value={formData.status} 
+                            onChange={handleChange} 
+                            options={statusOptions} 
+                            required 
+                            error={errors.status}
+                        />
+                        <InputField 
+                            label="Sector" 
+                            name="sector" 
+                            value={formData.sector} 
+                            onChange={handleChange} 
+                            required 
+                            error={errors.sector}
+                        />
+                        <SelectField 
+                            label="Source" 
+                            name="source" 
+                            value={formData.source} 
+                            onChange={handleChange} 
+                            options={sourceOptions} 
+                        />
                         {showReference && (
-                            <InputField label="Reference Name" name="referenceName" value={formData.referenceName} onChange={handleChange} />
+                            <InputField 
+                                label="Reference Name" 
+                                name="referenceName" 
+                                value={formData.referenceName} 
+                                onChange={handleChange} 
+                            />
                         )}
                     </div>
                 </form>
 
                 {/* Modal Footer */}
                 <div className="flex items-center justify-end p-4 border-t mt-auto">
-                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 mr-2">
+                    <button 
+                        type="button" 
+                        onClick={onClose} 
+                        disabled={isSubmitting}
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         Cancel
                     </button>
-                    <button type="submit" form="updatePropertyForm" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Update Property
+                    <button 
+                        type="submit" 
+                        form="updatePropertyForm" 
+                        disabled={isSubmitting}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                        {isSubmitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                        {isSubmitting ? 'Updating...' : 'Update Property'}
                     </button>
                 </div>
             </div>

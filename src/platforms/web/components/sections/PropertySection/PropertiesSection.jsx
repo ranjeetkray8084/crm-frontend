@@ -23,6 +23,22 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [autoSearch] = useState(true);
 
+  // Get user data from localStorage as fallback
+  const getUserDataFromStorage = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+      return null;
+    }
+  };
+
+  const userDataFromStorage = getUserDataFromStorage();
+  const finalUserRole = userRole || userDataFromStorage?.role;
+  const finalUserId = userId || userDataFromStorage?.userId || userDataFromStorage?.id;
+  const finalCompanyId = companyId || userDataFromStorage?.companyId;
+
   const [editingProperty, setEditingProperty] = useState(null);
   const [remarkingProperty, setRemarkingProperty] = useState(null);
   const [viewingRemarksProperty, setViewingRemarksProperty] = useState(null);
@@ -45,9 +61,9 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const {
     properties, loading, error, pagination, loadProperties, searchProperties,
     updateProperty, deleteProperty, addRemark, getRemarks
-  } = useProperties(companyId, userId, userRole);
+  } = useProperties(finalCompanyId, finalUserId, finalUserRole);
 
-  const { users: filterUsers } = useUsers(companyId);
+  const { users: filterUsers } = useUsers(finalCompanyId);
 
   const handleRefresh = useCallback(() => {
     // Maintain current page position when refreshing
@@ -69,18 +85,18 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
 
   // Main data loading effect - handles both search and regular loading
   useEffect(() => {
-    if (!companyId) return;
+    if (!finalCompanyId) return;
     
     if (isSearchActive && activeSearchParams) {
       searchProperties(activeSearchParams, currentPage, pageSize);
     } else {
       loadProperties(currentPage, pageSize);
     }
-  }, [companyId, currentPage, isSearchActive, activeSearchParams, searchProperties, loadProperties, pageSize]);
+  }, [finalCompanyId, currentPage, isSearchActive, activeSearchParams, searchProperties, loadProperties, pageSize]);
 
   // Auto-search when filters change (if autoSearch is enabled)
   useEffect(() => {
-    if (autoSearch && companyId && hasActiveFilters) {
+    if (autoSearch && finalCompanyId && hasActiveFilters) {
       const timeoutId = setTimeout(() => {
         // Reset to first page when filters change
         setCurrentPage(0);
@@ -88,16 +104,16 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
       }, 500);
       return () => clearTimeout(timeoutId);
     }
-  }, [autoSearch, companyId, filters, hasActiveFilters, applySearch]);
+  }, [autoSearch, finalCompanyId, filters, hasActiveFilters, applySearch]);
 
   // Manual search trigger
   const handleManualSearch = useCallback(() => {
-    if (companyId && (searchTags.length > 0 || hasActiveFilters || searchTerm.trim())) {
+    if (finalCompanyId && (searchTags.length > 0 || hasActiveFilters || searchTerm.trim())) {
       // Reset to first page when manually searching
       setCurrentPage(0);
       applySearch();
     }
-  }, [companyId, searchTags.length, hasActiveFilters, searchTerm, applySearch]);
+  }, [finalCompanyId, searchTags.length, hasActiveFilters, searchTerm, applySearch]);
 
   const handleUpdateProperty = (property) => setEditingProperty(property);
 
@@ -224,7 +240,9 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     onAddRemark: handleAddRemark,
     onViewRemarks: handleGetRemarks,
     onOutOfBox: handleOutOfBox,
-    companyId: companyId
+    companyId: finalCompanyId,
+    currentUserId: finalUserId,
+    userRole: finalUserRole
   };
 
   return (
@@ -256,10 +274,10 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
             onClearFilters={handleClearAll}
             isMobile={false}
             hasActiveFilters={hasActiveFilters}
-            activeFiltersSummary={getActiveFiltersSummary(userId, filterUsers)}
+            activeFiltersSummary={getActiveFiltersSummary(finalUserId, filterUsers)}
             autoApply={autoSearch}
-            companyId={companyId}
-            userId={userId}
+            companyId={finalCompanyId}
+            userId={finalUserId}
             availableUsers={filterUsers}
           />
         </div>
@@ -273,10 +291,10 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
               onClearFilters={handleClearAll}
               isMobile={true}
               hasActiveFilters={hasActiveFilters}
-              activeFiltersSummary={getActiveFiltersSummary(userId, filterUsers)}
+              activeFiltersSummary={getActiveFiltersSummary(finalUserId, filterUsers)}
               autoApply={autoSearch}
-              companyId={companyId}
-              userId={userId}
+              companyId={finalCompanyId}
+              userId={finalUserId}
               availableUsers={filterUsers}
             />
           </div>
@@ -331,7 +349,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
         isOpen={!!viewingRemarksProperty}
         onClose={() => setViewingRemarksProperty(null)}
         property={viewingRemarksProperty}
-        companyId={companyId}
+        companyId={finalCompanyId}
         onGetRemarks={getRemarks}
       />
 

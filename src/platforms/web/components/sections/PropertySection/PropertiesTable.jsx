@@ -52,19 +52,19 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
       <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
         <thead className="bg-gray-50">
           <tr>
-            <SortableHeader columnKey="propertyName" title="Project Name" />
-            <SortableHeader columnKey="status" title="Status" />
-            <SortableHeader columnKey="type" title="Type" />
-            <SortableHeader columnKey="price" title="Price" />
-            <SortableHeader columnKey="bhk" title="BHK" />
-            <SortableHeader columnKey="size" title="Size" />
-            <SortableHeader columnKey="unitDetails" title="Unit" />
-            <SortableHeader columnKey="floor" title="Floor" />
-            <SortableHeader columnKey="ownerName" title="Owner/Broker" />
-            <SortableHeader columnKey="ownerNumber" title="Owner No." />
-            <SortableHeader columnKey="sector" title="Sector" />
-            <SortableHeader columnKey="location" title="Location" />
-            <SortableHeader columnKey="createdAt" title="Created" />
+            <SortableHeader className='text-center' columnKey="propertyName" title="Project Name" />
+            <SortableHeader className='text-center' columnKey="status" title="Status" />
+            <SortableHeader className='text-center' columnKey="type" title="Type" />
+            <SortableHeader className='text-center' columnKey="price" title="Price" />
+            <SortableHeader className='text-center' columnKey="bhk" title="BHK" />
+            <SortableHeader className='text-center' columnKey="size" title="Size" />
+            <SortableHeader className='text-center' columnKey="unitDetails" title="Unit" />
+            <SortableHeader className='text-center' columnKey="floor" title="Floor" />
+            <SortableHeader className='text-center' columnKey="ownerName" title="Owner/Broker" />
+            <SortableHeader className='text-center' columnKey="ownerNumber" title="Owner No." />
+            <SortableHeader className='text-center' columnKey="sector" title="Sector" />
+            <SortableHeader className='text-center' columnKey="location" title="Location" />
+            <SortableHeader className='text-center' columnKey="createdAt" title="Created" />
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
               Actions
             </th>
