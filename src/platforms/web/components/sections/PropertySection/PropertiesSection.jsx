@@ -3,7 +3,7 @@ import { useProperties } from "../../../../../core/hooks/useProperties";
 import { usePropertySearch } from "../../../../../core/hooks/usePropertySearch";
 import { useUsers } from "../../../../../core/hooks/useUsers";
 import { customAlert } from "../../../../../core/utils/alertUtils";
-import { exportProperties } from "../../../../../core/utils/excelExport";
+import { exportProperties, exportPropertiesWithRole } from "../../../../../core/utils/excelExport";
 
 // Import all necessary components
 import PropertyToolbar from './PropertyToolbar';
@@ -221,7 +221,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
       
       customAlert('🔄 Exporting properties...');
       
-      const exportResult = exportProperties(result.data.content);
+      // Use role-based export
+      const exportResult = exportPropertiesWithRole(result.data.content, userRole, 'properties_export');
       
       if (exportResult.success) {
         customAlert(`✅ ${exportResult.message}`);

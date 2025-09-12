@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLeads } from "../../../../../core/hooks/useLeads";
 import { useLeadSearch } from "../../../../../core/hooks/useLeadSearch";
 import { useUsers } from "../../../../../core/hooks/useUsers";
-import { exportLeads } from "../../../../../core/utils/excelExport";
+import { exportLeads, exportLeadsWithRole } from "../../../../../core/utils/excelExport";
 import { customAlert } from "../../../../../core/utils/alertUtils";
 
 // Import all necessary components
@@ -193,7 +193,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
       
       // Check if we have active search/filter parameters
       if (isSearchActive && activeSearchParams && Object.keys(activeSearchParams).length > 0) {
-        // Use search API to get all filtered data
+        // Use role-based search API to get all filtered data
         console.log('🔍 Exporting filtered leads with params:', activeSearchParams);
         
         // Prepare search parameters for the API
@@ -224,10 +224,23 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
           }
         });
         
-        result = await LeadService.searchLeads(companyIdToUse, backendSearchParams, { page: 0, size: 10000 });
+        // Use role-based search API calls
+        if (userRole === 'DIRECTOR') {
+          result = await LeadService.searchLeads(companyIdToUse, backendSearchParams, { page: 0, size: 10000 });
+        } else if (userRole === 'ADMIN') {
+          result = await LeadService.searchLeadsVisibleToAdmin(companyIdToUse, userId, backendSearchParams, { page: 0, size: 10000 });
+        } else {
+          result = await LeadService.searchLeadsCreatedOrAssigned(companyIdToUse, userId, backendSearchParams, { page: 0, size: 10000 });
+        }
       } else {
-        // Use regular API to get all data
-        result = await LeadService.getLeadsByCompany(companyIdToUse, 0, 10000);
+        // Use role-based regular API to get all data
+        if (userRole === 'DIRECTOR') {
+          result = await LeadService.getLeadsByCompany(companyIdToUse, 0, 10000);
+        } else if (userRole === 'ADMIN') {
+          result = await LeadService.getLeadsVisibleToAdmin(companyIdToUse, userId, 0, 10000);
+        } else {
+          result = await LeadService.getLeadsCreatedOrAssigned(companyIdToUse, userId, 0, 10000);
+        }
       }
       
       if (!result.success || !result.data?.content || result.data.content.length === 0) {
@@ -237,7 +250,8 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
       
       customAlert('🔄 Exporting leads...');
       
-      const exportResult = exportLeads(result.data.content);
+      // Use role-based export
+      const exportResult = exportLeadsWithRole(result.data.content, userRole, 'leads_export');
       
       if (exportResult.success) {
         customAlert(`✅ ${exportResult.message}`);

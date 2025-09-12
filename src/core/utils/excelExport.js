@@ -204,6 +204,117 @@ export const COLUMN_CONFIGS = {
 };
 
 /**
+ * Role-based column configurations for properties
+ * Different roles see different levels of detail
+ */
+export const ROLE_BASED_PROPERTY_COLUMNS = {
+  DIRECTOR: [
+    { key: 'propertyName', header: 'Property Name' },
+    { key: 'status', header: 'Status' },
+    { key: 'type', header: 'Type' },
+    { key: 'price', header: 'Price' },
+    { key: 'location', header: 'Location' },
+    { key: 'sector', header: 'Sector' },
+    { key: 'bhk', header: 'BHK' },
+    { key: 'unitDetails', header: 'Unit Details' },
+    { key: 'floor', header: 'Floor' },
+    { key: 'ownerName', header: 'Owner Name' },
+    { key: 'ownerContact', header: 'Owner Contact' },
+    { key: 'source', header: 'Source' },
+    { key: 'createdAt', header: 'Created Date' },
+    { key: 'createdBy.name', header: 'Created By' },
+    { key: 'size', header: 'Size' },
+    { key: 'address', header: 'Address' }
+  ],
+  
+  ADMIN: [
+    { key: 'propertyName', header: 'Property Name' },
+    { key: 'status', header: 'Status' },
+    { key: 'type', header: 'Type' },
+    { key: 'price', header: 'Price' },
+    { key: 'location', header: 'Location' },
+    { key: 'sector', header: 'Sector' },
+    { key: 'bhk', header: 'BHK' },
+    { key: 'unitDetails', header: 'Unit Details' },
+    { key: 'floor', header: 'Floor' },
+    { key: 'ownerContact', header: 'Owner Contact' },
+    { key: 'source', header: 'Source' },
+    { key: 'createdAt', header: 'Created Date' },
+    { key: 'createdBy.name', header: 'Created By' },
+    { key: 'size', header: 'Size' }
+  ],
+  
+  USER: [
+    { key: 'propertyName', header: 'Property Name' },
+    { key: 'status', header: 'Status' },
+    { key: 'type', header: 'Type' },
+    { key: 'price', header: 'Price' },
+    { key: 'location', header: 'Location' },
+    { key: 'sector', header: 'Sector' },
+    { key: 'bhk', header: 'BHK' },
+    { key: 'unitDetails', header: 'Unit Details' },
+    { key: 'floor', header: 'Floor' },
+    { key: 'source', header: 'Source' },
+    { key: 'createdAt', header: 'Created Date' },
+    { key: 'size', header: 'Size' }
+  ]
+};
+
+/**
+ * Role-based column configurations for leads
+ * Different roles see different levels of detail
+ */
+export const ROLE_BASED_LEAD_COLUMNS = {
+  DIRECTOR: [
+    { key: 'name', header: 'Lead Name' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'email', header: 'Email' },
+    { key: 'status', header: 'Status' },
+    { key: 'budget', header: 'Budget' },
+    { key: 'requirement', header: 'Requirement' },
+    { key: 'location', header: 'Location' },
+    { key: 'source', header: 'Source' },
+    { key: 'createdAt', header: 'Created Date' },
+    { key: 'assignedToSummary.name', header: 'Assigned To' },
+    { key: 'createdBy.name', header: 'Created By' },
+    { key: 'notes', header: 'Notes' },
+    { key: 'followUpDate', header: 'Follow Up Date' },
+    { key: 'priority', header: 'Priority' }
+  ],
+  
+  ADMIN: [
+    { key: 'name', header: 'Lead Name' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'email', header: 'Email' },
+    { key: 'status', header: 'Status' },
+    { key: 'budget', header: 'Budget' },
+    { key: 'requirement', header: 'Requirement' },
+    { key: 'location', header: 'Location' },
+    { key: 'source', header: 'Source' },
+    { key: 'createdAt', header: 'Created Date' },
+    { key: 'assignedToSummary.name', header: 'Assigned To' },
+    { key: 'createdBy.name', header: 'Created By' },
+    { key: 'notes', header: 'Notes' },
+    { key: 'followUpDate', header: 'Follow Up Date' }
+  ],
+  
+  USER: [
+    { key: 'name', header: 'Lead Name' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'email', header: 'Email' },
+    { key: 'status', header: 'Status' },
+    { key: 'budget', header: 'Budget' },
+    { key: 'requirement', header: 'Requirement' },
+    { key: 'location', header: 'Location' },
+    { key: 'source', header: 'Source' },
+    { key: 'createdAt', header: 'Created Date' },
+    { key: 'assignedToSummary.name', header: 'Assigned To' },
+    { key: 'notes', header: 'Notes' },
+    { key: 'followUpDate', header: 'Follow Up Date' }
+  ]
+};
+
+/**
  * Helper function to export leads data
  * @param {Array} leads - Array of lead objects
  */
@@ -212,9 +323,51 @@ export const exportLeads = (leads) => {
 };
 
 /**
+ * Helper function to export leads data with role-based columns
+ * @param {Array} leads - Array of lead objects
+ * @param {string} userRole - User role (DIRECTOR, ADMIN, USER)
+ * @param {string} filename - Optional custom filename
+ */
+export const exportLeadsWithRole = (leads, userRole = 'USER', filename = 'leads_export') => {
+  const roleColumns = ROLE_BASED_LEAD_COLUMNS[userRole] || ROLE_BASED_LEAD_COLUMNS.USER;
+  const roleFilename = `${filename}_${userRole.toLowerCase()}`;
+  return exportToExcel(leads, roleColumns, roleFilename);
+};
+
+/**
+ * Get role-based columns for leads
+ * @param {string} userRole - User role (DIRECTOR, ADMIN, USER)
+ * @returns {Array} Array of column definitions
+ */
+export const getRoleBasedLeadColumns = (userRole) => {
+  return ROLE_BASED_LEAD_COLUMNS[userRole] || ROLE_BASED_LEAD_COLUMNS.USER;
+};
+
+/**
  * Helper function to export properties data
  * @param {Array} properties - Array of property objects
  */
 export const exportProperties = (properties) => {
   return exportToExcel(properties, COLUMN_CONFIGS.properties, 'properties_export');
+};
+
+/**
+ * Helper function to export properties data with role-based columns
+ * @param {Array} properties - Array of property objects
+ * @param {string} userRole - User role (DIRECTOR, ADMIN, USER)
+ * @param {string} filename - Optional custom filename
+ */
+export const exportPropertiesWithRole = (properties, userRole = 'USER', filename = 'properties_export') => {
+  const roleColumns = ROLE_BASED_PROPERTY_COLUMNS[userRole] || ROLE_BASED_PROPERTY_COLUMNS.USER;
+  const roleFilename = `${filename}_${userRole.toLowerCase()}`;
+  return exportToExcel(properties, roleColumns, roleFilename);
+};
+
+/**
+ * Get role-based columns for properties
+ * @param {string} userRole - User role (DIRECTOR, ADMIN, USER)
+ * @returns {Array} Array of column definitions
+ */
+export const getRoleBasedPropertyColumns = (userRole) => {
+  return ROLE_BASED_PROPERTY_COLUMNS[userRole] || ROLE_BASED_PROPERTY_COLUMNS.USER;
 };
