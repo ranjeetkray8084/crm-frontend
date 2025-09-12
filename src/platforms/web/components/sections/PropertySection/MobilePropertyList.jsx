@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Edit, MessageSquare, Eye, Trash2, MoreVertical } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
 
-const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox }) => {
+const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onOutOfBox }) => {
   const [activeProperty, setActiveProperty] = useState(null);
 
   const formatDate = (dateString) => {

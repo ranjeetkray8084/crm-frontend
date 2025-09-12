@@ -148,17 +148,73 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     setConfirmModal({ isOpen: true, title, message, onConfirm });
   };
 
-  const handleExport = () => {
-    if (!properties || properties.length === 0) {
-      customAlert('❌ No properties to export');
-      return;
-    }
-    
-    const result = exportProperties(properties);
-    if (result.success) {
-      customAlert(`✅ ${result.message}`);
-    } else {
-      customAlert(`❌ ${result.message}`);
+  const handleExport = async () => {
+    try {
+      customAlert('🔄 Fetching all properties for export...');
+      
+      // Fetch all properties for export by calling the API directly with a large size
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const companyIdToUse = companyId || localUser.companyId;
+      
+      if (!companyIdToUse) {
+        customAlert('❌ Company ID not found');
+        return;
+      }
+      
+      // Import PropertyService to fetch all data
+      const { PropertyService } = await import('../../../../../core/services/property.service');
+      
+      let result;
+      
+      // Check if we have active search/filter parameters
+      if (isSearchActive && activeSearchParams && Object.keys(activeSearchParams).length > 0) {
+        // Use search API to get all filtered data
+        console.log('🔍 Exporting filtered properties with params:', activeSearchParams);
+        
+        // Prepare search parameters for the API
+        const backendSearchParams = {
+          keywords: activeSearchParams?.keywords,
+          status: activeSearchParams?.status,
+          type: activeSearchParams?.type,
+          bhk: activeSearchParams?.bhk,
+          budgetRange: activeSearchParams?.budgetRange,
+          role: userRole,
+          userId: userId
+        };
+        
+        // Remove any undefined or null values
+        Object.keys(backendSearchParams).forEach(key => {
+          if (backendSearchParams[key] === undefined || backendSearchParams[key] === null || backendSearchParams[key] === '') {
+            delete backendSearchParams[key];
+          }
+        });
+        
+        result = await PropertyService.searchProperties(companyIdToUse, backendSearchParams, { page: 0, size: 10000 });
+      } else {
+        // Use regular API to get all data
+        result = await PropertyService.getPropertiesByCompany(companyIdToUse, 0, 10000, {
+          role: userRole,
+          userId: userId
+        });
+      }
+      
+      if (!result.success || !result.data?.content || result.data.content.length === 0) {
+        customAlert('❌ No properties to export');
+        return;
+      }
+      
+      customAlert('🔄 Exporting properties...');
+      
+      const exportResult = exportProperties(result.data.content);
+      
+      if (exportResult.success) {
+        customAlert(`✅ ${exportResult.message}`);
+      } else {
+        customAlert(`❌ ${exportResult.message}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      customAlert(`❌ Failed to export properties: ${error.message}`);
     }
   };
 

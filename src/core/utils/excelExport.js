@@ -3,6 +3,8 @@
  * Provides functionality to export table data to Excel format
  */
 
+import * as XLSX from 'xlsx';
+
 /**
  * Format value for export
  * @param {*} value - Value to format
@@ -59,20 +61,24 @@ const formatValue = (value, key) => {
 };
 
 /**
- * Convert data to CSV format
+ * Convert data to Excel format
  * @param {Array} data - Array of objects to export
  * @param {Array} columns - Array of column definitions with key and header
- * @returns {string} CSV string
+ * @returns {Object} Excel workbook object
  */
-const convertToCSV = (data, columns) => {
-  if (!data || data.length === 0) return '';
+const convertToExcel = (data, columns) => {
+  if (!data || data.length === 0) return null;
   
-  // Create header row
-  const headers = columns.map(col => `"${col.header}"`).join(',');
+  // Create worksheet data
+  const worksheetData = [];
   
-  // Create data rows
-  const rows = data.map(item => {
-    return columns.map(col => {
+  // Add header row
+  const headers = columns.map(col => col.header);
+  worksheetData.push(headers);
+  
+  // Add data rows
+  data.forEach(item => {
+    const row = columns.map(col => {
       let value = item[col.key];
       
       // Handle nested properties (e.g., 'user.name')
@@ -81,39 +87,57 @@ const convertToCSV = (data, columns) => {
       }
       
       // Format the value
-      const formattedValue = formatValue(value, col.key);
-      
-      // Escape quotes
-      const stringValue = formattedValue.replace(/"/g, '""');
-      return `"${stringValue}"`;
-    }).join(',');
+      return formatValue(value, col.key);
+    });
+    worksheetData.push(row);
   });
   
-  return [headers, ...rows].join('\n');
+  // Create worksheet
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  
+  // Set column widths
+  const columnWidths = columns.map(col => ({ wch: Math.max(col.header.length, 15) }));
+  worksheet['!cols'] = columnWidths;
+  
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+  
+  return workbook;
 };
 
 /**
- * Download CSV as Excel file
- * @param {string} csvContent - CSV content string
+ * Download Excel file
+ * @param {Object} workbook - Excel workbook object
  * @param {string} filename - Name of the file to download
  */
-const downloadCSV = (csvContent, filename) => {
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
+const downloadExcel = (workbook, filename) => {
+  const timestamp = new Date().toISOString().split('T')[0];
+  const finalFilename = `${filename}_${timestamp}.xlsx`;
   
+  // Convert workbook to buffer
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  
+  // Create blob and download
+  const blob = new Blob([excelBuffer], { 
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+  });
+  
+  const link = document.createElement('a');
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', filename);
+    link.setAttribute('download', finalFilename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 };
 
 /**
- * Export table data to Excel (CSV format)
+ * Export table data to Excel format
  * @param {Array} data - Array of objects to export
  * @param {Array} columns - Array of column definitions
  * @param {string} filename - Name of the exported file
@@ -133,15 +157,16 @@ export const exportToExcel = (data, columns, filename) => {
       throw new Error('Filename must be a non-empty string');
     }
     
-    const csvContent = convertToCSV(data, columns);
-    const timestamp = new Date().toISOString().split('T')[0];
-    const finalFilename = `${filename}_${timestamp}.csv`;
+    const workbook = convertToExcel(data, columns);
+    if (!workbook) {
+      throw new Error('Failed to create Excel workbook');
+    }
     
-    downloadCSV(csvContent, finalFilename);
+    downloadExcel(workbook, filename);
     
-    return { success: true, message: `Exported ${data.length} records to ${finalFilename}` };
+    return { success: true, message: `Exported ${data.length} records to ${filename}.xlsx` };
   } catch (error) {
-    
+    console.error('Export error:', error);
     return { success: false, message: `Export failed: ${error.message}` };
   }
 };

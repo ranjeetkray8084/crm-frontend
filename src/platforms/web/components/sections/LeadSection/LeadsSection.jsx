@@ -173,17 +173,80 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
     setConfirmModal({ isOpen: true, title, message, onConfirm });
   };
 
-  const handleExport = () => {
-    if (!leads || leads.length === 0) {
-      customAlert('❌ No leads to export');
-      return;
-    }
-    
-    const result = exportLeads(leads);
-    if (result.success) {
-      customAlert(`✅ ${result.message}`);
-    } else {
-      customAlert(`❌ ${result.message}`);
+  const handleExport = async () => {
+    try {
+      customAlert('🔄 Fetching all leads for export...');
+      
+      // Fetch all leads for export by calling the API directly with a large size
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const companyIdToUse = companyId || localUser.companyId;
+      
+      if (!companyIdToUse) {
+        customAlert('❌ Company ID not found');
+        return;
+      }
+      
+      // Import LeadService to fetch all data
+      const { LeadService } = await import('../../../../../core/services/lead.service');
+      
+      let result;
+      
+      // Check if we have active search/filter parameters
+      if (isSearchActive && activeSearchParams && Object.keys(activeSearchParams).length > 0) {
+        // Use search API to get all filtered data
+        console.log('🔍 Exporting filtered leads with params:', activeSearchParams);
+        
+        // Prepare search parameters for the API
+        const backendSearchParams = {
+          search: activeSearchParams?.search,
+          status: activeSearchParams?.status,
+          source: activeSearchParams?.source,
+          createdBy: activeSearchParams?.createdBy,
+          minBudget: activeSearchParams?.budget?.split('-')[0],
+          maxBudget: activeSearchParams?.budget?.split('-')[1],
+        };
+        
+        // Map assignedTo filter to action parameter
+        if (activeSearchParams?.assignedTo) {
+          if (activeSearchParams.assignedTo === 'assigned') {
+            backendSearchParams.action = 'ASSIGNED';
+          } else if (activeSearchParams.assignedTo === 'unassigned') {
+            backendSearchParams.action = 'UNASSIGNED';
+          }
+        } else if (activeSearchParams?.action) {
+          backendSearchParams.action = activeSearchParams.action;
+        }
+        
+        // Remove any undefined or null values
+        Object.keys(backendSearchParams).forEach(key => {
+          if (backendSearchParams[key] === undefined || backendSearchParams[key] === null || backendSearchParams[key] === '') {
+            delete backendSearchParams[key];
+          }
+        });
+        
+        result = await LeadService.searchLeads(companyIdToUse, backendSearchParams, { page: 0, size: 10000 });
+      } else {
+        // Use regular API to get all data
+        result = await LeadService.getLeadsByCompany(companyIdToUse, 0, 10000);
+      }
+      
+      if (!result.success || !result.data?.content || result.data.content.length === 0) {
+        customAlert('❌ No leads to export');
+        return;
+      }
+      
+      customAlert('🔄 Exporting leads...');
+      
+      const exportResult = exportLeads(result.data.content);
+      
+      if (exportResult.success) {
+        customAlert(`✅ ${exportResult.message}`);
+      } else {
+        customAlert(`❌ ${exportResult.message}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      customAlert(`❌ Failed to export leads: ${error.message}`);
     }
   };
 
