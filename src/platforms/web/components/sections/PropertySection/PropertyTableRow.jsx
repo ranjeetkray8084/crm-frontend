@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MoreVertical, Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
+import { parseSize, calculatePricePerUnit, formatPricePerUnit } from '../../../../../core/utils/sizeUtils';
 
 const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox, currentUserId, userRole }) => {
   const [showActions, setShowActions] = useState(false);
@@ -89,23 +90,9 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
   };
 
 
-  // Extract only numeric part from size (remove "sqft", "sq", "sqm" or other text)
-  const getNumericSize = (size) => {
-    if (!size) return 0;
-    console.log('Raw size data:', size, 'Type:', typeof size);
-    
-    // Remove common size units: sqft, sq, sqm, square feet, etc.
-    const cleanSize = size.toString()
-      .replace(/\s*(sqft|sq|sqm|square\s*feet|square\s*meters?)\s*/gi, '')
-      .trim();
-    
-    const numericPart = cleanSize.match(/\d+/);
-    const result = numericPart ? parseInt(numericPart[0]) : 0;
-    return result;
-  };
-
-  const numericSize = getNumericSize(property.size);
-  const parsqrfrate = property.price && numericSize ? (property.price / numericSize) : 0;
+  // Parse size with units
+  const sizeData = parseSize(property.size);
+  const pricePerUnit = calculatePricePerUnit(property.price, sizeData);
 
   return (
     <tr className="hover:bg-gray-50">
@@ -161,11 +148,11 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
       {/* Size */}
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 truncate text-center">
         <div className="font-medium">
-          {numericSize > 0 ? numericSize : 'N/A'}
+          {sizeData.display}
         </div>
-        {parsqrfrate > 0 && (
+        {pricePerUnit > 0 && (
           <div className="text-xs text-gray-500">
-            ₹{Math.round(parsqrfrate).toLocaleString()}/sqft
+            {formatPricePerUnit(pricePerUnit, sizeData.unit)}
           </div>
         )}
       </td>

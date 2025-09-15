@@ -39,7 +39,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
 
   const SortableHeader = ({ columnKey, title, className = "" }) => (
     <th
-      className={`px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap ${className}`}
+      className={`px-3 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 whitespace-nowrap ${className}`}
       onClick={() => handleSort(columnKey)}
     >
       {title}
@@ -65,7 +65,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
             <SortableHeader className='text-center' columnKey="sector" title="Sector" />
             <SortableHeader className='text-center' columnKey="location" title="Location" />
             <SortableHeader className='text-center' columnKey="createdAt" title="Created" />
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+            <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
               Actions
             </th>
           </tr>

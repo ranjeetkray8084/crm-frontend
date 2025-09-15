@@ -21,7 +21,7 @@ const initialForm = {
   ownerContact: '',
 };
 
-const AddPropertyForm = () => {
+const AddPropertyForm = ({ onSuccess, onCancel }) => {
   const [form, setForm] = useState(initialForm);
   const [showReference, setShowReference] = useState(false);
   const [isBroker, setIsBroker] = useState(false);
@@ -105,7 +105,7 @@ const AddPropertyForm = () => {
   };
 
   const getPriceLabel = () =>
-    ['Office', 'Retail'].includes(form.type) ? 'Lease Amount' : 'Price';
+    ['Office', 'Retail'].includes(form.type) ? 'Lease Amount' : ' Total Price';
 
   return (
     <motion.div
@@ -190,6 +190,9 @@ const AddPropertyForm = () => {
         </div>
 
         {/* Size */}
+       
+        {/* Status */}
+       
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1">
             <label className="block mb-1 font-medium">Size</label>
@@ -216,7 +219,7 @@ const AddPropertyForm = () => {
           </div>
         </div>
 
-        {/* Status */}
+
         <div>
           <label className="block mb-1 font-medium">Status *</label>
           <select
@@ -244,6 +247,8 @@ const AddPropertyForm = () => {
             className="w-full p-2 border rounded"
           />
         </div>
+       
+
 
         {/* Sector */}
         <div>
@@ -330,7 +335,7 @@ const AddPropertyForm = () => {
         <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4">
           <button
             type="button"
-            onClick={() => setForm(initialForm)}
+            onClick={onCancel || (() => setForm(initialForm))}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded w-full sm:w-auto"
           >
             Cancel

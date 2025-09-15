@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
+import { parseSize } from '../../../../../../core/utils/sizeUtils';
 
 // A reusable input field component to keep the form clean.
 const InputField = ({ label, name, value, onChange, placeholder = '', type = 'text', required = false, disabled = false, error = '' }) => (
@@ -71,7 +72,14 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
     // This ensures previous unsaved changes are discarded.
     useEffect(() => {
         if (isOpen && propertyToUpdate) {
-            setFormData(propertyToUpdate);
+            // Parse the size to separate value and unit
+            const sizeData = parseSize(propertyToUpdate.size);
+            const updatedProperty = {
+                ...propertyToUpdate,
+                sizeValue: sizeData.value || '',
+                sizeUnit: sizeData.unit || 'sqft'
+            };
+            setFormData(updatedProperty);
             setErrors({});
             setIsSubmitting(false);
         }
@@ -160,7 +168,7 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                 bhk: formData.bhk?.trim() || '',
                 unitDetails: formData.unitDetails?.trim() || '',
                 floor: formData.floor?.trim() || '',
-                size: formData.size ? parseInt(formData.size) : null,
+                size: formData.sizeValue ? `${formData.sizeValue} ${formData.sizeUnit || 'sqft'}` : '',
                 location: formData.location?.trim() || '',
                 ownerContact: formData.ownerContact?.trim() || '',
                 ownerName: formData.ownerName?.trim() || '',
@@ -255,14 +263,32 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                             value={formData.floor} 
                             onChange={handleChange} 
                         />
-                        <InputField 
-                            label="Size (sqft)" 
-                            name="size" 
-                            value={formData.size} 
-                            onChange={handleChange} 
-                            type="text" 
-                            error={errors.size}
-                        />
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex-1">
+                                <InputField 
+                                    label="Size" 
+                                    name="sizeValue" 
+                                    value={formData.sizeValue} 
+                                    onChange={handleChange} 
+                                    type="number" 
+                                    error={errors.size}
+                                />
+                            </div>
+                            <div className="w-full sm:w-32">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Unit
+                                </label>
+                                <select
+                                    name="sizeUnit"
+                                    value={formData.sizeUnit || 'sqft'}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent border-gray-300"
+                                >
+                                    <option value="sqft">sqft</option>
+                                    <option value="sqyd">sqyd</option>
+                                </select>
+                            </div>
+                        </div>
                         <InputField 
                             label={isBroker ? 'Broker Name' : 'Owner Name'} 
                             name="ownerName" 
