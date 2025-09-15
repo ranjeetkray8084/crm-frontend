@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Edit, MessageSquare, Eye, Trash2, MoreVertical } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
-import { parseSize, calculatePricePerUnit, formatPricePerUnit } from '../../../../../core/utils/sizeUtils';
 
 const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox, onStatusChange, currentUserId, userRole }) => {
   const [activeProperty, setActiveProperty] = useState(null);
@@ -15,8 +14,18 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
     });
   };
 
-  // Parse size with units - this function is now available from sizeUtils
-  const parsePropertySize = (size) => parseSize(size);
+  // Extract only numeric part from size (remove "sqft", "sq", "sqm" or other text)
+  const getNumericSize = (size) => {
+    if (!size) return 0;
+    
+    // Remove common size units: sqft, sq, sqm, square feet, etc.
+    const cleanSize = size.toString()
+      .replace(/\s*(sqft|sq|sqm|square\s*feet|square\s*meters?)\s*/gi, '')
+      .trim();
+    
+    const numericPart = cleanSize.match(/\d+/);
+    return numericPart ? parseInt(numericPart[0]) : 0;
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -161,16 +170,16 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
                 <span className="text-xs text-gray-500">Size</span>
                 <p className="text-sm font-medium">
                   {(() => {
-                    const sizeData = parsePropertySize(property.size);
-                    return sizeData.display;
+                    const numericSize = getNumericSize(property.size);
+                    return numericSize > 0 ? numericSize : 'N/A';
                   })()}
                 </p>
                 {(() => {
-                  const sizeData = parsePropertySize(property.size);
-                  const pricePerUnit = calculatePricePerUnit(property.price, sizeData);
-                  return pricePerUnit > 0 ? (
+                  const numericSize = getNumericSize(property.size);
+                  const parsqrfrate = property.price && numericSize ? (property.price / numericSize) : 0;
+                  return parsqrfrate > 0 ? (
                     <p className="text-xs text-gray-500">
-                      {formatPricePerUnit(pricePerUnit, sizeData.unit)}
+                      ₹{Math.round(parsqrfrate).toLocaleString()}/sqft
                     </p>
                   ) : null;
                 })()}

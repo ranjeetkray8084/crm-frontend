@@ -129,8 +129,8 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
             newErrors.price = 'Price must be a valid number';
         }
         
-        if (formData.size && isNaN(Number(formData.size))) {
-            newErrors.size = 'Size must be a valid number';
+        if (formData.sizeValue && isNaN(Number(formData.sizeValue))) {
+            newErrors.sizeValue = 'Size must be a valid number';
         }
         
         if (formData.ownerContact && !/^[\d\s\-\+\(\)]+$/.test(formData.ownerContact)) {
@@ -143,11 +143,35 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // Debug logging for size-related changes
+        if (name === 'sizeValue' || name === 'sizeUnit') {
+            console.log(`🔧 Size field changed: ${name} = ${value}`);
+        }
+        
+        setFormData(prev => {
+            const updated = { ...prev, [name]: value };
+            
+            // Debug log the updated form data for size fields
+            if (name === 'sizeValue' || name === 'sizeUnit') {
+                console.log('📝 Updated formData size fields:', {
+                    sizeValue: updated.sizeValue,
+                    sizeUnit: updated.sizeUnit,
+                    combinedSize: updated.sizeValue ? `${updated.sizeValue} ${updated.sizeUnit || 'sqft'}` : ''
+                });
+            }
+            
+            return updated;
+        });
         
         // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+        
+        // Clear size-related errors when either size field changes
+        if (name === 'sizeValue' || name === 'sizeUnit') {
+            setErrors(prev => ({ ...prev, sizeValue: '', size: '' }));
         }
     };
 
@@ -178,6 +202,15 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                 source: formData.source || '',
                 referenceName: formData.source === 'Reference' ? (formData.referenceName?.trim() || '') : ''
             };
+            
+            // Debug logging for the data being sent
+            console.log('🚀 Submitting property update with data:', updateData);
+            console.log('📏 Size data details:', {
+                originalSize: propertyToUpdate?.size,
+                sizeValue: formData.sizeValue,
+                sizeUnit: formData.sizeUnit,
+                finalSize: updateData.size
+            });
             
             await onUpdate(updateData);
             onClose(); // Close modal after successful update
@@ -271,7 +304,7 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                                     value={formData.sizeValue} 
                                     onChange={handleChange} 
                                     type="number" 
-                                    error={errors.size}
+                                    error={errors.sizeValue}
                                 />
                             </div>
                             <div className="w-full sm:w-32">
@@ -309,7 +342,7 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
                             onChange={handleChange} 
                         />
                         <InputField 
-                            label="Price" 
+                            label="Total Price" 
                             name="price" 
                             value={formData.price} 
                             onChange={handleChange} 
