@@ -20,6 +20,8 @@ import AddRemarkModal from './action/AddRemarkModal';
 import LeadRemarksModal from './action/LeadRemarksModal';
 import AddFollowUpModal from './action/AddFollowUpModal';
 import ViewFollowUpsModal from './action/ViewFollowUpsModal';
+import SaleRentSelectionModal from '../../common/SaleRentSelectionModal';
+import LeadReminderModal from '../../common/LeadReminderModal';
 
 
 const LeadsSection = ({ userRole, userId, companyId }) => {
@@ -40,6 +42,8 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
     message: '',
     onConfirm: null
   });
+  const [saleRentModal, setSaleRentModal] = useState({ isOpen: false, lead: null, pendingStatusChange: null });
+  const [leadReminderModal, setLeadReminderModal] = useState({ isOpen: false, lead: null });
 
   const pageSize = 10;
 
@@ -53,7 +57,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   const {
     leads, loading, error, pagination, loadLeads, searchLeads,
     updateLeadStatus, updateLead, deleteLead, addRemark,
-    assignLead, unassignLead, getRemarks
+    assignLead, unassignLead, getRemarks, setReminder
   } = useLeads(companyId, userId, userRole);
 
   const { users: filterUsers } = useUsers(companyId);
@@ -150,6 +154,61 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   const handleStatusUpdate = async (leadId, newStatus) => {
     await updateLeadStatus(leadId, newStatus);
     handleRefresh();
+  };
+
+  const handleShowSaleRentModal = (lead, pendingStatusChange) => {
+    setSaleRentModal({
+      isOpen: true,
+      lead: lead,
+      pendingStatusChange: pendingStatusChange
+    });
+  };
+
+  const handleSaleSelected = async () => {
+    const lead = saleRentModal.lead;
+    const pendingStatusChange = saleRentModal.pendingStatusChange;
+    
+    // Close the modal first
+    setSaleRentModal({ isOpen: false, lead: null, pendingStatusChange: null });
+    
+    // Update status to CLOSED (Sale)
+    if (pendingStatusChange) {
+      await updateLeadStatus(lead.leadId || lead.id, pendingStatusChange);
+      handleRefresh();
+    }
+  };
+
+  const handleRentSelected = () => {
+    const lead = saleRentModal.lead;
+    
+    // Close Sale/Rent modal and open reminder modal
+    setSaleRentModal({ isOpen: false, lead: null, pendingStatusChange: null });
+    setLeadReminderModal({ isOpen: true, lead: lead });
+  };
+
+  const handleSetLeadReminder = async (reminderDate) => {
+    const lead = leadReminderModal.lead;
+    
+    try {
+      // First update status to CLOSED
+      await updateLeadStatus(lead.leadId || lead.id, 'CLOSED');
+      
+      // Wait a moment for status update to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Then set the reminder
+      const result = await setReminder(lead.leadId || lead.id, reminderDate);
+      
+      if (result.success) {
+        customAlert('✅ Reminder is set successfully! You will receive notifications on the reminder date at 9:00 AM.');
+        handleRefresh();
+        setLeadReminderModal({ isOpen: false, lead: null });
+      } else {
+        customAlert(`❌ Failed to set reminder: ${result.error}`);
+      }
+    } catch (error) {
+      customAlert(`❌ Failed to set reminder: ${error.message}`);
+    }
   };
 
  
@@ -266,6 +325,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
 
   const actionHandlers = {
     onStatusUpdate: handleStatusUpdate,
+    onShowSaleRentModal: handleShowSaleRentModal,
     onAssign: handleAssignLead,
     onUnassign: handleUnassignLead,
     onUpdate: handleUpdateLead,
@@ -419,6 +479,23 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
         onConfirm={confirmModal.onConfirm}
         title={confirmModal.title}
         message={confirmModal.message}
+      />
+
+      {/* Sale/Rent Selection Modal */}
+      <SaleRentSelectionModal
+        isOpen={saleRentModal.isOpen}
+        onClose={() => setSaleRentModal({ isOpen: false, lead: null, pendingStatusChange: null })}
+        onSelectSale={handleSaleSelected}
+        onSelectRent={handleRentSelected}
+        leadName={saleRentModal.lead?.name || 'Unknown Lead'}
+      />
+
+      {/* Lead Reminder Modal */}
+      <LeadReminderModal
+        isOpen={leadReminderModal.isOpen}
+        onClose={() => setLeadReminderModal({ isOpen: false, lead: null })}
+        onSetReminder={handleSetLeadReminder}
+        leadName={leadReminderModal.lead?.name || 'Unknown Lead'}
       />
     </div>
   );

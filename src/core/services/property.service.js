@@ -311,4 +311,20 @@ export class PropertyService {
       return { success: false, error: error.response?.data?.message || 'Failed to load created properties' };
     }
   }
+
+  // Reminder functionality - Only for RENT_OUT properties
+  static async setReminderForRentOutProperty(companyId, propertyId, reminderDate) {
+    try {
+      const response = await axios.post(
+        `/api/companies/${companyId}/properties/${propertyId}/set-reminder`,
+        { reminderDate }
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.response?.data || 'Failed to set reminder' 
+      };
+    }
+  }
 }

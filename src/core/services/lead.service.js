@@ -837,4 +837,26 @@ export class LeadService {
       };
     }
   }
+
+  /**
+   * Set reminder for a closed lead
+   * @param {number} companyId 
+   * @param {number} leadId 
+   * @param {string} reminderDate 
+   * @returns {Promise<Object>} API response
+   */
+  static async setReminderForLead(companyId, leadId, reminderDate) {
+    try {
+      const response = await axios.post(
+        `/api/companies/${companyId}/leads/${leadId}/set-reminder`,
+        { reminderDate }
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.response?.data || 'Failed to set reminder' 
+      };
+    }
+  }
 }

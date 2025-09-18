@@ -9,7 +9,7 @@ const LeadTableRow = ({
     lead,
     searchTerm,
     onStatusUpdate,
-
+    onShowSaleRentModal,
     onAddRemark,
     onGetRemarks,
     onAssign,
@@ -107,7 +107,17 @@ const LeadTableRow = ({
     };
 
     const handleStatusChange = (newStatus) => {
-        onStatusUpdate(leadId, newStatus);
+        // If changing to CLOSED, show Sale/Rent selection modal first
+        if (newStatus === 'CLOSED') {
+            if (onShowSaleRentModal) {
+                onShowSaleRentModal(lead, newStatus);
+            } else {
+                // Fallback to direct status update if modal handler not provided
+                onStatusUpdate(leadId, newStatus);
+            }
+        } else {
+            onStatusUpdate(leadId, newStatus);
+        }
         setStatusDropdownOpen(false);
     };
 

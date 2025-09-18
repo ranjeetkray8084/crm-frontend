@@ -259,6 +259,23 @@ export const useLeads = (companyId, userId, userRole) => {
   const getRemarks = (leadId) =>
     executeApiCall(() => LeadService.getRemarksByLeadId(userInfo.companyId, leadId), '', '', false);
 
+  const setReminder = useCallback(
+    async (leadId, reminderDate) => {
+      if (!userInfo.companyId) {
+        customAlert('Company ID is missing.');
+        return { success: false, error: 'Company ID missing' };
+      }
+
+      return executeApiCall(
+        () => LeadService.setReminderForLead(userInfo.companyId, leadId, reminderDate),
+        'Reminder set successfully',
+        'Failed to set reminder',
+        true // Reload leads after setting reminder
+      );
+    },
+    [userInfo, executeApiCall]
+  );
+
   useEffect(() => {
     if (userInfo.companyId) loadLeads();
   }, [userInfo.companyId]);
@@ -279,5 +296,6 @@ export const useLeads = (companyId, userId, userRole) => {
     unassignLead,
     addRemark,
     getRemarks,
+    setReminder,
   };
 };

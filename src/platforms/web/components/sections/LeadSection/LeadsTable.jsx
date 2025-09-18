@@ -14,6 +14,7 @@ const LeadsTable = ({
     onUpdate,
     onAddFollowUp,
     onViewFollowUps,
+    onShowSaleRentModal,
     companyId
 }) => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -105,6 +106,7 @@ const LeadsTable = ({
                             lead={lead}
                             searchTerm={searchTerm}
                             onStatusUpdate={onStatusUpdate}
+                            onShowSaleRentModal={onShowSaleRentModal}
                             onDelete={onDelete}
                             onAddRemark={onAddRemark}
                             onGetRemarks={onGetRemarks}

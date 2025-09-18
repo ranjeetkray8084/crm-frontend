@@ -14,6 +14,7 @@ import Pagination from './Pagination';
 import PropertiesFeedback from './PropertiesFeedback';
 import SearchResultsSummary from './SearchResultsSummary';
 import ConfirmModal from '../../common/ConfirmModal';
+import ReminderDateModal from '../../common/ReminderDateModal';
 import AddRemarkModal from './action/AddRemarkModal';
 import PropertyRemarksModal from './action/PropertyRemarksModal';
 import UpdatePropertyModal from './action/UpdatePropertyModal';
@@ -42,6 +43,11 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [editingProperty, setEditingProperty] = useState(null);
   const [remarkingProperty, setRemarkingProperty] = useState(null);
   const [viewingRemarksProperty, setViewingRemarksProperty] = useState(null);
+  const [reminderModal, setReminderModal] = useState({
+    isOpen: false,
+    property: null,
+    pendingStatusChange: null
+  });
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -60,7 +66,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
 
   const {
     properties, loading, error, pagination, loadProperties, searchProperties,
-    updateProperty, deleteProperty, addRemark, getRemarks
+    updateProperty, deleteProperty, addRemark, getRemarks, setReminder
   } = useProperties(finalCompanyId, finalUserId, finalUserRole);
 
   const { users: filterUsers } = useUsers(finalCompanyId);
@@ -136,17 +142,90 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
 
   const handleGetRemarks = (property) => setViewingRemarksProperty(property);
 
+  const handleShowReminderModal = (property, pendingStatusChange) => {
+    console.log('📅 Opening reminder modal for property:', property?.propertyId || property?.id);
+    console.log('📅 Pending status change:', pendingStatusChange);
+    setReminderModal({
+      isOpen: true,
+      property: property,
+      pendingStatusChange: pendingStatusChange
+    });
+  };
+
   const handleStatusUpdate = async (propertyId, newStatus) => {
     try {
       const result = await updateProperty(propertyId, { status: newStatus });
       if (result.success) {
         customAlert(`✅ Property status updated to: ${newStatus}`);
+        handleRefresh();
+        return result; // Return the result for chaining
       } else {
         customAlert(`❌ Failed to update property status: ${result.error}`);
+        return result; // Return the result even on failure
       }
-      handleRefresh();
     } catch (error) {
       customAlert(`❌ Failed to update property status: ${error.message}`);
+      return { success: false, error: error.message }; // Return error result
+    }
+  };
+
+  // Silent status update for reminder flow (no alerts, no refresh)
+  const silentStatusUpdate = async (propertyId, newStatus) => {
+    try {
+      const result = await updateProperty(propertyId, { status: newStatus });
+      return result;
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const handleSetReminder = async (reminderDate) => {
+    const property = reminderModal.property;
+    const pendingStatusChange = reminderModal.pendingStatusChange;
+    
+    console.log('🔍 Setting reminder for property:', property?.propertyId || property?.id, 'with date:', reminderDate);
+    console.log('🔍 Property data:', property);
+    console.log('🔍 Pending status change:', pendingStatusChange);
+    
+    try {
+      // First change the status to RENT_OUT if there's a pending status change
+      if (pendingStatusChange) {
+        console.log('🔄 Changing status to RENT_OUT first...');
+        const statusResult = await silentStatusUpdate(property.propertyId || property.id, pendingStatusChange);
+        
+        // Wait for status change to complete
+        console.log('⏳ Waiting for status change to complete...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Check if status change was successful
+        if (statusResult && !statusResult.success) {
+          console.error('❌ Status change failed:', statusResult.error);
+          customAlert(`❌ Failed to change status to RENT_OUT: ${statusResult.error}`);
+          return;
+        }
+        console.log('✅ Status changed to RENT_OUT successfully');
+      }
+      
+      // Then set the reminder
+      console.log('📅 Setting reminder after status change...');
+      const result = await setReminder(property.propertyId || property.id, reminderDate);
+      
+      if (result.success) {
+        console.log('✅ Reminder set successfully');
+        // Show success message to user
+        customAlert('✅ Reminder is set successfully! You will receive notifications on the reminder date at 9:00 AM.');
+        handleRefresh();
+        // Close the modal
+        setReminderModal({ isOpen: false, property: null, pendingStatusChange: null });
+      } else {
+        console.log('❌ Failed to set reminder:', result.error);
+        // Show error message to user
+        customAlert(`❌ Failed to set reminder: ${result.error}`);
+        // Don't close modal on error so user can try again
+      }
+    } catch (error) {
+      console.error('❌ Exception in handleSetReminder:', error);
+      customAlert(`❌ Failed to set reminder: ${error.message}`);
     }
   };
 
@@ -240,6 +319,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     onUpdate: handleUpdateProperty,
     onAddRemark: handleAddRemark,
     onViewRemarks: handleGetRemarks,
+    onSetReminder: handleSetReminder,
+    onShowReminderModal: handleShowReminderModal,
     onOutOfBox: handleOutOfBox,
     companyId: finalCompanyId,
     currentUserId: finalUserId,
@@ -360,6 +441,14 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
         onConfirm={confirmModal.onConfirm}
         title={confirmModal.title}
         message={confirmModal.message}
+      />
+
+      {/* Reminder Date Modal */}
+      <ReminderDateModal
+        isOpen={reminderModal.isOpen}
+        onClose={() => setReminderModal({ isOpen: false, property: null, pendingStatusChange: null })}
+        onSetReminder={handleSetReminder}
+        propertyName={reminderModal.property?.propertyName || 'Unknown Property'}
       />
     </div>
   );

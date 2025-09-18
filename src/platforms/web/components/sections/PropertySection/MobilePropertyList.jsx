@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { Edit, MessageSquare, Eye, Trash2, MoreVertical } from 'lucide-react';
+import { Edit, MessageSquare, Eye, Trash2, MoreVertical, Clock } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
+import ReminderDateModal from '../../common/ReminderDateModal';
 
-const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox, onStatusChange, currentUserId, userRole }) => {
+const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox, onStatusChange, onSetReminder, currentUserId, userRole }) => {
   const [activeProperty, setActiveProperty] = useState(null);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -102,6 +106,21 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
     setActiveProperty(null);
   };
 
+  const handleSetReminder = (reminderDate) => {
+    if (onSetReminder && selectedProperty) {
+      onSetReminder(selectedProperty.propertyId || selectedProperty.id, reminderDate);
+    }
+    
+    // If there's a pending status change, apply it now
+    if (pendingStatusChange && selectedProperty) {
+      onStatusChange(selectedProperty.propertyId || selectedProperty.id, pendingStatusChange);
+      setPendingStatusChange(null);
+    }
+    
+    setShowReminderModal(false);
+    setSelectedProperty(null);
+  };
+
   const getActionsForProperty = (property) => {
     const baseActions = [
       {
@@ -122,6 +141,19 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
         label: 'Update Property',
         icon: <Edit size={14} />,
         onClick: (property) => { onUpdate(property); setActiveProperty(null); }
+      });
+    }
+
+    // Add reminder action only for RENT_OUT status
+    if (property.status === 'RENT_OUT') {
+      baseActions.push({
+        label: 'Set Reminder',
+        icon: <Clock size={14} />,
+        onClick: (property) => { 
+          setSelectedProperty(property); 
+          setShowReminderModal(true); 
+          setActiveProperty(null); 
+        }
       });
     }
 
@@ -222,7 +254,16 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
                     const statusOptions = ['AVAILABLE_FOR_SALE', 'AVAILABLE_FOR_RENT', 'RENT_OUT', 'SOLD_OUT'];
                     const currentIndex = statusOptions.indexOf(property.status);
                     const nextIndex = (currentIndex + 1) % statusOptions.length;
-                    onStatusChange(property.propertyId || property.id, statusOptions[nextIndex]);
+                    const newStatus = statusOptions[nextIndex];
+                    
+                    // If changing to RENT_OUT, show reminder modal first
+                    if (newStatus === 'RENT_OUT') {
+                      setSelectedProperty(property);
+                      setShowReminderModal(true);
+                      setPendingStatusChange(newStatus);
+                    } else {
+                      onStatusChange(property.propertyId || property.id, newStatus);
+                    }
                   }
                 }}
                 title={canChangeStatus(property) ? 'Click to change status' : 'Only creator or director can change status'}
@@ -241,6 +282,18 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
           </div>
         );
       })}
+
+      {/* Reminder Date Modal */}
+      <ReminderDateModal
+        isOpen={showReminderModal}
+        onClose={() => {
+          setShowReminderModal(false);
+          setSelectedProperty(null);
+          setPendingStatusChange(null);
+        }}
+        onSetReminder={handleSetReminder}
+        propertyName={selectedProperty?.propertyName || 'Unknown Property'}
+      />
     </div>
   );
 };

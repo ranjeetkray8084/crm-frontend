@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import PropertyTableRow from './PropertyTableRow';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
-const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox }) => {
+const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox, onShowReminderModal }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
 
   const handleSort = (key) => {
@@ -80,6 +80,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
               onUpdate={onUpdate}
               onStatusChange={onStatusChange}
               onOutOfBox={onOutOfBox}
+              onShowReminderModal={onShowReminderModal}
             />
           ))}
         </tbody>

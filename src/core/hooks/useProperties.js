@@ -208,6 +208,24 @@ export const useProperties = (companyId, userId, userRole) => {
     [loadProperties]
   );
 
+  const setReminder = useCallback(
+    async (propertyId, reminderDate) => {
+      if (!userInfo.companyId) {
+        customAlert('Company ID is missing.');
+        return { success: false, error: 'Company ID missing' };
+      }
+
+      return executeApiCall(
+        () => PropertyService.setReminderForRentOutProperty(userInfo.companyId, propertyId, reminderDate),
+        'Reminder set successfully',
+        'Failed to set reminder',
+        true // Reload properties after setting reminder
+      );
+    },
+    [userInfo, executeApiCall]
+  );
+
+
   return {
     properties,
     loading,
@@ -220,5 +238,6 @@ export const useProperties = (companyId, userId, userRole) => {
     deleteProperty,
     addRemark,
     getRemarks,
+    setReminder,
   };
 };

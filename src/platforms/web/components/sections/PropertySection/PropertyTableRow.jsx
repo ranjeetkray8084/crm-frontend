@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { MoreVertical, Edit, Trash2, MessageSquare, Eye } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, MessageSquare, Eye, Clock } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
+import ReminderDateModal from '../../common/ReminderDateModal';
 import { parseSize, calculatePricePerUnit, formatPricePerUnit } from '../../../../../core/utils/sizeUtils';
 
-const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox, currentUserId, userRole }) => {
+const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onSetReminder, onOutOfBox, currentUserId, userRole, onShowReminderModal }) => {
   const [showActions, setShowActions] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
 
   const statusOptions = [
     { value: 'AVAILABLE_FOR_SALE', label: 'For Sale' },
@@ -86,7 +89,46 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
-    onStatusChange(property.propertyId || property.id, newStatus);
+    console.log('🔄 Status change requested:', newStatus, 'for property:', property.propertyId || property.id);
+    
+    // If changing to RENT_OUT, show reminder modal first
+    if (newStatus === 'RENT_OUT') {
+      console.log('📅 RENT_OUT selected, showing reminder modal...');
+      if (onShowReminderModal) {
+        onShowReminderModal(property, newStatus);
+      } else {
+        setShowReminderModal(true);
+        setPendingStatusChange(newStatus);
+      }
+    } else {
+      console.log('🔄 Direct status change for non-RENT_OUT status');
+      onStatusChange(property.propertyId || property.id, newStatus);
+    }
+  };
+
+  const handleSetReminder = async (reminderDate) => {
+    // First change the status to RENT_OUT if there's a pending status change
+    if (pendingStatusChange) {
+      console.log('🔄 Changing status to RENT_OUT first...');
+      const statusResult = await onStatusChange(property.propertyId || property.id, pendingStatusChange);
+      setPendingStatusChange(null);
+      
+      // Wait for status change to complete and refresh data
+      console.log('⏳ Waiting for status change to complete...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if status change was successful
+      if (statusResult && !statusResult.success) {
+        console.error('❌ Status change failed:', statusResult.error);
+        return;
+      }
+    }
+    
+    // Then set the reminder
+    console.log('📅 Setting reminder after status change...');
+    if (onSetReminder) {
+      onSetReminder(property.propertyId || property.id, reminderDate);
+    }
   };
 
 
@@ -210,9 +252,12 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
             ...(canUpdateProperty() ? [{ label: 'Update Property', icon: <Edit size={14} />, onClick: () => onUpdate(property) }] : []),
             { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(property) },
             { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onViewRemarks(property) },
+            // Add reminder action only for RENT_OUT status
+            ...(property.status === 'RENT_OUT' ? [{ label: 'Set Reminder', icon: <Clock size={14} />, onClick: () => onShowReminderModal ? onShowReminderModal(property, null) : setShowReminderModal(true) }] : [])
           ]}
         />
       </td>
+
     </tr>
   );
 };
