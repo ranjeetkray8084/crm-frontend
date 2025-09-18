@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Upload, FileSpreadsheet, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-const TaskUploadForm = ({ onUpload, loading = false }) => {
+const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
   const [title, setTitle] = useState('');
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
@@ -54,6 +54,14 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
       }
       
       console.log('TaskUploadForm: File validation successful');
+      
+      // Auto-populate title with filename (without extension) - ONLY after validation passes
+      const fileNameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
+      if (!title.trim()) {
+        setTitle(fileNameWithoutExt);
+        console.log('TaskUploadForm: Auto-populated title from filename:', fileNameWithoutExt);
+      }
+      
       setFile(selectedFile);
       setFileDimensions({ columns: dimensions.columns, rows: dimensions.rows });
     } catch (error) {
@@ -188,6 +196,8 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
     setFileDimensions(null);
     resetFileInput();
     setError('');
+    // Clear title when file is removed
+    setTitle('');
   };
 
   return (
@@ -277,24 +287,36 @@ const TaskUploadForm = ({ onUpload, loading = false }) => {
           </div>
         )}
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading || !title.trim() || !file}
-          className="w-full flex items-center justify-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Task
-            </>
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className="flex-1 flex items-center justify-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+            >
+              Cancel
+            </button>
           )}
-        </button>
+          <button
+            type="submit"
+            disabled={loading || !title.trim() || !file}
+            className="flex-1 flex items-center justify-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Task
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );
