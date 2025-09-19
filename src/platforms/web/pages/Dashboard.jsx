@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from '../components/common/Sidebar';
 import Topbar from '../components/common/Topbar';
-import Breadcrumb from '../components/common/Breadcrumb';
+import Breadcrumb from '../components/common/Breadcrumb.jsx';
 import { useNavigationHistory } from '@/core/hooks';
 
 import DashboardContent from "../components/sections/DashboardStats";
