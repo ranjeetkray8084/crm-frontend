@@ -115,6 +115,7 @@ export class TaskService {
     try {
       console.log('TaskService: Starting upload with data:', {
         title: taskData.title,
+        purpose: taskData.purpose,
         fileName: taskData.file?.name,
         fileSize: taskData.file?.size,
         companyId: taskData.companyId,
@@ -136,6 +137,7 @@ export class TaskService {
       const formData = new FormData();
       formData.append('file', taskData.file);
       formData.append('title', taskData.title);
+      formData.append('purpose', taskData.purpose);
       formData.append('companyId', taskData.companyId.toString());
       formData.append('uploadedBy', taskData.uploadedBy.toString());
 

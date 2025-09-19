@@ -668,6 +668,10 @@ const TaskSection = () => {
     const [taskStatus, setTaskStatus] = useState('ALL'); // ALL | NEW | UNDER_PROCESS | COMPLETED
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // --- Pagination ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10); // Fixed to 10 items per page
+
     const isAdminOrDirector = userInfo.role === 'ADMIN' || userInfo.role === 'DIRECTOR';
 
     // Load available creators from tasks data
@@ -772,6 +776,62 @@ const TaskSection = () => {
 
         return list;
     }, [tasks, searchTerm, createdByFilter, assignedToFilter, taskStatus, userInfo.userId]);
+
+    // --- Pagination Logic ---
+    const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, taskStatus, createdByFilter, assignedToFilter]);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        // Scroll to top of table
+        const tableElement = document.querySelector('.task-table-container');
+        if (tableElement) {
+            tableElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+
+    // Pagination Component
+    const PaginationControls = () => {
+        if (totalPages <= 1) return null;
+
+        return (
+            <div className="flex justify-between items-center py-4 border-t border-gray-200 bg-gray-50">
+                {/* Page info */}
+                <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredTasks.length)} of {filteredTasks.length} tasks
+                </div>
+
+                {/* Pagination buttons */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white font-medium"
+                    >
+                        Previous
+                    </button>
+                    <span className="text-sm text-gray-600 px-2">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white font-medium"
+                    >
+                        Next
+                    </button>
+                </div>
+            </div>
+        );
+    };
 
     // Show loading state while user data is being loaded
     if (isLoading) {
@@ -985,19 +1045,24 @@ const TaskSection = () => {
 
                 {/* Task Table */}
                 {!loading && !error && userInfo.companyId && userInfo.userId && filteredTasks.length > 0 && (
-                    <TaskTable
-                        tasks={filteredTasks}
-                        onOpen={handleOpen}
-                        onDownload={handleDownload}
-                        onDelete={handleDelete}
-                        onAssign={handleAssign}
-                        onUnassign={handleUnassign}
-                        onStatusUpdate={handleStatusUpdate}
-                        role={userInfo.role}
-                        canManageTask={canManageTask}
-                        isTaskAssignedToUser={isTaskAssignedToUser}
-                        loading={loading}
-                    />
+                    <div className="task-table-container">
+                        <TaskTable
+                            tasks={paginatedTasks}
+                            onOpen={handleOpen}
+                            onDownload={handleDownload}
+                            onDelete={handleDelete}
+                            onAssign={handleAssign}
+                            onUnassign={handleUnassign}
+                            onStatusUpdate={handleStatusUpdate}
+                            role={userInfo.role}
+                            canManageTask={canManageTask}
+                            isTaskAssignedToUser={isTaskAssignedToUser}
+                            loading={loading}
+                        />
+                        
+                        {/* Pagination Controls */}
+                        <PaginationControls />
+                    </div>
                 )}
             </div>
 

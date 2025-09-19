@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 
 const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
   const [title, setTitle] = useState('');
+  const [purpose, setPurpose] = useState('');
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
@@ -153,6 +154,11 @@ const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
       return;
     }
 
+    if (!purpose.trim()) {
+      setError('❌ Task purpose is required');
+      return;
+    }
+
     if (!file) {
       setError('❌ Please select an Excel file');
       return;
@@ -160,6 +166,7 @@ const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
 
     const taskData = {
       title: title.trim(),
+      purpose: purpose.trim(),
       file
     };
 
@@ -176,6 +183,7 @@ const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
       
       if (result?.success) {
         setTitle('');
+        setPurpose('');
         setFile(null);
         setFileDimensions(null);
         resetFileInput();
@@ -196,8 +204,9 @@ const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
     setFileDimensions(null);
     resetFileInput();
     setError('');
-    // Clear title when file is removed
+    // Clear title and purpose when file is removed
     setTitle('');
+    setPurpose('');
   };
 
   return (
@@ -214,6 +223,22 @@ const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter task title"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
+          />
+        </div>
+
+        {/* Purpose Field */}
+        <div>
+          <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-1">
+            Task Purpose
+          </label>
+          <input
+            type="text"
+            id="purpose"
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            placeholder="Enter task purpose (e.g., Lead generation, Data analysis, etc.)"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           />
@@ -301,7 +326,7 @@ const TaskUploadForm = ({ onUpload, onCancel, loading = false }) => {
           )}
           <button
             type="submit"
-            disabled={loading || !title.trim() || !file}
+            disabled={loading || !title.trim() || !purpose.trim() || !file}
             className="flex-1 flex items-center justify-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? (

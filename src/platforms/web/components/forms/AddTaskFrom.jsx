@@ -4,7 +4,7 @@ import { useTasks } from '../../../../core/hooks/useTasks';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import { customAlert } from '../../../../core/utils/alertUtils';
 
-const AddTaskForm = () => {
+const AddTaskForm = ({ onCancel }) => {
   const { user, loading: authLoading } = useAuth();
   const companyId = user?.companyId;
   const userId = user?.userId || user?.id;
@@ -103,6 +103,7 @@ const AddTaskForm = () => {
     <div className="max-w-2xl mx-auto">
       <TaskUploadForm
         onUpload={handleUpload}
+        onCancel={onCancel}
         loading={uploadLoading}
       />
     </div>

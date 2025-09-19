@@ -526,7 +526,8 @@ const PropertyOverviewCard = ({ propertyOverview }) => {
     "available for sale": availableForSale = 0,
     "available for rent": availableForRent = 0,
     "sold out": soldOut = 0,
-    "rent out": rentOut = 0
+    "rent out": rentOut = 0,
+    "dropped": dropped = 0
   } = propertyOverview;
 
   return (
@@ -545,10 +546,10 @@ const PropertyOverviewCard = ({ propertyOverview }) => {
         <span className="text-3xl font-bold">{totalProperties}</span>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Left Side - Available Properties */}
-        <div className="space-y-3">
+      {/* Two Row Layout */}
+      <div className="space-y-4">
+        {/* Top Row - Available Properties */}
+        <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Home size={14} className="text-green-200" />
@@ -566,8 +567,8 @@ const PropertyOverviewCard = ({ propertyOverview }) => {
           </div>
         </div>
 
-        {/* Right Side - Completed Properties */}
-        <div className="space-y-3">
+        {/* Bottom Row - Completed and Dropped Properties */}
+        <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <CheckCircle size={14} className="text-green-200" />
@@ -582,6 +583,14 @@ const PropertyOverviewCard = ({ propertyOverview }) => {
               <span className="text-xs font-medium text-green-100">Rent Out</span>
             </div>
             <span className="text-xl font-bold">{rentOut}</span>
+          </div>
+
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <XCircle size={14} className="text-green-200" />
+              <span className="text-xs font-medium text-green-100">Dropped</span>
+            </div>
+            <span className="text-xl font-bold">{dropped}</span>
           </div>
         </div>
       </div>

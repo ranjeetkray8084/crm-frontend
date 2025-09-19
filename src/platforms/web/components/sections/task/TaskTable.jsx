@@ -87,9 +87,12 @@ const TaskTable = ({
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
         <table className="min-w-[1000px] w-full table-auto text-sm text-left text-gray-700">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
             <tr>
               <SortableHeader columnKey="title" title="Title" />
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                Purpose
+              </th>
               <SortableHeader columnKey="uploadDate" title="Created" />
               <SortableHeader columnKey="assignedTo" title="Assigned To" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
@@ -103,7 +106,7 @@ const TaskTable = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedTasks.length === 0 ? (
               <tr>
-                <td colSpan="5" className="text-center py-6 text-gray-400">No tasks found.</td>
+                <td colSpan="6" className="text-center py-6 text-gray-400">No tasks found.</td>
               </tr>
             ) : (
               sortedTasks.map((task) => (
@@ -111,6 +114,11 @@ const TaskTable = ({
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900" title={task.title}>
                       {task.title}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-600" title={task.purpose}>
+                      {task.purpose || 'Not specified'}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -207,6 +215,9 @@ const TaskTable = ({
                   <h3 className="text-sm font-medium text-gray-900 truncate" title={task.title}>
                     {task.title}
                   </h3>
+                  <div className="text-sm text-gray-600 mt-1" title={task.purpose}>
+                    {task.purpose || 'Not specified'}
+                  </div>
                   <div className="flex items-center mt-1 text-xs text-gray-500">
                     <Calendar className="h-3 w-3 mr-1" />
                     {formatDate(task.uploadDate)}

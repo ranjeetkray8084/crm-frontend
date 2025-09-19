@@ -95,6 +95,7 @@ const PropertyFilters = ({
           <option value="AVAILABLE_FOR_RENT">For Rent</option>
           <option value="RENT_OUT">Rented Out</option>
           <option value="SOLD_OUT">Sold Out</option>
+          <option value="DROPPED">Dropped</option>
         </select>
 
         {/* Type Filter */}

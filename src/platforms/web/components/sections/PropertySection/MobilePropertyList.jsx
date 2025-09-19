@@ -41,6 +41,8 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
         return 'bg-yellow-100 text-yellow-800';
       case 'SOLD_OUT':
         return 'bg-red-100 text-red-800';
+      case 'DROPPED':
+        return 'bg-gray-100 text-gray-600';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -56,6 +58,8 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
         return 'Rented Out';
       case 'SOLD_OUT':
         return 'Sold Out';
+      case 'DROPPED':
+        return 'Dropped';
       default:
         return status || 'N/A';
     }

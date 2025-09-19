@@ -232,7 +232,8 @@ const UpdatePropertyModal = ({ isOpen, onClose, propertyToUpdate, onUpdate }) =>
         { value: 'AVAILABLE_FOR_SALE', label: 'Available for Sale' },
         { value: 'AVAILABLE_FOR_RENT', label: 'Available for Rent' },
         { value: 'RENT_OUT', label: 'Rent Out' },
-        { value: 'SOLD_OUT', label: 'Sold Out' }
+        { value: 'SOLD_OUT', label: 'Sold Out' },
+        { value: 'DROPPED', label: 'Dropped' }
     ];
 
     const sourceOptions = [

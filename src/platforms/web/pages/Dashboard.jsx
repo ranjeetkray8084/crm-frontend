@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from '../components/common/Sidebar';
 import Topbar from '../components/common/Topbar';
+import Breadcrumb from '../components/common/Breadcrumb';
+import { useNavigationHistory } from '@/core/hooks';
 
 import DashboardContent from "../components/sections/DashboardStats";
 import Users from "../components/sections/UsersSection";
@@ -31,9 +33,20 @@ function Dashboard() {
   const [userId, setUserId] = useState('');
   const [companyId, setCompanyId] = useState('');
   const [companyName, setCompanyName] = useState('SmartProCare');
-  const [activeSection, setActiveSection] = useState('ViewDashboard');
   const [showSidebar, setShowSidebar] = useState(false); // mobile sidebar
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Use navigation history hook for better navigation management
+  const { 
+    currentSection: activeSection, 
+    navigateToSection: setActiveSection, 
+    goBack 
+  } = useNavigationHistory('ViewDashboard');
+
+  // Debug logging for navigation
+  useEffect(() => {
+    console.log('Dashboard: Active section changed to:', activeSection);
+  }, [activeSection]);
 
   useEffect(() => {
     const initializeDashboard = () => {
@@ -97,6 +110,26 @@ function Dashboard() {
     window.location.href = '/';
   };
 
+  // Handle Quick Add actions with proper navigation history
+  const handleAddAction = (action) => {
+    console.log('🎯 Dashboard: handleAddAction called with action:', action);
+    console.log('🎯 Dashboard: Current section before add action:', activeSection);
+    console.log('🎯 Dashboard: About to navigate to:', action);
+    
+    // Use navigateToSection to properly update navigation history
+    setActiveSection(action);
+  };
+
+  // Handle sidebar navigation with proper navigation history
+  const handleSidebarNavigation = (section) => {
+    console.log('🧭 Dashboard: Sidebar navigation to section:', section);
+    console.log('🧭 Dashboard: Current section before sidebar navigation:', activeSection);
+    console.log('🧭 Dashboard: About to navigate to:', section);
+    
+    // Use navigateToSection to properly update navigation history
+    setActiveSection(section);
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case 'ViewDashboard': return <DashboardContent />;
@@ -109,13 +142,13 @@ function Dashboard() {
       case 'ViewNotification': return <Notifications />;
       case 'ViewAccount': return <Account />;
       case 'ViewCompany': return <CompaniesSection />;
-      case 'addCompany': return <AddCompanyForm />;
-      case 'User': return <AddAdmin />;
-      case 'AddAdmin': return <AddAdmin />;
-      case 'Lead': return <AddLeadForm />;
-      case 'Properties': return <AddPropertyForm />;
-      case 'Notes': return <AddNoteFormWrapper />;
-      case 'Task': return <AddTaskForm />;
+      case 'addCompany': return <AddCompanyForm onCancel={goBack} />;
+      case 'User': return <AddAdmin onCancel={goBack} />;
+      case 'AddAdmin': return <AddAdmin onCancel={goBack} />;
+      case 'Lead': return <AddLeadForm onCancel={goBack} />;
+      case 'Properties': return <AddPropertyForm onCancel={goBack} />;
+      case 'Notes': return <AddNoteFormWrapper onCancel={goBack} />;
+      case 'Task': return <AddTaskForm onCancel={goBack} />;
       case 'ViewAdmins': return <ViewAdmins />;
       case 'ViewDirectors': return <DirectorSection />;
       case 'logout':
@@ -133,7 +166,7 @@ function Dashboard() {
         <Sidebar
           userRole={userRole}
           activeSection={activeSection}
-          onSectionChange={setActiveSection}
+          onSectionChange={handleSidebarNavigation}
           companyName={companyName}
           userName={userName}
         />
@@ -153,7 +186,7 @@ function Dashboard() {
               userRole={userRole}
               activeSection={activeSection}
               onSectionChange={(section) => {
-                setActiveSection(section);
+                handleSidebarNavigation(section);
                 setShowSidebar(false); // close after selection
               }}
               companyName={companyName}
@@ -174,12 +207,16 @@ function Dashboard() {
           userRole={userRole}
           companyName={companyName}
           onLogout={handleLogout}
-          onAddAction={(action) => setActiveSection(action)}
-          onSectionChange={setActiveSection}
+          onAddAction={handleAddAction}
+          onSectionChange={handleSidebarNavigation}
           onSidebarToggle={() => setShowSidebar(true)} 
         />
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 md:py-3 max-w-7xl">
+            <Breadcrumb 
+              currentSection={activeSection} 
+              onSectionClick={handleSidebarNavigation} 
+            />
             <div className="min-h-fit">
               {renderContent()}
             </div>

@@ -202,7 +202,8 @@ export class DashboardService {
           "available for sale": 0,
           "available for rent": 0,
           "sold out": 0,
-          "rent out": 0
+          "rent out": 0,
+          "dropped": 0
         },
         message: 'Using fallback data'
       };

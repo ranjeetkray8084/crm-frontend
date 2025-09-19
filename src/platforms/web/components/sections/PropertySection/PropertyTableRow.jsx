@@ -13,7 +13,8 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
     { value: 'AVAILABLE_FOR_SALE', label: 'For Sale' },
     { value: 'AVAILABLE_FOR_RENT', label: 'For Rent' },
     { value: 'SOLD_OUT', label: 'Sold Out' },
-    { value: 'RENT_OUT', label: 'Rented Out' }
+    { value: 'RENT_OUT', label: 'Rented Out' },
+    { value: 'DROPPED', label: 'Dropped' }
   ];
 
   // Get user data from localStorage
@@ -82,6 +83,8 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
         return 'bg-red-100 text-red-800 border-red-200 focus:ring-red-500';
       case 'RENT_OUT':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200 focus:ring-yellow-500';
+      case 'DROPPED':
+        return 'bg-gray-100 text-gray-600 border-gray-300 focus:ring-gray-500';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200 focus:ring-gray-500';
     }

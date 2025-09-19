@@ -52,7 +52,8 @@ const formatValue = (value, key) => {
       'AVAILABLE_FOR_SALE': 'For Sale',
       'AVAILABLE_FOR_RENT': 'For Rent',
       'SOLD_OUT': 'Sold Out',
-      'RENT_OUT': 'Rented Out'
+      'RENT_OUT': 'Rented Out',
+      'DROPPED': 'Dropped'
     };
     return statusMap[value] || value;
   }
