@@ -246,19 +246,11 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
 
             {/* Status */}
             <div className="mb-3">
-              <span 
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  canChangeStatus(property) 
-                    ? `${getStatusColor(property.status)} cursor-pointer hover:opacity-80 transition-opacity` 
-                    : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                }`}
-                onClick={() => {
+              <select
+                value={property.status}
+                onChange={(e) => {
                   if (canChangeStatus(property) && onStatusChange) {
-                    // Simple status cycling for mobile
-                    const statusOptions = ['AVAILABLE_FOR_SALE', 'AVAILABLE_FOR_RENT', 'RENT_OUT', 'SOLD_OUT'];
-                    const currentIndex = statusOptions.indexOf(property.status);
-                    const nextIndex = (currentIndex + 1) % statusOptions.length;
-                    const newStatus = statusOptions[nextIndex];
+                    const newStatus = e.target.value;
                     
                     // If changing to RENT_OUT, show reminder modal first
                     if (newStatus === 'RENT_OUT') {
@@ -270,10 +262,16 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
                     }
                   }
                 }}
-                title={canChangeStatus(property) ? 'Click to change status' : 'Only creator or director can change status'}
+                disabled={!canChangeStatus(property)}
+                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-gray-300 bg-white ${getStatusColor(property.status)} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                title={canChangeStatus(property) ? 'Select status' : 'Only creator or director can change status'}
               >
-                {getStatusLabel(property.status)}
-              </span>
+                <option value="AVAILABLE_FOR_SALE">For Sale</option>
+                <option value="AVAILABLE_FOR_RENT">For Rent</option>
+                <option value="RENT_OUT">Rented Out</option>
+                <option value="SOLD_OUT">Sold Out</option>
+                <option value="DROPPED">Dropped</option>
+              </select>
             </div>
 
             {/* Footer */}

@@ -20,14 +20,14 @@ const LeadFilters = ({
 
   const options = {
     status: [
-      { value: "", label: "All Status" },
+      { value: "", label: "Status" },
       { value: "NEW", label: "New" },
       { value: "CONTACTED", label: "Contacted" },
       { value: "CLOSED", label: "Closed" },
       { value: "DROPED", label: "Dropped" }
     ],
     budget: [
-      { value: "", label: "All Budgets" },
+      { value: "", label: "Budgets" },
       { value: "0-500000", label: "Below ₹5L" },
       { value: "500000-1000000", label: "₹5L–10L" },
       { value: "1000000-2000000", label: "₹10L–20L" },
@@ -36,7 +36,7 @@ const LeadFilters = ({
       { value: "10000000-99999999", label: "Above ₹1Cr" }
     ],
     source: [
-      { value: "", label: "All Sources" },
+      { value: "", label: "Sources" },
       { value: "INSTAGRAM", label: "Instagram" },
       { value: "FACEBOOK", label: "Facebook" },
       { value: "YOUTUBE", label: "YouTube" },
@@ -45,7 +45,7 @@ const LeadFilters = ({
       { value: "MAGIC_BRICKS", label: "MagicBricks" }
     ],
     assignedTo: [
-      { value: "", label: "All Assignments" },
+      { value: "", label: "Assignments" },
       { value: "assigned", label: "Assigned" },
       { value: "unassigned", label: "Unassigned" }
     ],

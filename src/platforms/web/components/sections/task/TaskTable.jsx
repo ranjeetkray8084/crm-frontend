@@ -85,12 +85,12 @@ const TaskTable = ({
   return (
     <>
       {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="min-w-[1000px] w-full table-auto text-sm text-left text-gray-700">
+      <div className="hidden md:block overflow-x-auto max-h-[45vh] overflow-y-auto border border-gray-200 rounded-lg">
+        <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
           <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
             <tr>
               <SortableHeader columnKey="title" title="Title" />
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[150px]">
                 Purpose
               </th>
               <SortableHeader columnKey="uploadDate" title="Created" />
@@ -116,8 +116,8 @@ const TaskTable = ({
                       {task.title}
                     </div>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600" title={task.purpose}>
+                  <td className="px-4 py-4 whitespace-nowrap min-w-[150px]">
+                    <div className="text-sm text-gray-600 font-medium" title={task.purpose}>
                       {task.purpose || 'Not specified'}
                     </div>
                   </td>

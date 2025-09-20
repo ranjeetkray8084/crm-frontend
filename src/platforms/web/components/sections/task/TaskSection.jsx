@@ -4,7 +4,6 @@ import { useTasks } from '../../../../../core/hooks/useTasks';
 import { UserService } from '../../../../../core/services/user.service';
 
 import TaskTable from './TaskTable';
-import TaskToolbar from './TaskToolbar';
 
 const TaskSection = () => {
     const [userInfo, setUserInfo] = useState({
@@ -878,101 +877,119 @@ const TaskSection = () => {
     }
 
     return (
-        <div className="flex justify-center items-start p-2">
-            <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
-                <h2 className="text-center text-xl p-2 font-bold text-gray-800">Task Management</h2>
+        <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
+            <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
+                {/* Title */}
+                <h2 className="text-center text-xl p-2 font-bold text-gray-800">Calling Management</h2>
                 
-
-
-                {/* Toolbar Section */}
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                            <TaskToolbar
-                                onRefresh={refreshTasks}
-                                searchTerm={searchTerm}
-                                onSearchChange={setSearchTerm}
-                                loading={loading}
-                                taskCount={filteredTasks.length}
-                                creatorFilter={createdByFilter}
-                                availableCreators={availableCreators}
-                            />
-                        </div>
-
-
-
-                        {/* Mobile Filter Toggle */}
-                        {isAdminOrDirector && (
-                            <button
-                                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                className="md:hidden ml-3 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors relative"
-                                title="Toggle Filters"
-                            >
-                                <Filter className="h-5 w-5" />
-                                {hasActiveFilters && (
-                                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full"></div>
-                                )}
-                            </button>
-                        )}
+                {/* Mobile Filter Toggle */}
+                {isAdminOrDirector && (
+                    <div className="mb-4 flex justify-end">
+                        <button
+                            onClick={() => setShowMobileFilters(!showMobileFilters)}
+                            className="md:hidden p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors relative"
+                            title="Toggle Filters"
+                        >
+                            <Filter className="h-5 w-5" />
+                            {hasActiveFilters && (
+                                <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full"></div>
+                            )}
+                        </button>
                     </div>
-                </div>
+                )}
 
                 {/* Filters Section */}
                 {isAdminOrDirector && (
                     <div className={`mb-4 p-4 bg-gray-50 rounded-lg transition-all duration-300 ${showMobileFilters ? 'block' : 'hidden md:block'
                         }`}>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Task Status
+                        {/* Search and Filters Row */}
+                        <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
+                            {/* Search Bar */}
+                            <div className="flex-1 min-w-[300px]">
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Search
                                 </label>
-                                <select
-                                    value={taskStatus}
-                                    onChange={(e) => setTaskStatus(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="ALL">All Task Status</option>
-                                    <option value="NEW">New</option>
-                                    <option value="UNDER_PROCESS">Under Process</option>
-                                    <option value="COMPLETED">Completed</option>
-                                </select>
+                                <div className="relative">
+                                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <input
+                                        type="text"
+                                        placeholder="Search tasks..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Created By
-                                </label>
-                                <select
-                                    value={createdByFilter}
-                                    onChange={(e) => setCreatedByFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                                <div className="min-w-[140px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Calling Status
+                                    </label>
+                                    <select
+                                        value={taskStatus}
+                                        onChange={(e) => setTaskStatus(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="ALL">Status</option>
+                                        <option value="NEW">New</option>
+                                        <option value="UNDER_PROCESS">Under Process</option>
+                                        <option value="COMPLETED">Completed</option>
+                                    </select>
+                                </div>
+
+                                <div className="min-w-[140px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Created By
+                                    </label>
+                                    <select
+                                        value={createdByFilter}
+                                        onChange={(e) => setCreatedByFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="ALL">Creators</option>
+                                        {availableCreators.map(creator => (
+                                            <option key={creator.id} value={creator.id}>
+                                                {creator.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="min-w-[140px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        Assigned To
+                                    </label>
+                                    <select
+                                        value={assignedToFilter}
+                                        onChange={(e) => setAssignedToFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="ALL">Assignments</option>
+                                        {availableAssignees.map(assignee => (
+                                            <option key={assignee.id} value={assignee.id}>
+                                                {assignee.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                            {/* Refresh Button */}
+                            <div className="flex items-end">
+                                <button
+                                    onClick={refreshTasks}
+                                    disabled={loading}
+                                    className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    <option value="ALL">All Creators</option>
-                                    {availableCreators.map(creator => (
-                                        <option key={creator.id} value={creator.id}>
-                                            {creator.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <svg className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Assigned To
-                                </label>
-                                <select
-                                    value={assignedToFilter}
-                                    onChange={(e) => setAssignedToFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="ALL">No Filter</option>
-                                    {availableAssignees.map(assignee => (
-                                        <option key={assignee.id} value={assignee.id}>
-                                            {assignee.name}
-                                        </option>
-                                    ))}
-                                </select>
-
                             </div>
                         </div>
 

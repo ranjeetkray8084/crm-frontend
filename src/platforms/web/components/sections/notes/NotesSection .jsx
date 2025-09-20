@@ -21,6 +21,10 @@ const NotesSection = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Fixed to 10 items per page
+
   useEffect(() => {
     const companyIdRaw = localStorage.getItem('companyId');
     const companyIdAlt = localStorage.getItem('company_id');
@@ -143,6 +147,26 @@ const NotesSection = () => {
     return priorityA - priorityB;
   });
 
+  // --- Pagination Logic ---
+  const totalPages = Math.ceil(sortedNotes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedNotes = sortedNotes.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, priorityFilter, typeFilter]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to top of notes section
+    const notesElement = document.querySelector('.notes-container');
+    if (notesElement) {
+      notesElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
 
 
   // Get unique types for filter dropdown
@@ -155,37 +179,51 @@ const NotesSection = () => {
     setTypeFilter('');
   };
 
+  // Pagination Component
+  const PaginationControls = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-between items-center py-4 border-t border-gray-200 bg-gray-50">
+        {/* Page info */}
+        <div className="text-sm text-gray-600">
+          Showing {startIndex + 1} to {Math.min(endIndex, sortedNotes.length)} of {sortedNotes.length} notes
+        </div>
+
+        {/* Pagination buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white font-medium"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-600 px-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white font-medium"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex justify-center items-start min-h-screen p-4">
-      <div className="bg-white p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
+    <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
+      <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
         <h2 className="text-center text-xl p-2 font-bold text-gray-800">Notes Management</h2>
 
         {/* Toolbar Section */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={handleAddNote}
-              className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Add Note
-            </button>
-            <button
-              onClick={loadNotes}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Refreshing...
-                </div>
-              ) : (
-                'Refresh'
-              )}
-            </button>
+           
+            
             
             {/* Mobile Filters Toggle */}
             <button 
@@ -222,7 +260,7 @@ const NotesSection = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">All Status</option>
+                <option value="">Status</option>
                 <option value="NEW">New</option>
                 <option value="PROCESSING">Processing</option>
                 <option value="COMPLETED">Completed</option>
@@ -236,7 +274,7 @@ const NotesSection = () => {
                 onChange={(e) => setPriorityFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">All Priority</option>
+                <option value="">Priority</option>
                 <option value="PRIORITY_A">Priority A</option>
                 <option value="PRIORITY_B">Priority B</option>
                 <option value="PRIORITY_C">Priority C</option>
@@ -250,11 +288,27 @@ const NotesSection = () => {
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">All Types</option>
+                <option value="">Types</option>
                 {uniqueTypes.map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
+            </div>
+          <div>
+            <button
+              onClick={loadNotes}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Refreshing...
+                </div>
+              ) : (
+                'Refresh'
+              )}
+            </button>
             </div>
           </div>
 
@@ -296,7 +350,7 @@ const NotesSection = () => {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">All Status</option>
+                  <option value="">Status</option>
                   <option value="NEW">New</option>
                   <option value="PROCESSING">Processing</option>
                   <option value="COMPLETED">Completed</option>
@@ -310,7 +364,7 @@ const NotesSection = () => {
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">All Priority</option>
+                  <option value="">Priority</option>
                   <option value="PRIORITY_A">Priority A</option>
                   <option value="PRIORITY_B">Priority B</option>
                   <option value="PRIORITY_C">Priority C</option>
@@ -381,9 +435,9 @@ const NotesSection = () => {
 
         {/* Notes Display */}
         {!loading && !error && sortedNotes.length > 0 && (
-          <>
+          <div className="notes-container">
             <NoteTable
-              notes={sortedNotes}
+              notes={paginatedNotes}
               onEdit={handleEdit}
               onDelete={deleteNote}
               onUpdateStatus={updateNoteStatus}
@@ -393,7 +447,7 @@ const NotesSection = () => {
             />
             <div className="block md:hidden">
               <NoteCardList
-                notes={sortedNotes}
+                notes={paginatedNotes}
                 onEdit={handleEdit}
                 onDelete={deleteNote}
                 onUpdateStatus={updateNoteStatus}
@@ -402,7 +456,10 @@ const NotesSection = () => {
                 onViewRemarks={handleViewRemarks}
               />
             </div>
-          </>
+            
+            {/* Pagination Controls */}
+            <PaginationControls />
+          </div>
         )}
 
       </div>
