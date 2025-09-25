@@ -106,6 +106,27 @@ export class NoteService {
   }
 
   /**
+   * Get notes created by admin (including SPECIFIC_USERS notes)
+   * @param {number} companyId 
+   * @param {number} adminId 
+   * @returns {Promise<Object>} API response
+   */
+  static async getNotesByAdmin(companyId, adminId) {
+    try {
+      const response = await axios.get(API_ENDPOINTS.NOTES.GET_BY_USER(companyId, adminId));
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load admin notes'
+      };
+    }
+  }
+
+  /**
    * Get public notes
    * @param {number} companyId 
    * @returns {Promise<Object>} API response

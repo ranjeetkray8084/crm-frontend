@@ -27,6 +27,7 @@ export const useNotes = (companyId, userId, role) => {
         case 'ADMIN':
           notePromises.push(NoteService.getNotesVisibleToUser(companyId, userId, true, false));
           notePromises.push(NoteService.getNotesVisibleToAdmin(companyId, userId));
+          notePromises.push(NoteService.getNotesByAdmin(companyId, userId)); // Include admin's own notes (including SPECIFIC_USERS)
           break;
         case 'DIRECTOR':
           notePromises.push(NoteService.getNotesVisibleToDirector(companyId, userId));
