@@ -219,8 +219,8 @@ const NotesSection = () => {
       <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
         <h2 className="text-center text-xl p-2 font-bold text-gray-800">Notes Management</h2>
 
-        {/* Toolbar Section */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4 p-4 bg-gray-50 rounded-lg">
+        {/* Toolbar Section (mobile only to avoid empty space on desktop) */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4 p-4 bg-gray-50 rounded-lg md:hidden">
           <div className="flex gap-2 flex-wrap">
            
             
@@ -241,7 +241,7 @@ const NotesSection = () => {
 
         {/* Desktop Filters */}
         <div className="hidden md:block mb-4 p-4 bg-gray-50 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             {/* Search Input */}
             <div>
               <input
@@ -281,37 +281,36 @@ const NotesSection = () => {
               </select>
             </div>
 
-            {/* Type Filter */}
-            <div>
+            {/* Type Filter + Refresh in same cell */}
+            <div className="flex items-center gap-3">
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Types</option>
                 {uniqueTypes.map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
-            </div>
-          <div>
-            <button
-              onClick={loadNotes}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Refreshing...
-                </div>
-              ) : (
-                'Refresh'
-              )}
-            </button>
+              <button
+                onClick={loadNotes}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Refreshing...
+                  </div>
+                ) : (
+                  'Refresh'
+                )}
+              </button>
             </div>
           </div>
 
+        
                     {/* Filter Summary */}
           <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
             <div className="text-sm text-gray-600">
