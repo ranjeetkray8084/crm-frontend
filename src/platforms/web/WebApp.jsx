@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../../core/hooks/useAuth';
+import { useAuth } from '../../shared/contexts/AuthContext';
 import { 
   Dashboard, 
   Login, 
@@ -12,9 +12,9 @@ import {
 } from './pages';
 
 const WebApp = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
