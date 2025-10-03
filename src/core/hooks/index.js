@@ -15,3 +15,4 @@ export * from './useDashboardEvents';
 export * from './useNotifications';
 export * from './useProperties';
 export * from './useTasks';
+export * from './useNavigationHistory';

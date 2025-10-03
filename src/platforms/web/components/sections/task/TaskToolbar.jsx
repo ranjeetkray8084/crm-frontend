@@ -26,9 +26,8 @@ const TaskToolbar = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Left side - Title and count */}
         <div className="flex items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Task Management</h2>
           <span className="ml-3 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-            {taskCount} tasks
+            {taskCount} calling data
           </span>
           {creatorFilterText && (
             <span className="ml-2 px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">

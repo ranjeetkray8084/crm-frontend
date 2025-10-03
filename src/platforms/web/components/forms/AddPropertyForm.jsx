@@ -232,6 +232,7 @@ const AddPropertyForm = ({ onSuccess, onCancel }) => {
             <option value="AVAILABLE_FOR_RENT">Available for Rent</option>
             <option value="RENT_OUT">Rented Out</option>
             <option value="SOLD_OUT">Sold Out</option>
+            <option value="DROPPED">Dropped</option>
           </select>
         </div>
 

@@ -1,4 +1,4 @@
-import { Search, Plus, ChevronDown, Menu, Phone } from 'lucide-react';
+import { Plus, ChevronDown, Menu, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import NotificationDropdown from './NotificationDropdown';
@@ -11,7 +11,8 @@ function Topbar({
   userRole = '',
   companyName = '',
   onSidebarToggle = () => {},
-  onSectionChange = () => {}
+  onSectionChange = () => {},
+  currentSection = 'ViewDashboard'
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -60,6 +61,24 @@ function Topbar({
   };
 
   const addOptions = getAddOptions();
+
+  // Get section title based on current section
+  const getSectionTitle = () => {
+    switch (currentSection) {
+      case 'ViewDashboard': return 'Dashboard';
+      case 'ViewUsers': return 'User Management';
+      case 'ViewLead': return 'Lead Management';
+      case 'ViewProperty': return 'Property Management';
+      case 'ViewNotes': return 'Notes Management';
+      case 'ViewTask': return 'Task Management';
+      case 'ViewNotification': return 'Notifications';
+      case 'ViewAccount': return 'Account Settings';
+      case 'ViewCompany': return 'Company Management';
+      case 'ViewAdmins': return 'Admin Management';
+      case 'ViewDirectors': return 'Director Management';
+      default: return 'Dashboard';
+    }
+  };
 
   // Fetch user avatar
   const fetchAvatar = async () => {
@@ -123,18 +142,22 @@ function Topbar({
             </div>
           </div>
 
-          {/* Right Section: Desktop and Tablet */}
-          <div className="hidden md:flex items-center gap-3 lg:gap-4 flex-wrap justify-end w-full lg:w-auto">
-          {/* Search */}
-          <div className="relative hidden xl:block">
-            <input
-              type="text"
-              placeholder="Search here"
-              className="bg-white text-gray-900 placeholder-gray-500 px-4 py-2 pl-10 rounded-lg w-64 xl:w-72 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          {/* Center Section: Current Component Title */}
+          <div className="hidden lg:flex items-center justify-center flex-1">
+            <motion.div 
+              className="bg-white text-gray-900 px-4 py-2 rounded-lg font-medium text-sm"
+              key={currentSection}
+              initial={{ opacity: 0, y: -10, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {getSectionTitle()}
+            </motion.div>
           </div>
 
+          {/* Right Section: Desktop and Tablet */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-4 flex-wrap justify-end w-full lg:w-auto">
           {/* Notification */}
           <NotificationDropdown onSectionChange={onSectionChange} />
 
@@ -194,16 +217,6 @@ function Topbar({
 
         {/* Mobile Bottom Section */}
         <div className="md:hidden mt-4 flex items-center justify-between gap-3">
-          {/* Mobile Search */}
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="bg-white text-gray-900 placeholder-gray-500 px-3 py-2 pl-9 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          </div>
-
           {/* Mobile Notification Icon */}
           <div className="flex-shrink-0">
             <NotificationDropdown onSectionChange={onSectionChange} />

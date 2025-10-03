@@ -337,51 +337,34 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
-      <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
-        <h2 className="text-center text-xl p-2 font-bold text-gray-800">Lead Management</h2>
+    <div className="w-full flex flex-col">
+      <div className="bg-white rounded-xl border shadow-sm w-full flex flex-col">
+        {/* Fixed Header Section */}
+        <div className="flex-shrink-0">
 
-        <LeadToolbar
-          searchTerm={searchTerm}
-          searchTags={searchTags}
-          onSearchTermChange={setSearchTerm}
-          onSearchEnter={handleSearchEnter}
-          onRemoveSearchTag={removeSearchTag}
-          onSearch={handleManualSearch}
-          onExport={handleExport}
-          onRefresh={handleRefresh}
-          onClearSearch={clearSearch}
-          onToggleMobileFilters={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-          isSearchActive={isSearchActive}
-          isLoading={loading}
-          autoSearch={autoSearch}
-        />
-
-        {/* Desktop Filters */}
-        <div className="hidden md:block">
-          <LeadFilters
-            filters={filters}
-            onFilterChange={updateFilter}
-            onClearFilters={handleClearAll}
-            isMobile={false}
-            hasActiveFilters={hasActiveFilters}
-            activeFiltersSummary={getActiveFiltersSummary()}
-            autoApply={autoSearch}
-            userRole={userRole}
-            userId={userId}
-            companyId={companyId}
-            availableUsers={filterUsers}
+          <LeadToolbar
+            searchTerm={searchTerm}
+            searchTags={searchTags}
+            onSearchTermChange={setSearchTerm}
+            onSearchEnter={handleSearchEnter}
+            onRemoveSearchTag={removeSearchTag}
+            onSearch={handleManualSearch}
+            onExport={handleExport}
+            onRefresh={handleRefresh}
+            onClearSearch={clearSearch}
+            onToggleMobileFilters={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            isSearchActive={isSearchActive}
+            isLoading={loading}
+            autoSearch={autoSearch}
           />
-        </div>
 
-        {/* Mobile Filters */}
-        {mobileFiltersOpen && (
-          <div className="md:hidden">
+          {/* Desktop Filters */}
+          <div className="hidden md:block">
             <LeadFilters
               filters={filters}
               onFilterChange={updateFilter}
               onClearFilters={handleClearAll}
-              isMobile={true}
+              isMobile={false}
               hasActiveFilters={hasActiveFilters}
               activeFiltersSummary={getActiveFiltersSummary()}
               autoApply={autoSearch}
@@ -391,35 +374,60 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
               availableUsers={filterUsers}
             />
           </div>
-        )}
 
-        {isSearchActive && (
-          <SearchResultsSummary
-            isSearchActive={isSearchActive}
-            totalResults={pagination?.totalElements || 0}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            hasActiveFilters={hasActiveFilters}
-            activeFiltersSummary={getActiveFiltersSummary()}
-            onClearAll={handleClearAll}
-          />
-        )}
+          {/* Mobile Filters */}
+          {mobileFiltersOpen && (
+            <div className="md:hidden">
+              <LeadFilters
+                filters={filters}
+                onFilterChange={updateFilter}
+                onClearFilters={handleClearAll}
+                isMobile={true}
+                hasActiveFilters={hasActiveFilters}
+                activeFiltersSummary={getActiveFiltersSummary()}
+                autoApply={autoSearch}
+                userRole={userRole}
+                userId={userId}
+                companyId={companyId}
+                availableUsers={filterUsers}
+              />
+            </div>
+          )}
 
-        <LeadsFeedback loading={loading} error={error} isEmpty={!loading && leads.length === 0} />
+          {isSearchActive && (
+            <SearchResultsSummary
+              isSearchActive={isSearchActive}
+              totalResults={pagination?.totalElements || 0}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              hasActiveFilters={hasActiveFilters}
+              activeFiltersSummary={getActiveFiltersSummary()}
+              onClearAll={handleClearAll}
+            />
+          )}
 
-        {!loading && !error && leads.length > 0 && (
-          <>
-            <LeadsTable leads={leads} searchTerm={searchTerm} {...actionHandlers} />
-            <MobileLeadList leads={leads} {...actionHandlers} />
-          </>
-        )}
+          <LeadsFeedback loading={loading} error={error} isEmpty={!loading && leads.length === 0} />
+        </div>
 
+        {/* Scrollable Content Section */}
+        <div className="overflow-y-auto">
+          {!loading && !error && leads.length > 0 && (
+            <>
+              <LeadsTable leads={leads} searchTerm={searchTerm} {...actionHandlers} />
+              <MobileLeadList leads={leads} {...actionHandlers} />
+            </>
+          )}
+        </div>
+
+        {/* Pagination - Fixed at bottom */}
         {!loading && !error && pagination && pagination.totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            pagination={pagination}
-            onPageChange={setCurrentPage}
-          />
+          <div className="flex-shrink-0">
+            <Pagination
+              currentPage={currentPage}
+              pagination={pagination}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
 

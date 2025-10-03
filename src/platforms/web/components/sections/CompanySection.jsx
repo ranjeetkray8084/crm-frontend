@@ -61,7 +61,6 @@ const CompanySection = () => {
         /* Full Header for Developer */
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Companies Management</h2>
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"

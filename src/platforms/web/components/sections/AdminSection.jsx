@@ -127,7 +127,7 @@ const AdminSection = () => {
 
   return (
     <motion.div
-      className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+      className="bg-white rounded-xl shadow-sm border border-gray-200"
       initial={{ opacity: 0, y: -60 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, type: "spring" }}
@@ -136,7 +136,6 @@ const AdminSection = () => {
       {role === 'DEVELOPER' ? (
         /* Simple Header for Developer */
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Admins</h2>
           <input
             type="text"
             placeholder="Search admins..."
@@ -150,7 +149,6 @@ const AdminSection = () => {
         <div className="sticky top-0 bg-white z-10 pb-4">
           <div className="flex justify-center items-center gap-3 mb-3">
             <AdminIcon className="text-gray-500" size={28} />
-            <h2 className="text-xl font-semibold text-gray-800">Admins Management</h2>
           </div>
           <div className="flex justify-center">
             <input

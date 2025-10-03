@@ -3,7 +3,7 @@ import { UserPlus, ArrowLeft } from 'lucide-react';
 import { useLeads } from '../../../../core/hooks/useLeads';
 import { customAlert } from '../../../../core/utils/alertUtils';
 
-const AddLeadForm = ({ onSuccess }) => {
+const AddLeadForm = ({ onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -268,7 +268,7 @@ const AddLeadForm = ({ onSuccess }) => {
           </div>
 
           <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-            <button type="button" onClick={() => onSuccess?.()} className="flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+            <button type="button" onClick={onCancel || (() => onSuccess?.())} className="flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
               <ArrowLeft className="mr-2" size={18} />
               Cancel
             </button>

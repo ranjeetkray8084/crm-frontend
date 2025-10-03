@@ -188,17 +188,17 @@ const TaskSection = () => {
                 
                 customAlert({
                     title: 'Success',
-                    message: 'Task assigned successfully!',
+                    message: 'Calling data assigned successfully!',
                     type: 'success'
                 });
             } else {
-                throw new Error(result.error || 'Failed to assign task');
+                throw new Error(result.error || 'Failed to assign calling data');
             }
         } catch (error) {
             setAssigningUser(null);
             customAlert({
                 title: 'Error',
-                message: error.message || 'Failed to assign task. Please try again.',
+                message: error.message || 'Failed to assign calling data. Please try again.',
                 type: 'error'
             });
         }
@@ -781,6 +781,15 @@ const TaskSection = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+    
+    // Debug pagination
+    console.log('TaskSection Pagination Debug:', {
+        filteredTasksLength: filteredTasks.length,
+        itemsPerPage,
+        totalPages,
+        currentPage,
+        shouldShowPagination: totalPages > 1 && filteredTasks.length > itemsPerPage
+    });
 
     // Reset to first page when filters change
     useEffect(() => {
@@ -797,15 +806,13 @@ const TaskSection = () => {
     };
 
 
-    // Pagination Component
+    // Pagination Component - Simple style like notes
     const PaginationControls = () => {
-        if (totalPages <= 1) return null;
-
         return (
-            <div className="flex justify-between items-center py-4 border-t border-gray-200 bg-gray-50">
+            <div className="flex justify-between items-center py-4 border-t border-gray-200 bg-gray-50 mr-20">
                 {/* Page info */}
                 <div className="text-sm text-gray-600">
-                    Showing {startIndex + 1} to {Math.min(endIndex, filteredTasks.length)} of {filteredTasks.length} tasks
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredTasks.length)} of {filteredTasks.length} calling data
                 </div>
 
                 {/* Pagination buttons */}
@@ -877,10 +884,8 @@ const TaskSection = () => {
     }
 
     return (
-        <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
-            <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
-                {/* Title */}
-                <h2 className="text-center text-xl p-2 font-bold text-gray-800">Calling Management</h2>
+        <div className="w-full">
+            <div className="bg-white rounded-xl border shadow-sm w-full h-fit">
                 
                 {/* Mobile Filter Toggle */}
                 {isAdminOrDirector && (
@@ -1077,8 +1082,8 @@ const TaskSection = () => {
                             loading={loading}
                         />
                         
-                        {/* Pagination Controls */}
-                        <PaginationControls />
+                        {/* Pagination Controls - Only show when there are multiple pages */}
+                        {totalPages > 1 && filteredTasks.length > itemsPerPage && <PaginationControls />}
                     </div>
                 )}
             </div>

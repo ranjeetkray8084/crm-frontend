@@ -8,7 +8,7 @@ import { customAlert } from '../../../../core/utils/alertUtils'
 import { UserService } from '../../../../core/services/user.service'
 import { CompanyService } from '../../../../core/services/company.service'
 
-const AddUserForm = ({ onSuccess }) => {
+const AddUserForm = ({ onSuccess, onCancel }) => {
   const { user } = useAuth()
   const companyId = user?.companyId
   const userRole = user?.role
@@ -504,7 +504,7 @@ const AddUserForm = ({ onSuccess }) => {
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
               <button
                 type="button"
-                onClick={() => onSuccess?.()}
+                onClick={onCancel || (() => onSuccess?.())}
                 className="flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
               >
                 <ArrowLeft size={18} className="mr-2" />

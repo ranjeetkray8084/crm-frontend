@@ -66,6 +66,7 @@ export const useAuth = () => {
 
   return {
     user,
+    companyId: user?.companyId,
     loading,
     isAuthenticated,
     login,

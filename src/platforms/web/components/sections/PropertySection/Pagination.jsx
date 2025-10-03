@@ -46,7 +46,7 @@ const Pagination = ({ currentPage, pagination, onPageChange }) => {
     const toResult = Math.min((currentPage + 1) * size, totalElements);
 
     return (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-6">
+        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-6 mr-20">
             {/* Mobile Pagination */}
             <div className="flex flex-1 justify-between sm:hidden">
                 <button

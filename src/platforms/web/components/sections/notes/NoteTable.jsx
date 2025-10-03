@@ -285,7 +285,7 @@ const NoteTable = ({
     );
 
     return (
-        <div className="hidden md:block overflow-x-auto max-h-[45vh] overflow-y-auto border border-gray-200 rounded-lg">
+        <div className="hidden md:block overflow-x-auto max-h-[60vh] overflow-y-auto border border-gray-200 rounded-lg">
             <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
                 <thead className="bg-gray-50">
                     <tr>

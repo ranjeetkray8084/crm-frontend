@@ -131,13 +131,10 @@ const DirectorSection = () => {
         />
       )}
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white p-6 border-b border-gray-100 shadow-sm">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <Crown className="text-gray-500" size={32} />
-          <h2 className="text-xl font-semibold text-gray-800">
-            Director Management
-            <span className="text-sm text-gray-500 ml-2">({displayedDirectors.length} directors)</span>
-          </h2>
+          <span className="text-sm text-gray-500">({displayedDirectors.length} directors)</span>
         </div>
         
         <div className="relative max-w-md">
@@ -153,7 +150,7 @@ const DirectorSection = () => {
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div>
         {loading ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (

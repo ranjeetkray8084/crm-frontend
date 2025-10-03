@@ -1,37 +1,19 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./shared/contexts/AuthContext";
-import { NotesProvider } from "./shared/contexts/NotesContext";
-import Dashboard from "./platforms/web/pages/Dashboard";
-import Login from "./platforms/web/pages/Login";
-import ExcelEditorPage from "./platforms/web/pages/ExcelEditorPage";
-import SecurityTest from "./pages/SecurityTest";
-
-import { useEffect, useState } from "react";
-import CustomAlert from "./platforms/web/components/common/CustomAlert";
-import { setAlertCallback } from "./core/utils/alertUtils";
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { AuthProvider } from './shared/contexts/AuthContext';
+import { NotesProvider } from './shared/contexts/NotesContext';
+import WebApp from './platforms/web/WebApp';
 
 function App() {
-  const [alertMsg, setAlertMsg] = useState("");
-
-  // Register the custom alert callback on mount
-  useEffect(() => {
-    setAlertCallback(setAlertMsg);
-  }, []);
-
   return (
     <AuthProvider>
       <NotesProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/excel-preview/:taskId" element={<ExcelEditorPage />} />
-            <Route path="/security-test" element={<SecurityTest />} />
-          </Routes>
+          <div className="App">
+            <WebApp />
+            
+          </div>
         </Router>
-
-        {/* Global Custom Alert */}
-        <CustomAlert message={alertMsg} onClose={() => setAlertMsg("")} />
       </NotesProvider>
     </AuthProvider>
   );

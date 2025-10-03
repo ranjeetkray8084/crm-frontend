@@ -328,9 +328,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
-      <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
-        <h2 className="text-center text-xl p-2 font-bold text-gray-800">Property Management</h2>
+    <div className="w-full">
+      <div className="bg-white rounded-xl border shadow-sm w-full h-fit">
 
         <PropertyToolbar
           searchTerm={searchTerm}
@@ -403,12 +402,15 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
           </>
         )}
 
+        {/* Pagination - Fixed at bottom */}
         {!loading && !error && pagination && pagination.totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            pagination={pagination}
-            onPageChange={setCurrentPage}
-          />
+          <div className="flex-shrink-0">
+            <Pagination
+              currentPage={currentPage}
+              pagination={pagination}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
 

@@ -184,7 +184,7 @@ const NotesSection = () => {
     if (totalPages <= 1) return null;
 
     return (
-      <div className="flex justify-between items-center py-4 border-t border-gray-200 bg-gray-50">
+      <div className="flex justify-between items-center py-4 border-t border-gray-200 bg-gray-50 mr-20">
         {/* Page info */}
         <div className="text-sm text-gray-600">
           Showing {startIndex + 1} to {Math.min(endIndex, sortedNotes.length)} of {sortedNotes.length} notes
@@ -215,9 +215,8 @@ const NotesSection = () => {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-2 sm:p-4">
-      <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl border shadow-sm w-full max-w-[1200px] h-fit">
-        <h2 className="text-center text-xl p-2 font-bold text-gray-800">Notes Management</h2>
+    <div className="w-full">
+      <div className="bg-white rounded-xl border shadow-sm w-full h-fit">
 
         {/* Toolbar Section (mobile only to avoid empty space on desktop) */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4 p-4 bg-gray-50 rounded-lg md:hidden">

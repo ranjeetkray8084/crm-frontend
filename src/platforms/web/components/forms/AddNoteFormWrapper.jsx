@@ -2,7 +2,7 @@ import React from 'react';
 import { useNotes } from '../../../../core/hooks/useNotes';
 import AddNoteForm from '../sections/notes/form/AddNoteForm';
 
-const AddNoteFormWrapper = () => {
+const AddNoteFormWrapper = ({ onCancel }) => {
     // Get user info from localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const companyIdRaw = localStorage.getItem('companyId');
@@ -34,8 +34,13 @@ const AddNoteFormWrapper = () => {
     };
 
     const handleCancel = () => {
-        // Redirect back to notes view
-        window.location.hash = '#ViewNotes';
+        // Use onCancel prop if provided, otherwise redirect back to notes view
+        if (onCancel) {
+            onCancel();
+        } else {
+            // Redirect back to notes view
+            window.location.hash = '#ViewNotes';
+        }
     };
 
     return (

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { CompanyService } from '../../../../core/services';
 import { customAlert } from '../../../../core/utils/alertUtils';
 
-const AddCompanyForm = ({ onSuccess }) => {
+const AddCompanyForm = ({ onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -132,11 +132,11 @@ const AddCompanyForm = ({ onSuccess }) => {
           <div className="flex justify-between items-center mt-6">
             <button
               type="button"
-              onClick={() => onSuccess?.()}
+              onClick={onCancel || (() => onSuccess?.())}
               className="flex items-center px-5 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
             >
               <ArrowLeft className="mr-2" size={18} />
-              Back to Companies
+              Cancel
             </button>
 
             <button

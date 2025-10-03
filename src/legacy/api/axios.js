@@ -3,7 +3,11 @@ import axios from "axios";
 
 // ✅ Backend API base URL - pointing to Spring Boot backend
 // Use environment variable for development, fallback to production URL
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://backend.leadstracker.in";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8083";
+
+// Debug log to verify which URL is being used
+console.log('🔗 API Base URL:', BASE_URL);
+console.log('🔧 Environment Variable VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
 
 // ✅ Security configuration
 const SECURITY_CONFIG = {
