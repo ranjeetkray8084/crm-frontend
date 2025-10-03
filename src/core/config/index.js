@@ -2,7 +2,7 @@
 export const config = {
   // API Configuration
   api: {
-    baseURL: import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://backend.leadstracker.in',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083',
     timeout: 30000,
     retries: 3
   },
@@ -47,7 +47,17 @@ export const config = {
     enableNotifications: true,
     enableOfflineMode: false,
     enableBiometric: false, // For mobile
-    enablePushNotifications: false // For mobile
+    enablePushNotifications: false, // For mobile
+    enableChatbot: true
+  },
+
+  // AI/Chatbot Configuration
+  ai: {
+    gemini: {
+      apiKey: import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAomb6hCi6fXmvPy0jR-ON8K1N0Nhp9DwM',
+      apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+      model: 'gemini-2.0-flash-exp'
+    }
   },
 
   // Platform detection
@@ -62,21 +72,21 @@ export const config = {
 export const environments = {
   development: {
     api: {
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in'
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083'
     },
     debug: true
   },
   
   production: {
     api: {
-      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in') + '/api'
+      baseURL: (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083') + '/api'
     },
     debug: false
   },
   
   mobile: {
     api: {
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in'
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083'
     },
     storage: {
       // Use AsyncStorage for React Native

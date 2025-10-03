@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from '../components/common/Sidebar';
 import Topbar from '../components/common/Topbar';
-import Breadcrumb from '../components/common/Breadcrumb.jsx';
 import { useNavigationHistory } from '@/core/hooks';
 
 import DashboardContent from "../components/sections/DashboardStats";
@@ -24,6 +23,7 @@ import AddNoteFormWrapper from '../components/forms/AddNoteFormWrapper';
 import AddPropertyForm from '../components/forms/AddPropertyForm';
 import AddTaskForm from '../components/forms/AddTaskFrom';
 import AddAdmin from '../components/forms/AddUserFrom';
+import ChatbotIcon from '../components/common/ChatbotIcon';
 
 
 
@@ -112,9 +112,7 @@ function Dashboard() {
 
   // Handle Quick Add actions with proper navigation history
   const handleAddAction = (action) => {
-    console.log('🎯 Dashboard: handleAddAction called with action:', action);
-    console.log('🎯 Dashboard: Current section before add action:', activeSection);
-    console.log('🎯 Dashboard: About to navigate to:', action);
+ 
     
     // Use navigateToSection to properly update navigation history
     setActiveSection(action);
@@ -122,9 +120,7 @@ function Dashboard() {
 
   // Handle sidebar navigation with proper navigation history
   const handleSidebarNavigation = (section) => {
-    console.log('🧭 Dashboard: Sidebar navigation to section:', section);
-    console.log('🧭 Dashboard: Current section before sidebar navigation:', activeSection);
-    console.log('🧭 Dashboard: About to navigate to:', section);
+  
     
     // Use navigateToSection to properly update navigation history
     setActiveSection(section);
@@ -209,20 +205,20 @@ function Dashboard() {
           onLogout={handleLogout}
           onAddAction={handleAddAction}
           onSectionChange={handleSidebarNavigation}
-          onSidebarToggle={() => setShowSidebar(true)} 
+          onSidebarToggle={() => setShowSidebar(true)}
+          currentSection={activeSection}
         />
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 md:py-3 max-w-7xl">
-            <Breadcrumb 
-              currentSection={activeSection} 
-              onSectionClick={handleSidebarNavigation} 
-            />
+          <div className="py-2 md:py-3">
             <div className="min-h-fit">
               {renderContent()}
             </div>
           </div>
         </main>
       </div>
+      
+      {/* Chatbot Icon */}
+      <ChatbotIcon />
     </div>
   );
 }
