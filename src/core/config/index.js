@@ -2,7 +2,7 @@
 export const config = {
   // API Configuration
   api: {
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
     timeout: 30000,
     retries: 3
   },
