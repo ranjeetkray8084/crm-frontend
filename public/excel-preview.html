@@ -868,8 +868,12 @@
                     config.url = config.url.replace('http://', 'https://');
                 }
 
-                // Add authentication token
-                const token = localStorage.getItem('token');
+                // Add authentication token - prioritize sessionStorage
+                let token = sessionStorage.getItem('token');
+                if (!token) {
+                    token = localStorage.getItem('token');
+                }
+                
                 if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;
                     // Debug: Log token info (first 20 chars only for security)
@@ -877,13 +881,10 @@
                     console.log('Request URL:', config.url);
                     console.log('Request headers:', config.headers);
                 } else {
-                    console.warn('No authentication token found in localStorage');
-                    // Try to get token from sessionStorage as fallback
-                    const sessionToken = sessionStorage.getItem('token');
-                    if (sessionToken) {
-                        config.headers['Authorization'] = `Bearer ${sessionToken}`;
-                        console.log('Using session token:', sessionToken.substring(0, 20) + '...');
-                    }
+                    console.warn('No authentication token found in sessionStorage or localStorage');
+                    console.log('Available storage keys:');
+                    console.log('sessionStorage keys:', Object.keys(sessionStorage));
+                    console.log('localStorage keys:', Object.keys(localStorage));
                 }
 
                 // Add request timestamp for security
@@ -1033,15 +1034,15 @@
 
         // Session validation helper
         function validateSession() {
-            // Check for token in both localStorage and sessionStorage
-            let token = localStorage.getItem('token');
+            // Check for token in both sessionStorage and localStorage (prioritize sessionStorage)
+            let token = sessionStorage.getItem('token');
             if (!token) {
-                token = sessionStorage.getItem('token');
+                token = localStorage.getItem('token');
             }
             
-            let user = localStorage.getItem('user');
+            let user = sessionStorage.getItem('user');
             if (!user) {
-                user = sessionStorage.getItem('user');
+                user = localStorage.getItem('user');
             }
 
             if (!user || !token) {
@@ -1074,15 +1075,15 @@
 
         // Function to check authentication and provide login option if needed
         function checkAuthentication() {
-            // Check for token in both localStorage and sessionStorage
-            let token = localStorage.getItem('token');
-            let user = localStorage.getItem('user');
+            // Check for token in both sessionStorage and localStorage (prioritize sessionStorage)
+            let token = sessionStorage.getItem('token');
+            let user = sessionStorage.getItem('user');
             
             if (!token) {
-                token = sessionStorage.getItem('token');
+                token = localStorage.getItem('token');
             }
             if (!user) {
-                user = sessionStorage.getItem('user');
+                user = localStorage.getItem('user');
             }
 
             if (!token || !user) {
@@ -1193,7 +1194,7 @@
 
         // Function to manually check token validity
         function checkTokenValidity() {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
             if (!token) {
                 console.log('No token found');
                 return false;
@@ -1623,22 +1624,24 @@
         // Debug function to show authentication state
         function debugAuthenticationState() {
             console.log('=== Authentication Debug Info ===');
-            const localToken = localStorage.getItem('token');
             const sessionToken = sessionStorage.getItem('token');
-            const localUser = localStorage.getItem('user');
+            const localToken = localStorage.getItem('token');
             const sessionUser = sessionStorage.getItem('user');
+            const localUser = localStorage.getItem('user');
             
-            console.log('Local Storage Token:', localToken ? localToken.substring(0, 20) + '...' : 'Not found');
             console.log('Session Storage Token:', sessionToken ? sessionToken.substring(0, 20) + '...' : 'Not found');
-            console.log('Local Storage User:', localUser ? 'Found' : 'Not found');
+            console.log('Local Storage Token:', localToken ? localToken.substring(0, 20) + '...' : 'Not found');
             console.log('Session Storage User:', sessionUser ? 'Found' : 'Not found');
+            console.log('Local Storage User:', localUser ? 'Found' : 'Not found');
             
-            if (localToken) {
+            const activeToken = sessionToken || localToken;
+            if (activeToken) {
                 try {
-                    const payload = JSON.parse(atob(localToken.split('.')[1]));
-                    console.log('Token Payload:', payload);
+                    const payload = JSON.parse(atob(activeToken.split('.')[1]));
+                    console.log('Active Token Payload:', payload);
                     console.log('Token Expires:', new Date(payload.exp * 1000));
                     console.log('Token Valid:', payload.exp > Date.now() / 1000);
+                    console.log('Token Source:', sessionToken ? 'sessionStorage' : 'localStorage');
                 } catch (e) {
                     console.error('Error parsing token:', e);
                 }
@@ -1697,9 +1700,9 @@
                 }
 
                 // Check if token might be expired or invalid
-                let token = localStorage.getItem('token');
+                let token = sessionStorage.getItem('token');
                 if (!token) {
-                    token = sessionStorage.getItem('token');
+                    token = localStorage.getItem('token');
                 }
                 
                 if (token) {
