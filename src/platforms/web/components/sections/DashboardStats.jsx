@@ -77,10 +77,10 @@ const DashboardStats = () => {
       );
     }
 
-    // Get userId from localStorage for robust matching
+    // Get userId from sessionStorage for robust matching
     let localUserId = null;
     try {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         localUserId = parsedUser.userId || parsedUser.id;

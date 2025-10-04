@@ -20,23 +20,23 @@ const TaskSection = () => {
     const [availableCreators, setAvailableCreators] = useState([]);
     const [availableAssignees, setAvailableAssignees] = useState([]);
 
-    // Initialize user info from localStorage
+    // Initialize user info from sessionStorage
     useEffect(() => {
         try {
-            const userRaw = localStorage.getItem('user');
+            const userRaw = sessionStorage.getItem('user') || localStorage.getItem('user');
             if (!userRaw) {
                 throw new Error('No user data found');
             }
 
             const user = JSON.parse(userRaw);
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
             if (!token) {
                 throw new Error('No authentication token found');
             }
 
             // Get all possible company ID sources
-            const companyIdRaw = localStorage.getItem('companyId');
-            const companyIdAlt = localStorage.getItem('company_id');
+            const companyIdRaw = sessionStorage.getItem('companyId') || localStorage.getItem('companyId');
+            const companyIdAlt = sessionStorage.getItem('company_id') || localStorage.getItem('company_id');
 
             if (!token) {
                 return;
@@ -264,7 +264,7 @@ const TaskSection = () => {
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">{alertConfig.title}</h3>
                     </div>
-                    <div className="text-gray-700 mb-6">
+                    <div className="text-gray-700 mb-6 text-center">
                         {alertConfig.message}
                     </div>
                     <div className="flex justify-end space-x-3">
@@ -371,9 +371,9 @@ const TaskSection = () => {
     };
 
     const handleOpen = async (taskId) => {
-        // Get user info from localStorage
-        const user = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
+        // Get user info from sessionStorage
+        const user = sessionStorage.getItem('user') || localStorage.getItem('user');
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
 
         if (!user || !token) {
             customAlert({
@@ -872,6 +872,7 @@ const TaskSection = () => {
 
                 <button
                     onClick={() => {
+                        sessionStorage.clear();
                         localStorage.clear();
                         window.location.href = '/';
                     }}

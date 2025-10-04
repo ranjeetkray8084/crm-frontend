@@ -10,7 +10,7 @@ const ExcelEditorPage = () => {
     window.close();
   };
 
-  const currentTaskId = taskId || localStorage.getItem('currentTaskId');
+  const currentTaskId = taskId || sessionStorage.getItem('currentTaskId') || localStorage.getItem('currentTaskId');
   
   if (!currentTaskId) {
     return (

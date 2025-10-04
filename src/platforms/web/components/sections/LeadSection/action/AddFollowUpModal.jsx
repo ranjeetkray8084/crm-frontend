@@ -33,8 +33,8 @@ const AddFollowUpModal = ({ isOpen, onClose, onAddFollowUp, lead }) => {
     setError(null);
 
     try {
-      // Get companyId from localStorage
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      // Get companyId from sessionStorage
+      const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
       const companyId = user.companyId;
 
       if (!companyId) {

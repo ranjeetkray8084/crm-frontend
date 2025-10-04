@@ -254,7 +254,7 @@ class SecureApiService {
       userAgent: navigator.userAgent,
       url: window.location.href,
       isSecure: window.location.protocol === 'https:',
-      hasValidToken: !!localStorage.getItem('token'),
+      hasValidToken: !!(sessionStorage.getItem('token') || localStorage.getItem('token')),
       securityFeatures: {
         rateLimiting: true,
         requestValidation: true,

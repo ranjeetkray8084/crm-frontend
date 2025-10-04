@@ -83,7 +83,7 @@ function Topbar({
   // Fetch user avatar
   const fetchAvatar = async () => {
     try {
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const localUser = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
       const userId = localUser.userId || localUser.id;
       
       if (userId) {
@@ -240,9 +240,9 @@ function Topbar({
           </div>
         </div>
 
-        {/* Mobile Plus Button - Bottom Right */}
+        {/* Mobile Plus Button - Above Chatbox */}
         {addOptions.length > 0 && (
-          <div className="md:hidden fixed bottom-6 right-6 z-50" ref={phoneDropdownRef}>
+          <div className="md:hidden fixed bottom-20 right-6 z-50" ref={phoneDropdownRef}>
             <button 
               className="mobile-plus-btn flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-full shadow-2xl transition-all duration-300 transform active:scale-95 relative overflow-hidden"
               onClick={() => setShowPhoneDropdown(!showPhoneDropdown)}

@@ -28,9 +28,9 @@ const AddPropertyForm = ({ onSuccess, onCancel }) => {
   const [disableBhk, setDisableBhk] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get user info from localStorage (same as AddLeadForm)
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const companyId = parseInt(localStorage.getItem('companyId'), 10);
+  // Get user info from sessionStorage (same as AddLeadForm)
+  const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+  const companyId = parseInt(sessionStorage.getItem('companyId') || localStorage.getItem('companyId'), 10);
   const userId = user.userId || user.id;
   const userRole = user.role;
 

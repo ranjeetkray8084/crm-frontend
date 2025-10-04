@@ -114,7 +114,7 @@ const NoteModals = ({
       return;
     }
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
     const userId = user.userId || user.id;
 
     if (!userId) {

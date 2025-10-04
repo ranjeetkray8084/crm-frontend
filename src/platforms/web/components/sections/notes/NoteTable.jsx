@@ -187,7 +187,7 @@ const NoteTable = ({
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">{alertConfig.title}</h3>
                     </div>
-                    <div className="text-gray-700 mb-6">
+                    <div className="text-gray-700 mb-6 text-center">
                         {alertConfig.message}
                     </div>
                     <div className="flex justify-end space-x-3">

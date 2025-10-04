@@ -22,8 +22,8 @@ const DeactivatedUserModal = ({ isOpen, onClose, userEmail }) => {
         const data = await response.json();
         setUserRole(data.role);
       } else {
-        // Fallback: try to determine from localStorage or default to USER
-        const storedUser = localStorage.getItem('user');
+        // Fallback: try to determine from sessionStorage or default to USER
+        const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
           setUserRole(userData.role || 'USER');

@@ -21,9 +21,9 @@ const AddLeadForm = ({ onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [showReferenceField, setShowReferenceField] = useState(false);
 
-  // Get user info from localStorage
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const companyId = parseInt(localStorage.getItem('companyId'), 10);
+  // Get user info from sessionStorage
+  const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+  const companyId = parseInt(sessionStorage.getItem('companyId') || localStorage.getItem('companyId'), 10);
   const userId = user.userId || user.id;
   const userRole = user.role;
 

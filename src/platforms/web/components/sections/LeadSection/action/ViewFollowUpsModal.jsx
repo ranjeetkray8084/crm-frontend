@@ -10,10 +10,10 @@ const ViewFollowUpsModal = ({ isOpen, onClose, lead, companyId }) => {
   const hasLoadedRef = useRef(false);
   const currentLeadIdRef = useRef(null);
 
-  // Get companyId from localStorage if not provided
+  // Get companyId from sessionStorage if not provided
   const getCurrentCompanyId = () => {
     if (companyId) return companyId;
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
     return user.companyId;
   };
 

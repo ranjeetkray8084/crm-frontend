@@ -209,6 +209,7 @@ export class AuthService {
    */
   static clearSession() {
     Object.values(this.SESSION_KEYS).forEach(key => {
+      sessionStorage.removeItem(key);
       localStorage.removeItem(key);
     });
     delete axios.defaults.headers.common['Authorization'];
@@ -259,7 +260,7 @@ export class AuthService {
    */
   static getCurrentUser() {
     try {
-      const user = localStorage.getItem(this.SESSION_KEYS.USER);
+      const user = sessionStorage.getItem(this.SESSION_KEYS.USER) || localStorage.getItem(this.SESSION_KEYS.USER);
       return user ? JSON.parse(user) : null;
     } catch {
       return null;
@@ -271,7 +272,7 @@ export class AuthService {
    * @returns {string|null} JWT token
    */
   static getToken() {
-    return localStorage.getItem(this.SESSION_KEYS.TOKEN);
+    return sessionStorage.getItem(this.SESSION_KEYS.TOKEN) || localStorage.getItem(this.SESSION_KEYS.TOKEN);
   }
 
   /**
@@ -299,8 +300,8 @@ export class AuthService {
         return;
       }
 
-      localStorage.setItem(this.SESSION_KEYS.USER, JSON.stringify(userData));
-      localStorage.setItem(this.SESSION_KEYS.TOKEN, token);
+      sessionStorage.setItem(this.SESSION_KEYS.USER, JSON.stringify(userData));
+      sessionStorage.setItem(this.SESSION_KEYS.TOKEN, token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     } catch (error) {

@@ -18,8 +18,8 @@ export const useProperties = (companyId, userId, userRole) => {
   });
 
   const userInfo = useMemo(() => {
-    const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-    const userIdFromStorage = localStorage.getItem('userId');
+    const localUser = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+    const userIdFromStorage = sessionStorage.getItem('userId') || localStorage.getItem('userId');
     const finalUserId = userId || localUser.userId || localUser.id || (userIdFromStorage ? parseInt(userIdFromStorage) : null);
 
 

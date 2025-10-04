@@ -3,9 +3,9 @@ import { useNotes } from '../../../../core/hooks/useNotes';
 import AddNoteForm from '../sections/notes/form/AddNoteForm';
 
 const AddNoteFormWrapper = ({ onCancel }) => {
-    // Get user info from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const companyIdRaw = localStorage.getItem('companyId');
+    // Get user info from sessionStorage
+    const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+    const companyIdRaw = sessionStorage.getItem('companyId') || localStorage.getItem('companyId');
 
     let companyId = null;
     if (companyIdRaw) {

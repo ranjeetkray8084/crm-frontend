@@ -18,7 +18,7 @@ if (typeof document !== 'undefined') {
 }
 
 const AddNoteForm = ({ onSubmit, onCancel }) => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
   const role = user.role;
   const userId = user.userId;
   const companyId = user.companyId;

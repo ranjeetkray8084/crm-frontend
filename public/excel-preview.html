@@ -459,6 +459,8 @@
             font-weight: 600;
         }
 
+
+
         /* Hidden rows during search */
         .search-hidden {
             display: none !important;
@@ -734,7 +736,7 @@
                 <button onclick="autoFitAllColumns()" id="autoFitBtn" title="Auto-fit all columns to content">📏 Auto-fit All</button>
                 <button onclick="resetColumnWidths()" id="resetWidthsBtn" title="Reset all columns to default fixed width (120px)">📐 Reset Widths</button>
                 <button onclick="showDuplicateStats()" id="duplicateStatsBtn" title="Show phone number duplicate statistics">📱 Phone Duplicates</button>
-                <button onclick="clearDuplicateHighlights()" id="clearDuplicatesBtn" title="Clear all phone number duplicate highlights">✨ Clear Highlights</button>
+                <button onclick="clearDuplicateHighlights()" id="clearDuplicatesBtn" title="Clear all duplicate highlights">✨ Clear All Highlights</button>
                 <button onclick="scrollTableLeft()">⬅️ Scroll Left</button>
                 <button onclick="scrollTableRight()">➡️ Scroll Right</button>
                 <button onclick="window.close()" style="background-color: #dc2626;">❌ Close</button>
@@ -783,6 +785,7 @@
         📏 Resizing Column...
     </div>
 
+
     <script>
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -805,7 +808,7 @@
         let startX = 0;
         let startWidth = 0;
 
-        // ✅ Backend API base URL - pointing to Spring Boot backend (from legacy/api/axios.js)
+        // ✅ Backend API base URL - pointing to production backend
         const BASE_URL = "https://backend.leadstracker.in";
 
         // ✅ Security configuration (from legacy/api/axios.js)
@@ -2475,11 +2478,6 @@
                 showDuplicateStats();
             }
             
-            // Ctrl+Shift+D to highlight all phone number duplicates
-            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'D') {
-                event.preventDefault();
-                highlightAllDuplicatesInTable();
-            }
             
             // Escape key to cancel column resizing
             if (event.key === 'Escape' && isResizing) {
@@ -2759,6 +2757,7 @@
                 }, 500);
             }
         });
+
     </script>
 </body>
 

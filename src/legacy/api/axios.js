@@ -66,8 +66,8 @@ axiosInstance.interceptors.request.use(
       config.url = config.url.replace('http://', 'https://');
     }
 
-    // Add authentication token
-    const token = localStorage.getItem('token');
+    // Add authentication token from sessionStorage
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -112,9 +112,10 @@ axiosInstance.interceptors.response.use(
       // Only logout for auth endpoints or if we're not on login page
       if (isAuthEndpoint && !isOnLogin) {
         // Clear auth data securely
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        sessionStorage.clear();
 
         // Redirect to login
         window.location.href = "/";

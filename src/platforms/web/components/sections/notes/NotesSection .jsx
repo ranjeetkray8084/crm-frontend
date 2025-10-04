@@ -26,9 +26,10 @@ const NotesSection = () => {
   const [itemsPerPage] = useState(10); // Fixed to 10 items per page
 
   useEffect(() => {
-    const companyIdRaw = localStorage.getItem('companyId');
-    const companyIdAlt = localStorage.getItem('company_id');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    // Use sessionStorage first, then fallback to localStorage
+    const companyIdRaw = sessionStorage.getItem('companyId') || localStorage.getItem('companyId');
+    const companyIdAlt = sessionStorage.getItem('company_id') || localStorage.getItem('company_id');
+    const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
 
     let companyId = null;
     if (companyIdRaw) {
@@ -82,7 +83,7 @@ const NotesSection = () => {
   };
 
   const handleAddNote = () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
 
     if (!token) {
       alert('No authentication token found. Please login again.');

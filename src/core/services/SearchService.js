@@ -348,7 +348,7 @@ export class SearchService {
   // Get search history for user
   static getSearchHistory(userId) {
     const historyKey = `search_history_${userId}`;
-    const history = localStorage.getItem(historyKey);
+    const history = sessionStorage.getItem(historyKey) || localStorage.getItem(historyKey);
     return history ? JSON.parse(history) : [];
   }
 
@@ -370,12 +370,13 @@ export class SearchService {
     // Keep only last 20 searches
     const limitedHistory = history.slice(0, 20);
     
-    localStorage.setItem(historyKey, JSON.stringify(limitedHistory));
+    sessionStorage.setItem(historyKey, JSON.stringify(limitedHistory));
   }
 
   // Clear search history
   static clearSearchHistory(userId) {
     const historyKey = `search_history_${userId}`;
+    sessionStorage.removeItem(historyKey);
     localStorage.removeItem(historyKey);
   }
 

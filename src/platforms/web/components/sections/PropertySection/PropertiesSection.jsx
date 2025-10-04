@@ -24,13 +24,13 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [autoSearch] = useState(true);
 
-  // Get user data from localStorage as fallback
+  // Get user data from sessionStorage as fallback
   const getUserDataFromStorage = () => {
     try {
-      const userData = localStorage.getItem('user');
+      const userData = sessionStorage.getItem('user') || localStorage.getItem('user');
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error('Error parsing user data from localStorage:', error);
+      console.error('Error parsing user data from storage:', error);
       return null;
     }
   };
@@ -248,7 +248,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
       customAlert('🔄 Fetching all properties for export...');
       
       // Fetch all properties for export by calling the API directly with a large size
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const localUser = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
       const companyIdToUse = companyId || localUser.companyId;
       
       if (!companyIdToUse) {

@@ -178,7 +178,7 @@ export class PropertyService {
   static async searchProperties(companyId, searchParams = {}, pageable = {}) {
     try {
       // Check if token exists
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       
       if (!token) {
         return {

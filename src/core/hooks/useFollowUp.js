@@ -10,7 +10,7 @@ export const useFollowUp = (companyId) => {
   // Memoize companyId to prevent unnecessary re-renders
   const currentCompanyId = useMemo(() => {
     if (companyId) return companyId;
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
     return user.companyId;
   }, [companyId]);
 

@@ -17,13 +17,13 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
     { value: 'DROPPED', label: 'Dropped' }
   ];
 
-  // Get user data from localStorage
+  // Get user data from sessionStorage
   const getUserData = () => {
     try {
-      const userData = localStorage.getItem('user');
+      const userData = sessionStorage.getItem('user') || localStorage.getItem('user');
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error('Error parsing user data from localStorage:', error);
+      console.error('Error parsing user data from storage:', error);
       return null;
     }
   };

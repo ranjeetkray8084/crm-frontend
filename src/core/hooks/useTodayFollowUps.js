@@ -6,10 +6,10 @@ export const useTodayFollowUps = (companyId) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Get companyId from localStorage if not provided
+  // Get companyId from sessionStorage if not provided
   const getCompanyId = useCallback(() => {
     if (companyId) return companyId;
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
     return user.companyId;
   }, [companyId]);
 

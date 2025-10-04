@@ -453,7 +453,7 @@ export class LeadService {
   static async searchLeads(companyId, searchParams, pageable = {}) {
     try {
       // Check if token exists
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       
       if (!token) {
         return {
@@ -564,7 +564,7 @@ export class LeadService {
   static async searchLeadsCreatedOrAssigned(companyId, userId, searchParams, pageable = {}) {
     try {
       // Check if token exists
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       
       if (!token) {
         return {
@@ -671,7 +671,7 @@ export class LeadService {
   static async searchLeadsVisibleToAdmin(companyId, adminId, searchParams, pageable = {}) {
     try {
       // Check if token exists
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       
       if (!token) {
         return {

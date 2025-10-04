@@ -237,7 +237,7 @@ const LeadsSection = ({ userRole, userId, companyId }) => {
       customAlert('🔄 Fetching all leads for export...');
       
       // Fetch all leads for export by calling the API directly with a large size
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const localUser = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
       const companyIdToUse = companyId || localUser.companyId;
       
       if (!companyIdToUse) {

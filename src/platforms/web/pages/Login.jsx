@@ -40,8 +40,9 @@ const Login = () => {
 
       if (result.success) {
         login(result.user, result.token);
-        const redirectUrl = localStorage.getItem("redirectUrl");
+        const redirectUrl = sessionStorage.getItem("redirectUrl") || localStorage.getItem("redirectUrl");
         if (redirectUrl) {
+          sessionStorage.removeItem("redirectUrl");
           localStorage.removeItem("redirectUrl");
           navigate(redirectUrl);
         } else {

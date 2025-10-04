@@ -17,10 +17,10 @@ const AccountSection = () => {
   const [avatarUrl, setAvatarUrl] = useState('/assets/default-avatar.png')
 
   const loadAccountInfo = async () => {
-    const localUser = JSON.parse(localStorage.getItem('user') || '{}')
+    const localUser = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}')
     const userId = localUser.userId
     if (!userId) {
-      customAlert('User not found in local storage.')
+      customAlert('User not found in storage.')
       return
     }
 
@@ -34,7 +34,7 @@ const AccountSection = () => {
           phone: userData.phone || '',
           role: userData.role || '',
         })
-        localStorage.setItem('user', JSON.stringify(userData))
+        sessionStorage.setItem('user', JSON.stringify(userData))
         await fetchAvatar(userId)
       } else {
         // Display specific error message from backend

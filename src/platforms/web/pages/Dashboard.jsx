@@ -50,8 +50,8 @@ function Dashboard() {
 
   useEffect(() => {
     const initializeDashboard = () => {
-      const storedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
+      const storedUser = sessionStorage.getItem('user');
+      const token = sessionStorage.getItem('token');
       
       if (storedUser && token) {
         try {
@@ -63,6 +63,7 @@ function Dashboard() {
           
           // More lenient check - only redirect if critical data is missing
           if (!finalUserId || !finalUserRole) {
+            sessionStorage.clear();
             localStorage.clear();
             window.location.href = '/';
             return;
@@ -79,16 +80,18 @@ function Dashboard() {
           
           setIsLoading(false);
         } catch (err) {
+          sessionStorage.clear();
           localStorage.clear();
           window.location.href = '/';
         }
       } else {
+        sessionStorage.clear();
         localStorage.clear();
         window.location.href = '/';
       }
     };
 
-    // Add a small delay to ensure localStorage is fully available
+    // Add a small delay to ensure sessionStorage is fully available
     const timer = setTimeout(initializeDashboard, 100);
     return () => clearTimeout(timer);
   }, []);
@@ -106,6 +109,7 @@ function Dashboard() {
   }
 
   const handleLogout = () => {
+    sessionStorage.clear();
     localStorage.clear();
     window.location.href = '/';
   };
