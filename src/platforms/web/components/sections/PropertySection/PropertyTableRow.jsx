@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { MoreVertical, Edit, Trash2, MessageSquare, Eye, Clock } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, MessageSquare, Eye, Clock, Code } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
 import ReminderDateModal from '../../common/ReminderDateModal';
 import { parseSize, calculatePricePerUnit, formatPricePerUnit } from '../../../../../core/utils/sizeUtils';
 
-const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onSetReminder, onOutOfBox, currentUserId, userRole, onShowReminderModal }) => {
+const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onSetReminder, onOutOfBox, currentUserId, userRole, onShowReminderModal, companyId, onShowPropertyCodeModal }) => {
   const [showActions, setShowActions] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
@@ -253,6 +253,7 @@ const PropertyTableRow = ({ property, onDelete, onAddRemark, onViewRemarks, onUp
           item={property}
           actions={[
             ...(canUpdateProperty() ? [{ label: 'Update Property', icon: <Edit size={14} />, onClick: () => onUpdate(property) }] : []),
+            ...(canUpdateProperty() ? [{ label: 'Add Property Code', icon: <Code size={14} />, onClick: () => { console.log('🔘 Add Property Code clicked in PropertyTableRow'); onShowPropertyCodeModal(property); } }] : []),
             { label: 'Add Remark', icon: <MessageSquare size={14} />, onClick: () => onAddRemark(property) },
             { label: 'View Remarks', icon: <Eye size={14} />, onClick: () => onViewRemarks(property) },
             // Add reminder action only for RENT_OUT status

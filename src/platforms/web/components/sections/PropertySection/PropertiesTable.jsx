@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import PropertyTableRow from './PropertyTableRow';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
-const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox, onShowReminderModal }) => {
+const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onUpdate, onStatusChange, onOutOfBox, onShowReminderModal, companyId, onShowPropertyCodeModal }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
 
   const handleSort = (key) => {
@@ -50,7 +50,7 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
   return (
     <div className="hidden md:block overflow-x-auto max-h-[60vh] overflow-y-auto border border-gray-200 rounded-lg">
       <table className="min-w-[1200px] w-full table-auto text-sm text-left text-gray-700">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-50 sticky top-0 z-10">
           <tr>
             <SortableHeader className='text-center' columnKey="propertyName" title="Project Name" />
             <SortableHeader className='text-center' columnKey="status" title="Status" />
@@ -81,6 +81,8 @@ const PropertiesTable = ({ properties, onDelete, onAddRemark, onViewRemarks, onU
               onStatusChange={onStatusChange}
               onOutOfBox={onOutOfBox}
               onShowReminderModal={onShowReminderModal}
+              companyId={companyId}
+              onShowPropertyCodeModal={onShowPropertyCodeModal}
             />
           ))}
         </tbody>

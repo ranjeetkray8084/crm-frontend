@@ -142,6 +142,7 @@ function Dashboard() {
       case 'ViewNotification': return <Notifications />;
       case 'ViewAccount': return <Account />;
       case 'ViewCompany': return <CompaniesSection />;
+      case 'ViewSecurity': return <div className="p-6"><h2 className="text-xl font-semibold">Security Dashboard</h2><p className="text-gray-600">Security features are managed automatically.</p></div>;
       case 'addCompany': return <AddCompanyForm onCancel={goBack} />;
       case 'User': return <AddAdmin onCancel={goBack} />;
       case 'AddAdmin': return <AddAdmin onCancel={goBack} />;

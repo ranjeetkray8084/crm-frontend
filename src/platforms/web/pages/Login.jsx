@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/contexts/AuthContext";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, WifiOff } from "lucide-react";
 import { motion } from "framer-motion";
 import ForgetPassword from "./ForgetPassword";
 import { AuthService } from "../../../core/services/auth.service";
 import DeactivatedUserModal from "../components/modals/DeactivatedUserModal";
+import ConnectionTroubleshooter from "../../../components/common/ConnectionTroubleshooter";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -16,6 +17,7 @@ const Login = () => {
   const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
   const [deactivatedUserEmail, setDeactivatedUserEmail] = useState("");
   const [isModalBlocking, setIsModalBlocking] = useState(false);
+  const [showConnectionTroubleshooter, setShowConnectionTroubleshooter] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -39,7 +41,8 @@ const Login = () => {
       const result = await AuthService.login(formData);
 
       if (result.success) {
-        login(result.user, result.token);
+        // Use AuthContext login method instead of direct AuthService
+        await login(result.user, result.token);
         const redirectUrl = sessionStorage.getItem("redirectUrl") || localStorage.getItem("redirectUrl");
         if (redirectUrl) {
           sessionStorage.removeItem("redirectUrl");
@@ -55,10 +58,33 @@ const Login = () => {
           setIsModalBlocking(true);
         } else {
           setError(result.error || "Login failed");
+          
+          // Check if it's a backend connectivity issue
+          if (result.error && (
+            result.error.includes('Backend server is not accessible') ||
+            result.error.includes('Unable to connect to server') ||
+            result.error.includes('Network Error')
+          )) {
+            // Show connection troubleshooter button
+            // Backend connectivity issue detected
+          }
+          
+          // Handle login suggestions
         }
       }
     } catch (err) {
       setError(err?.message || "Login failed");
+      
+      // Check if it's a backend connectivity issue
+      if (err?.message && (
+        err.message.includes('Backend server is not accessible') ||
+        err.message.includes('Unable to connect to server') ||
+        err.message.includes('Network Error') ||
+        err.isBackendError ||
+        err.isNetworkError
+      )) {
+        // Backend connectivity issue detected
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +144,22 @@ const Login = () => {
                 className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 shadow-sm"
               >
                 <p className="text-red-600 text-sm text-center font-medium">{error}</p>
+                
+                {/* Show connection troubleshooter button for backend connectivity issues */}
+                {(error.includes('Backend server is not accessible') ||
+                  error.includes('Unable to connect to server') ||
+                  error.includes('Network Error')) && (
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowConnectionTroubleshooter(true)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      <WifiOff className="w-3 h-3" />
+                      Diagnose Connection
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -233,6 +275,21 @@ const Login = () => {
           </div>
         </div>
       )}
+
+      {/* Connection Troubleshooter Modal */}
+      <ConnectionTroubleshooter
+        isOpen={showConnectionTroubleshooter}
+        onClose={() => setShowConnectionTroubleshooter(false)}
+        onRetry={() => {
+          setShowConnectionTroubleshooter(false);
+          setError("");
+          // Retry login after connection check
+          setTimeout(() => {
+            const mockEvent = { preventDefault: () => {} };
+            handleLogin(mockEvent);
+          }, 1000);
+        }}
+      />
     </div>
   );
 };

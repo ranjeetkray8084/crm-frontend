@@ -53,37 +53,88 @@ const axiosInstance = axios.create({
   }
 });
 
-// ✅ Enhanced request interceptor with security measures
+// ✅ Enhanced request interceptor with basic security measures
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // Rate limiting check
-    if (!rateLimiter.canMakeRequest()) {
-      return Promise.reject(new Error('Rate limit exceeded. Please try again later.'));
+  async (config) => {
+    try {
+      // Rate limiting check
+      if (!rateLimiter.canMakeRequest()) {
+        return Promise.reject(new Error('Rate limit exceeded. Please try again later.'));
+      }
+
+      // Force HTTPS in production
+      if (process.env.NODE_ENV === 'production' && config.url && !config.url.startsWith('https://')) {
+        config.url = config.url.replace('http://', 'https://');
+      }
+
+      // Get token from storage
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Use environment-based security configuration
+      const { ENV_CONFIG } = await import('../../core/config/environment.js');
+      const securityConfig = ENV_CONFIG.getSecurityConfig();
+      
+      if (!securityConfig.skipSecurityHeaders) {
+        // Add basic security headers for production/development
+        const { getBasicSecurityHeaders } = await import('../../core/security/SimpleSecurityInit.js');
+        const securityHeaders = getBasicSecurityHeaders();
+        config.headers = { ...config.headers, ...securityHeaders };
+
+        // Add request timestamp
+        config.headers['X-Request-Timestamp'] = Date.now().toString();
+      }
+
+      if (!securityConfig.skipInputSanitization) {
+        // Basic input sanitization for sensitive operations
+        if (isSensitiveOperation(config.method, config.url) && config.data) {
+          const { sanitizeInput } = await import('../../core/security/SimpleSecurityInit.js');
+          config.data = sanitizeRequestData(config.data, sanitizeInput);
+        }
+      }
+
+      return config;
+    } catch (error) {
+      console.error('Request interceptor error:', error);
+      return Promise.reject(error);
     }
-
-    // Force HTTPS in production
-    if (process.env.NODE_ENV === 'production' && config.url && !config.url.startsWith('https://')) {
-      config.url = config.url.replace('http://', 'https://');
-    }
-
-    // Add authentication token from sessionStorage
-    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    // Add request timestamp for security
-    config.headers['X-Request-Timestamp'] = Date.now().toString();
-
-    // Obfuscate sensitive headers
-    // Removed code that stripped password and confirmPassword from request data
-
-    return config;
   },
   (error) => {
     return Promise.reject(error);
   }
 );
+
+// Helper function to check if operation is sensitive
+function isSensitiveOperation(method, url) {
+  const sensitiveMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+  const sensitiveEndpoints = ['/auth/', '/users/', '/companies/', '/leads/', '/properties/'];
+  
+  return sensitiveMethods.includes(method.toUpperCase()) && 
+         sensitiveEndpoints.some(endpoint => url.includes(endpoint));
+}
+
+// Helper function to sanitize request data
+function sanitizeRequestData(data, sanitizeInput) {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+  
+  const sanitized = {};
+  
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'string') {
+      sanitized[key] = sanitizeInput(value);
+    } else if (typeof value === 'object' && value !== null) {
+      sanitized[key] = sanitizeRequestData(value, sanitizeInput);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  
+  return sanitized;
+}
 
 // ✅ Enhanced response interceptor with security measures
 axiosInstance.interceptors.response.use(
@@ -97,12 +148,31 @@ axiosInstance.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
     // Enhanced error handling with security
     if (error.response?.status === 401) {
       const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
+      const isLoginEndpoint = error.config?.url?.includes('/api/auth/login');
       const isFollowUpEndpoint = error.config?.url?.includes('/followups');
       const isOnLogin = window.location.pathname.includes('/login') || window.location.pathname === '/';
+
+      // For login endpoint, provide better error messages
+      if (isLoginEndpoint) {
+        // Only log if it's not a simple credential error
+        if (!error.response || error.response.status !== 401) {
+          console.log('🔍 Login failed - checking error type...');
+          
+          // Check if it's a network error vs authentication error
+          if (!error.response) {
+            error.message = 'Unable to connect to server. Please check your internet connection.';
+            error.isNetworkError = true;
+            console.log('🚨 Network connectivity issue detected');
+          } else {
+            console.log('✅ Server is accessible - 401 is expected for wrong credentials');
+          }
+        }
+        // Don't log 401 errors for login - they're expected for wrong credentials
+      }
 
       // Don't logout for follow-up API errors (temporary fix for backend JPA issue)
       if (isFollowUpEndpoint) {
@@ -119,6 +189,21 @@ axiosInstance.interceptors.response.use(
 
         // Redirect to login
         window.location.href = "/";
+      }
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      console.error('🚨 Network error:', error.message);
+      
+      // Check if it's a connection error
+      if (error.code === 'NETWORK_ERROR' || 
+          error.message.includes('Network Error') ||
+          error.message.includes('ERR_NETWORK') ||
+          error.message.includes('ERR_CONNECTION_REFUSED') ||
+          error.message.includes('ERR_INTERNET_DISCONNECTED')) {
+        error.message = 'Unable to connect to server. Please check your internet connection and try again.';
+        error.isNetworkError = true;
       }
     }
 

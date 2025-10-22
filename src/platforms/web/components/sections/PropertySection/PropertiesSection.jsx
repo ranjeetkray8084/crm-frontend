@@ -18,6 +18,7 @@ import ReminderDateModal from '../../common/ReminderDateModal';
 import AddRemarkModal from './action/AddRemarkModal';
 import PropertyRemarksModal from './action/PropertyRemarksModal';
 import UpdatePropertyModal from './action/UpdatePropertyModal';
+import UpdatePropertyCodeModal from './action/UpdatePropertyCodeModal';
 
 const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -43,6 +44,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
   const [editingProperty, setEditingProperty] = useState(null);
   const [remarkingProperty, setRemarkingProperty] = useState(null);
   const [viewingRemarksProperty, setViewingRemarksProperty] = useState(null);
+  const [showPropertyCodeModal, setShowPropertyCodeModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const [reminderModal, setReminderModal] = useState({
     isOpen: false,
     property: null,
@@ -314,6 +317,27 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     }
   };
 
+  const handleShowPropertyCodeModal = (property) => {
+    console.log('🔘 Add Property Code clicked in PropertiesSection for property:', property?.propertyName);
+    setSelectedProperty(property);
+    setShowPropertyCodeModal(true);
+    console.log('🔍 PropertiesSection - showPropertyCodeModal set to true');
+  };
+
+  const handlePropertyCodeUpdate = (updatedProperty) => {
+    console.log('🔧 Property code updated:', updatedProperty);
+    // Don't close modal immediately - let the success message show first
+    // The modal will be closed when user clicks OK button
+    // loadProperties(); // Refresh will happen when modal closes
+  };
+
+  const handlePropertyCodeModalClose = () => {
+    console.log('🔧 Property code modal closed, refreshing properties');
+    setShowPropertyCodeModal(false);
+    setSelectedProperty(null);
+    loadProperties(); // Refresh properties when modal closes
+  };
+
   const actionHandlers = {
     onStatusChange: handleStatusUpdate,
     onUpdate: handleUpdateProperty,
@@ -321,6 +345,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     onViewRemarks: handleGetRemarks,
     onSetReminder: handleSetReminder,
     onShowReminderModal: handleShowReminderModal,
+    onShowPropertyCodeModal: handleShowPropertyCodeModal,
     onOutOfBox: handleOutOfBox,
     companyId: finalCompanyId,
     currentUserId: finalUserId,
@@ -397,8 +422,8 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
 
         {!loading && !error && properties.length > 0 && (
           <>
-            <PropertiesTable properties={properties} searchTerm={searchTerm} {...actionHandlers} />
-            <MobilePropertyList properties={properties} {...actionHandlers} />
+            <PropertiesTable properties={properties} searchTerm={searchTerm} companyId={finalCompanyId} {...actionHandlers} />
+            <MobilePropertyList properties={properties} companyId={finalCompanyId} {...actionHandlers} />
           </>
         )}
 
@@ -451,6 +476,15 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
         onClose={() => setReminderModal({ isOpen: false, property: null, pendingStatusChange: null })}
         onSetReminder={handleSetReminder}
         propertyName={reminderModal.property?.propertyName || 'Unknown Property'}
+      />
+
+      {/* Property Code Modal */}
+      <UpdatePropertyCodeModal
+        isOpen={showPropertyCodeModal}
+        onClose={handlePropertyCodeModalClose}
+        propertyToUpdate={selectedProperty}
+        onUpdate={handlePropertyCodeUpdate}
+        companyId={finalCompanyId}
       />
     </div>
   );

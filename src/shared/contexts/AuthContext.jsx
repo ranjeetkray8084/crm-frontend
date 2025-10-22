@@ -47,11 +47,14 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const login = (userData, token) => {
+  const login = async (userData, token) => {
     // Use sessionStorage instead of localStorage for session-based auth
     sessionStorage.setItem('user', JSON.stringify(userData));
     if (token) {
       sessionStorage.setItem('token', token);
+      // Also set axios default header
+      const { default: axios } = await import('../../legacy/api/axios');
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
     setUser(userData);
   };

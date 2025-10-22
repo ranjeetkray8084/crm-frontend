@@ -85,6 +85,28 @@ export class PropertyService {
     }
   }
 
+  static async updatePropertyCode(companyId, propertyId, externalPropertyId) {
+    try {
+      console.log('🔗 API Call: PUT /api/companies/' + companyId + '/properties/' + propertyId + '/property-code');
+      console.log('📤 Request Body:', { externalPropertyId });
+      
+      const response = await axios.put(`/api/companies/${companyId}/properties/${propertyId}/property-code`, {
+        externalPropertyId: externalPropertyId
+      });
+      
+      console.log('📥 Response Status:', response.status);
+      console.log('📥 Response Data:', response.data);
+      
+      return { success: true, data: response.data, message: 'Property code updated successfully' };
+    } catch (error) {
+      console.error('❌ API Error:', error);
+      console.error('❌ Error Response:', error.response?.data);
+      console.error('❌ Error Status:', error.response?.status);
+      
+      return { success: false, error: error.response?.data?.message || 'Failed to update property code' };
+    }
+  }
+
   static async deleteProperty(companyId, propertyId) {
     try {
       await axios.delete(API_ENDPOINTS.PROPERTIES.DELETE(companyId, propertyId));

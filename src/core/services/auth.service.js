@@ -1,6 +1,7 @@
 // Authentication Service - Reusable for Web & Mobile
 import axios from '../../legacy/api/axios';
 import { API_ENDPOINTS } from './api.endpoints';
+import { simpleBackendCheck } from './SimpleBackendCheck.js';
 
 export class AuthService {
   static SESSION_KEYS = {
@@ -17,6 +18,8 @@ export class AuthService {
    */
   static async login(credentials) {
     try {
+      // Login attempt
+
       const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
 
       // Extract token and user data
@@ -54,8 +57,8 @@ export class AuthService {
         };
       }
 
-      // Save session
-      this.saveSession(user, token);
+      // Don't save session here - let AuthContext handle it
+      // this.saveSession(user, token);
 
       // Configure axios with new token
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -101,9 +104,22 @@ export class AuthService {
         }
       }
 
+      // Provide helpful suggestions for common login issues
+      let suggestions = [];
+      
+      if (error.response?.status === 401) {
+        suggestions = [
+          'Check your email and password',
+          'Make sure the account exists in the database',
+          'Verify the account is not deactivated',
+          'Try using production credentials: testdirector@gmail.com / 1234567'
+        ];
+      }
+      
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
+        suggestions: suggestions
       };
     }
   }

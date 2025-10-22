@@ -13,6 +13,7 @@ import {
   Plus,
   Eye,
   Clock,
+  Shield,
 } from 'lucide-react';
 import logoImg from '../../../../assets/img/logo.png';
 
@@ -47,6 +48,7 @@ function Sidebar({ userRole, activeSection, onSectionChange, companyName, userNa
         { id: 'ViewAdmins', label: 'View Admin', icon: Eye },
         { id: 'ViewDirectors', label: 'View Directors', icon: Eye },
         { id: 'ViewUsers', label: 'View Users', icon: Eye },
+        { id: 'ViewSecurity', label: 'Security', icon: Shield },
         { id: 'ViewAccount', label: 'Account', icon: User },
         { id: 'logout', label: 'Log Out', icon: LogOut },
       ],

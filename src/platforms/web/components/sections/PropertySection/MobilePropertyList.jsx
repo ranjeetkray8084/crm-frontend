@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Edit, MessageSquare, Eye, Trash2, MoreVertical, Clock } from 'lucide-react';
+import { Edit, MessageSquare, Eye, Trash2, MoreVertical, Clock, Code } from 'lucide-react';
 import ThreeDotMenu from '../../common/ThreeDotMenu';
 import ReminderDateModal from '../../common/ReminderDateModal';
 
-const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox, onStatusChange, onSetReminder, currentUserId, userRole }) => {
+const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, onDelete, onOutOfBox, onStatusChange, onSetReminder, currentUserId, userRole, companyId, onShowPropertyCodeModal }) => {
   const [activeProperty, setActiveProperty] = useState(null);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -145,6 +145,11 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
         label: 'Update Property',
         icon: <Edit size={14} />,
         onClick: (property) => { onUpdate(property); setActiveProperty(null); }
+      });
+      baseActions.unshift({
+        label: 'Add Property Code',
+        icon: <Code size={14} />,
+        onClick: (property) => { setSelectedProperty(property); onShowPropertyCodeModal(property); setActiveProperty(null); }
       });
     }
 
@@ -296,6 +301,7 @@ const MobilePropertyList = ({ properties, onUpdate, onAddRemark, onViewRemarks, 
         onSetReminder={handleSetReminder}
         propertyName={selectedProperty?.propertyName || 'Unknown Property'}
       />
+
     </div>
   );
 };
