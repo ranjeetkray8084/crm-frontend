@@ -95,6 +95,7 @@ export function getSessionId() {
 
 /**
  * Enhanced input sanitization with comprehensive XSS and SQL injection protection
+ * Now includes email-friendly sanitization for login credentials
  */
 export function sanitizeInput(input) {
   if (typeof input !== 'string') {
@@ -136,7 +137,7 @@ export function sanitizeInput(input) {
     sanitized = sanitized.replace(pattern, '[BLOCKED]');
   });
   
-  // Step 2: Comprehensive XSS Prevention
+  // Step 2: Comprehensive XSS Prevention (but preserve email-friendly characters)
   const xssPatterns = [
     // Script tags (all variants) - Most aggressive blocking
     /<script[^>]*>[\s\S]*?<\/script>/gi,
@@ -291,7 +292,7 @@ export function sanitizeInput(input) {
     /&lt;style/gi,
     /&lt;\/style/gi,
     
-    // Dangerous characters and patterns
+    // Dangerous characters and patterns (but preserve email-friendly characters)
     /<[^>]*>/g,
     /[<>]/g,
     /["']/g,
@@ -304,7 +305,7 @@ export function sanitizeInput(input) {
     /`/g,
     /~/g,
     /!/g,
-    /@/g,
+    // Removed /@/g to allow @ symbol for emails
     /#/g,
     /\*/g,
     /\+/g,
@@ -319,8 +320,8 @@ export function sanitizeInput(input) {
     /;/g,
     /:/g,
     /,/g,
-    /\./g,
-    /\//g
+    // Removed /\./g to allow dots for emails
+    // Removed /\//g to allow forward slashes in some contexts
   ];
   
   // Apply XSS protection patterns
