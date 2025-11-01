@@ -5,8 +5,6 @@ import axios from "axios";
 // Force production API URL - no local backend support
 const BASE_URL = "https://backend.leadstracker.in";
 
-// Debug log to verify which URL is being used
-console.log('🔗 API Base URL (PRODUCTION):', BASE_URL);
 
 // ✅ Security configuration
 const SECURITY_CONFIG = {
@@ -73,94 +71,10 @@ axiosInstance.interceptors.request.use(
         token = token.trim();
         
         // Validate token format (should not be empty after trim)
-        if (!token || token.length === 0) {
-          console.error('❌ Token is empty after trim:', config.url);
-        } else {
+        if (token && token.length > 0) {
           // Ensure Authorization header is set correctly (case-sensitive)
           config.headers['Authorization'] = `Bearer ${token}`;
           
-          // Debug logging for notes endpoint to diagnose 401 issues
-          if (config.url && config.url.includes('/notes') && config.method === 'post') {
-            const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
-            const userFromStorage = sessionStorage.getItem('user') || localStorage.getItem('user');
-            let userObj = null;
-            try {
-              userObj = userFromStorage ? JSON.parse(userFromStorage) : null;
-            } catch (e) {
-              console.error('Failed to parse user from storage:', e);
-            }
-            
-            // Decode token to see what's in it
-            let tokenPayload = null;
-            try {
-              const parts = token.split('.');
-              if (parts.length === 3) {
-                tokenPayload = JSON.parse(atob(parts[1]));
-              }
-            } catch (e) {
-              console.error('Failed to decode token:', e);
-            }
-            
-            console.log('🔍 Notes Request Debug (PRODUCTION):', {
-              url: config.url,
-              fullUrl: fullUrl,
-              method: config.method,
-              hasToken: !!token,
-              tokenLength: token.length,
-              tokenPreview: token.substring(0, 20) + '...',
-              authHeader: config.headers['Authorization']?.substring(0, 30) + '...',
-              requestPayload: JSON.parse(JSON.stringify(config.data)), // Deep clone to avoid mutation
-              requestPayloadString: JSON.stringify(config.data),
-              userFromStorage: userObj,
-              tokenPayload: tokenPayload,
-              allHeaders: Object.keys(config.headers),
-              contentType: config.headers['Content-Type'],
-              headersSnapshot: { ...config.headers }
-            });
-          }
-          
-          // Also log leads PUT requests in production to debug 401 errors
-          if (config.url && config.url.includes('/leads') && (config.method === 'post' || config.method === 'put') && window.location.hostname.includes('.leadstracker.in')) {
-            const userFromStorage = sessionStorage.getItem('user') || localStorage.getItem('user');
-            let userObj = null;
-            try {
-              userObj = userFromStorage ? JSON.parse(userFromStorage) : null;
-            } catch (e) {
-              console.error('Failed to parse user from storage (leads):', e);
-            }
-            
-            // Decode token to see what's in it
-            let tokenPayload = null;
-            try {
-              const parts = token.split('.');
-              if (parts.length === 3) {
-                tokenPayload = JSON.parse(atob(parts[1]));
-              }
-            } catch (e) {
-              console.error('Failed to decode token (leads):', e);
-            }
-            
-            console.log(`🔍 Leads ${config.method.toUpperCase()} Request Debug (PRODUCTION):`, {
-              url: config.url,
-              fullUrl: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
-              method: config.method,
-              hasToken: !!token,
-              tokenLength: token.length,
-              tokenPreview: token.substring(0, 20) + '...',
-              authHeader: config.headers['Authorization']?.substring(0, 30) + '...',
-              requestPayload: typeof config.data === 'object' ? JSON.parse(JSON.stringify(config.data)) : config.data,
-              userFromStorage: userObj,
-              tokenPayload: tokenPayload,
-              allHeaders: Object.keys(config.headers),
-              contentType: config.headers['Content-Type'],
-              headersSnapshot: { ...config.headers }
-            });
-          }
-        }
-      } else {
-        // Log warning in development to help debug
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('⚠️ No token found in storage for request:', config.url);
         }
       }
 
@@ -168,15 +82,13 @@ axiosInstance.interceptors.request.use(
       if (config.data && typeof config.data === 'string') {
         try {
           config.data = JSON.parse(config.data);
-          console.warn('⚠️ Request data was string, parsed to object:', config.url);
         } catch (e) {
-          console.error('❌ Failed to parse stringified request data:', e, config.url);
+          // Failed to parse - keep as is
         }
       }
 
       return config;
     } catch (error) {
-      console.error('Request interceptor error:', error);
       // Even on error, ensure token is added if available
       const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       if (token && config.headers) {
@@ -216,43 +128,6 @@ axiosInstance.interceptors.response.use(
         responseText = String(error.response?.data || '');
       }
       
-      // Check if request payload is accidentally a string (double-stringified)
-      let actualPayload = error.config?.data;
-      if (typeof actualPayload === 'string') {
-        try {
-          actualPayload = JSON.parse(actualPayload);
-          console.warn('⚠️ Request payload was a string, parsed it:', actualPayload);
-        } catch (e) {
-          console.error('❌ Request payload is string but not valid JSON:', actualPayload);
-        }
-      }
-      
-      console.error('🔴 Notes 400 Bad Request - Backend validation error:', {
-        url: error.config?.url,
-        requestPayload: actualPayload,
-        requestPayloadType: typeof error.config?.data,
-        requestPayloadOriginal: error.config?.data,
-        requestPayloadString: JSON.stringify(actualPayload, null, 2),
-        responseStatus: error.response?.status,
-        responseStatusText: error.response?.statusText,
-        responseHeaders: error.response?.headers,
-        responseData: error.response?.data,
-        responseDataType: typeof error.response?.data,
-        responseDataString: responseText,
-        responseDataLength: responseText?.length || 0,
-        message: error.response?.data?.message,
-        error: error.response?.data?.error,
-        fullResponse: error.response?.data,
-        contentType: error.response?.headers?.['content-type'] || error.response?.headers?.['Content-Type']
-      });
-      
-      // Suggest checking Network tab for actual response
-      console.error('💡 TIP: Open Browser DevTools > Network tab > Find the failed POST request > Check Response tab for actual error message');
-      
-      // If response is empty, log the raw response
-      if (!error.response?.data || (typeof error.response?.data === 'string' && error.response?.data.trim() === '')) {
-        console.error('⚠️ Backend returned empty response body. Check Network tab for actual response.');
-      }
     }
     
     if (error.response?.status === 401) {
@@ -263,21 +138,9 @@ axiosInstance.interceptors.response.use(
       const isOnLogin = window.location.pathname.includes('/login') || window.location.pathname === '/';
 
       // For login endpoint, provide better error messages
-      if (isLoginEndpoint) {
-        // Only log if it's not a simple credential error
-        if (!error.response || error.response.status !== 401) {
-          console.log('🔍 Login failed - checking error type...');
-          
-          // Check if it's a network error vs authentication error
-          if (!error.response) {
-            error.message = 'Unable to connect to server. Please check your internet connection.';
-            error.isNetworkError = true;
-            console.log('🚨 Network connectivity issue detected');
-          } else {
-            console.log('✅ Server is accessible - 401 is expected for wrong credentials');
-          }
-        }
-        // Don't log 401 errors for login - they're expected for wrong credentials
+      if (isLoginEndpoint && !error.response) {
+        error.message = 'Unable to connect to server. Please check your internet connection.';
+        error.isNetworkError = true;
       }
 
       // For leads PUT endpoint 401, check if token exists and log helpful info
@@ -313,68 +176,11 @@ axiosInstance.interceptors.response.use(
             }
           } catch (e) {
             tokenDecodeError = e.message || 'Token decode failed';
-            console.error('❌ Token decode error:', e);
           }
         }
 
-        // Log comprehensive error info
-        const errorLog = {
-          url: error.config?.url,
-          method: error.config?.method,
-          hasToken: !!token,
-          tokenLength: token?.trim()?.length || 0,
-          tokenPreview: token ? token.substring(0, 20) + '...' : 'N/A',
-          hasAuthHeader: !!authHeader,
-          authHeaderPreview: authHeader ? authHeader.substring(0, 40) + '...' : 'N/A',
-          tokenExpired: tokenExpired,
-          tokenExpiryTime: tokenExpiryTime?.toLocaleString() || 'N/A',
-          tokenDecodeError: tokenDecodeError,
-          tokenPayloadInfo: payloadInfo,
-          requestHeaders: Object.keys(error.config?.headers || {}),
-          responseStatus: error.response?.status,
-          responseData: error.response?.data,
-          responseDataString: JSON.stringify(error.response?.data || {}),
-          responseHeaders: error.response?.headers,
-          requestPayload: error.config?.data,
-          requestPayloadString: JSON.stringify(error.config?.data || {}),
-          hostname: window.location.hostname,
-          isProduction: window.location.hostname.includes('.leadstracker.in')
-        };
-        
-        const endpointType = isLeadsPutEndpoint ? 'Leads PUT' : 'Notes';
-        console.error(`🔴 ${endpointType} endpoint 401 Unauthorized:`, errorLog);
-        
-        // Log backend error message separately for better visibility
-        if (error.response?.data) {
-          console.error('🔴 Backend 401 Response:', {
-            message: error.response.data.message,
-            error: error.response.data.error,
-            status: error.response.data.status,
-            fullResponse: error.response.data
-          });
-        }
-        
-        // Also log separately for better visibility
-        if (tokenExpired) {
-          console.error('❌ TOKEN EXPIRED:', {
-            expired: true,
-            expiryTime: tokenExpiryTime?.toLocaleString(),
-            currentTime: new Date().toLocaleString()
-          });
-        } else if (tokenDecodeError) {
-          console.error('❌ TOKEN DECODE FAILED:', tokenDecodeError);
-        } else if (!tokenExpired && payloadInfo) {
-          console.warn('⚠️ TOKEN NOT EXPIRED but backend rejected:', {
-            expiryTime: tokenExpiryTime?.toLocaleString(),
-            timeRemaining: tokenExpiryTime ? Math.max(0, Math.floor((tokenExpiryTime.getTime() - Date.now()) / 1000)) : 'N/A',
-            userId: payloadInfo.userId
-          });
-        }
-        
         // Clear token if expired
         if (tokenExpired) {
-          console.warn('⚠️ Token is expired. Clearing token and asking user to re-login.');
-          
           // Clear expired token
           sessionStorage.removeItem('token');
           localStorage.removeItem('token');
@@ -383,23 +189,16 @@ axiosInstance.interceptors.response.use(
           
           error.userMessage = 'Your session has expired. Please refresh the page and login again.';
         } else if (!token) {
-          console.error('❌ No token found in storage');
           error.userMessage = 'Authentication required. Please login again.';
         } else if (!authHeader || !authHeader.includes('Bearer')) {
-          console.error('❌ Authorization header missing or malformed in request');
           error.userMessage = 'Authorization header missing. Please refresh the page.';
         } else {
-          console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be invalid or revoked.');
-          
           // In production, token expiry is common - suggest user to refresh page or re-login
           const isProduction = window.location.hostname !== 'localhost' && 
                               !window.location.hostname.includes('127.0.0.1') &&
                               window.location.hostname.includes('.leadstracker.in');
           if (isProduction) {
-            console.warn('⚠️ Production API detected. Token is NOT expired but was rejected. This means token is from LOCAL backend. User must login again on PRODUCTION.');
-            
             // CRITICAL FIX: Clear token from different backend environment
-            console.log('🔄 Clearing invalid token to force re-authentication...');
             sessionStorage.removeItem('token');
             sessionStorage.removeItem('user');
             localStorage.removeItem('token');
@@ -417,7 +216,6 @@ axiosInstance.interceptors.response.use(
           // Check backend error message
           const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
           if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
-            console.warn('⚠️ Backend indicates token is expired/invalid. User should re-login.');
             error.userMessage = error.userMessage || 'Session expired. Please login again.';
           }
         }
@@ -452,8 +250,6 @@ axiosInstance.interceptors.response.use(
 
     // Handle network errors
     if (!error.response) {
-      console.error('🚨 Network error:', error.message);
-      
       // Check if it's a connection error
       if (error.code === 'NETWORK_ERROR' || 
           error.message.includes('Network Error') ||

@@ -11,9 +11,7 @@ class GeminiService {
         this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
         this.model = 'gemini-pro';
         
-        if (!this.apiKey) {
-            console.warn('Gemini API key not found. AI features will be disabled.');
-        }
+        // API key check - features disabled if not configured
     }
 
     /**
@@ -28,7 +26,6 @@ class GeminiService {
                 response: response
             };
         } catch (error) {
-            console.error('Gemini API test failed:', error);
             return {
                 success: false,
                 message: 'Gemini API test failed',
@@ -81,7 +78,6 @@ class GeminiService {
             }
 
         } catch (error) {
-            console.error('Gemini API request failed:', error);
             throw error;
         }
     }
@@ -147,7 +143,6 @@ class GeminiService {
             }
 
         } catch (error) {
-            console.error('Lead quality analysis failed:', error);
             return {
                 success: false,
                 error: error.message
@@ -194,7 +189,6 @@ class GeminiService {
             };
 
         } catch (error) {
-            console.error('Email generation failed:', error);
             return {
                 success: false,
                 error: error.message
@@ -266,7 +260,6 @@ class GeminiService {
             }
 
         } catch (error) {
-            console.error('Sentiment analysis failed:', error);
             return {
                 success: false,
                 error: error.message
@@ -313,7 +306,6 @@ class GeminiService {
             };
 
         } catch (error) {
-            console.error('Property recommendation generation failed:', error);
             return {
                 success: false,
                 error: error.message
@@ -353,7 +345,6 @@ class GeminiService {
             };
 
         } catch (error) {
-            console.error('Follow-up reminder generation failed:', error);
             return {
                 success: false,
                 error: error.message
@@ -390,7 +381,6 @@ class GeminiService {
             };
 
         } catch (error) {
-            console.error('Market insights generation failed:', error);
             return {
                 success: false,
                 error: error.message

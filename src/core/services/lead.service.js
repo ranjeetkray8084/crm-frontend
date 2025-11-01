@@ -56,10 +56,6 @@ export class LeadService {
    */
   static async createLead(companyId, leadData) {
     try {
-      // Log in production for comparison with notes
-      if (window.location.hostname.includes('.leadstracker.in')) {
-        console.log('✅ Leads creation payload (PRODUCTION - WORKING):', JSON.stringify(leadData, null, 2));
-      }
       const response = await axios.post(API_ENDPOINTS.LEADS.CREATE(companyId), leadData);
       
       // Check if response is successful (status 200-299)
@@ -120,9 +116,7 @@ export class LeadService {
       if (typeof payload === 'string') {
         try {
           payload = JSON.parse(payload);
-          console.warn('⚠️ leadData was string, parsed to object');
         } catch (e) {
-          console.error('❌ Failed to parse leadData string:', e);
           return {
             success: false,
             error: 'Invalid lead data format'
@@ -132,20 +126,10 @@ export class LeadService {
       
       // Double-check it's an object
       if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
-        console.error('❌ Invalid payload type:', typeof payload, payload);
         return {
           success: false,
           error: 'Invalid lead data format - must be an object'
         };
-      }
-
-      // Log in production for debugging
-      if (window.location.hostname.includes('.leadstracker.in')) {
-        console.log('🔍 Leads API Call: Update Lead', {
-          companyId,
-          leadId,
-          payload: JSON.parse(JSON.stringify(payload)) // Deep clone
-        });
       }
 
       const response = await axios.put(API_ENDPOINTS.LEADS.UPDATE(companyId, leadId), payload);

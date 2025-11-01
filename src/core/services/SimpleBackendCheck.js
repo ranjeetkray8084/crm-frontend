@@ -16,12 +16,8 @@ class SimpleBackendCheck {
    * Simple check - just test if login endpoint responds
    */
   async checkBackend() {
-    console.log('🔍 Simple backend check...');
-    
     for (const url of this.baseURLs) {
       try {
-        console.log(`Testing: ${url}`);
-        
         const response = await fetch(`${url}/api/auth/login`, {
           method: 'POST',
           headers: {
@@ -34,10 +30,7 @@ class SimpleBackendCheck {
         });
         
         // Any response means server is working
-        console.log(`✅ Server reachable at ${url} (status: ${response.status})`);
-        
         if (response.status === 401) {
-          console.log('🎯 Perfect! 401 means server is working but credentials are wrong');
           return {
             healthy: true,
             url: url,
@@ -52,7 +45,7 @@ class SimpleBackendCheck {
         };
         
       } catch (error) {
-        console.log(`❌ ${url} failed:`, error.message);
+        // URL failed, try next
       }
     }
     

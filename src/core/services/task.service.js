@@ -44,16 +44,10 @@ export class TaskService {
 
   // ✅ Delete a task
   static async deleteTask(taskId, companyId) {
-    console.log('TaskService deleteTask called with:', { taskId, companyId });
-    console.log('TaskService deleteTask URL:', buildUrl(API_ENDPOINTS.TASKS.DELETE(taskId), { companyId }));
-    
     try {
       const response = await axios.delete(buildUrl(API_ENDPOINTS.TASKS.DELETE(taskId), { companyId }));
-      console.log('TaskService deleteTask response:', response);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('TaskService deleteTask error:', error);
-      console.error('TaskService deleteTask error response:', error.response);
       return { success: false, error: error.response?.data?.message || 'Failed to delete task' };
     }
   }
@@ -113,15 +107,6 @@ export class TaskService {
   // ✅ Upload Excel file
   static async uploadExcelFile(taskData) {
     try {
-      console.log('TaskService: Starting upload with data:', {
-        title: taskData.title,
-        purpose: taskData.purpose,
-        fileName: taskData.file?.name,
-        fileSize: taskData.file?.size,
-        companyId: taskData.companyId,
-        uploadedBy: taskData.uploadedBy
-      });
-
       if (!taskData.file) {
         return { success: false, error: 'No file provided' };
       }
@@ -141,8 +126,6 @@ export class TaskService {
       formData.append('companyId', taskData.companyId.toString());
       formData.append('uploadedBy', taskData.uploadedBy.toString());
 
-      console.log('TaskService: Sending request to:', API_ENDPOINTS.TASKS.UPLOAD);
-
       const response = await axios.post(API_ENDPOINTS.TASKS.UPLOAD, formData, {
         headers: { 
           'Content-Type': 'multipart/form-data'
@@ -150,10 +133,8 @@ export class TaskService {
         timeout: 30000 // 30 second timeout for file uploads
       });
 
-      console.log('TaskService: Upload successful:', response.data);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('TaskService: Upload error:', error);
       
       if (error.response) {
         // Server responded with error status

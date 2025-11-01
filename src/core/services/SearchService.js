@@ -162,7 +162,6 @@ export class SearchService {
         searchParams: searchParams
       };
     } catch (error) {
-      console.error('Search error:', error);
       return {
         success: false,
         error: error.message,

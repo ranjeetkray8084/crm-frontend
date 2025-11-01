@@ -12,16 +12,6 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
-      // Log FULL payload in production to debug issues - check if userId is present
-      if (window.location.hostname.includes('.leadstracker.in')) {
-        console.log('📝 Note creation payload received by service:', JSON.stringify(noteData, null, 2));
-        console.log('📝 Payload check - has top-level userId?', {
-          hasUserId: 'userId' in noteData,
-          userId: noteData.userId,
-          message: 'userId' in noteData ? '✅ userId correctly included' : '❌ userId is missing!'
-        });
-      }
-      
       // CRITICAL: Ensure noteData is always an object, never a string
       // Axios.post() expects an object which it will JSON.stringify automatically
       let payload = noteData;
@@ -29,9 +19,7 @@ export class NoteService {
       if (typeof payload === 'string') {
         try {
           payload = JSON.parse(payload);
-          console.warn('⚠️ noteData was string, parsed to object');
         } catch (e) {
-          console.error('❌ Failed to parse noteData string:', e);
           return {
             success: false,
             error: 'Invalid note data format'
@@ -41,21 +29,10 @@ export class NoteService {
       
       // Double-check it's an object
       if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
-        console.error('❌ Invalid payload type:', typeof payload, payload);
         return {
           success: false,
           error: 'Invalid note data format - must be an object'
         };
-      }
-      
-      // Log final payload before sending
-      if (window.location.hostname.includes('.leadstracker.in') || process.env.NODE_ENV === 'development') {
-        console.log('📤 Sending note payload to backend (ensured object):', {
-          payloadType: typeof payload,
-          isArray: Array.isArray(payload),
-          payload: payload,
-          payloadKeys: Object.keys(payload)
-        });
       }
       
       const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), payload);
@@ -76,16 +53,6 @@ export class NoteService {
     } catch (error) {
       // Handle different types of errors - same pattern as lead service
       if (error.response) {
-        // Log detailed error for debugging
-        console.error('❌ Note creation failed:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data,
-          message: error.response.data?.message,
-          error: error.response.data?.error,
-          fullResponse: error.response.data
-        });
-        
         // Special handling for 401 Unauthorized - likely token from different backend (local vs production)
         if (error.response.status === 401) {
           const isProduction = window.location.hostname.includes('.leadstracker.in');
