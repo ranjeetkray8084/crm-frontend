@@ -149,8 +149,11 @@ const NoteModals = ({
                            errorMessage.includes('session may have expired') ||
                            errorMessage.includes('Session expired') ||
                            errorMessage.includes('token is invalid') ||
+                           errorMessage.includes('different backend') ||
                            errorMessage.includes('Authentication failed') ||
-                           errorMessage.includes('login again');
+                           errorMessage.includes('authentication') ||
+                           errorMessage.includes('login again') ||
+                           errorMessage.includes('refresh the page');
         
         if (isAuthError) {
           const shouldRefresh = confirm(`${errorMessage}\n\nWould you like to refresh the page and login again?`);
@@ -175,8 +178,11 @@ const NoteModals = ({
                          errorMessage.includes('session may have expired') ||
                          errorMessage.includes('Session expired') ||
                          errorMessage.includes('token is invalid') ||
+                         errorMessage.includes('different backend') ||
                          errorMessage.includes('Authentication failed') ||
-                         errorMessage.includes('login again');
+                         errorMessage.includes('authentication') ||
+                         errorMessage.includes('login again') ||
+                         errorMessage.includes('refresh the page');
       
       if (isAuthError) {
         const shouldRefresh = confirm(`${errorMessage}\n\nWould you like to refresh the page and login again?`);

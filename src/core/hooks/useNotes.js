@@ -143,12 +143,18 @@ export const useNotes = (companyId, userId, role) => {
           }
           return result;
         } else {
-          throw new Error(result?.error || errorMsg || 'Unknown error');
+          // Extract error message - handle both Error objects and plain error strings
+          const errorText = result?.error || errorMsg || 'Unknown error';
+          throw new Error(typeof errorText === 'string' ? errorText : errorText.message || 'Unknown error');
         }
       } catch (err) {
-        setError(err.message);
-        customAlert(`❌ ${err.message}`);
-        return { success: false, error: err.message };
+        const errorMessage = err.message || err.error || 'Unknown error occurred';
+        setError(errorMessage);
+        
+        // Show alert with error message
+        customAlert(`❌ ${errorMessage}`);
+        
+        return { success: false, error: errorMessage };
       } finally {
         setLoading(false);
       }
