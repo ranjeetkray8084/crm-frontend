@@ -238,11 +238,33 @@ function sanitizeRequestData(data, sanitizeInput) {
     return data;
   }
   
+  // CRITICAL: Preserve arrays - don't convert them to objects
+  if (Array.isArray(data)) {
+    return data.map(item => {
+      if (typeof item === 'string') {
+        return sanitizeInput(item);
+      } else if (typeof item === 'object' && item !== null) {
+        return sanitizeRequestData(item, sanitizeInput);
+      }
+      return item;
+    });
+  }
+  
   const sanitized = {};
   
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
       sanitized[key] = sanitizeInput(value);
+    } else if (Array.isArray(value)) {
+      // Preserve arrays - sanitize string items only
+      sanitized[key] = value.map(item => {
+        if (typeof item === 'string') {
+          return sanitizeInput(item);
+        } else if (typeof item === 'object' && item !== null) {
+          return sanitizeRequestData(item, sanitizeInput);
+        }
+        return item;
+      });
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeRequestData(value, sanitizeInput);
     } else {
@@ -458,24 +480,17 @@ axiosInstance.interceptors.response.use(
               
               error.userMessage = 'Your session has expired. Please refresh the page and login again.';
             } else {
-              // Token NOT expired but rejected = likely from wrong backend (local token used with production API)
-              console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be from a different backend (local vs production).');
+              console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be invalid or revoked.');
               
-              // In production, if token is not expired, it's likely from local backend
+              // In production, token expiry is common - suggest user to refresh page or re-login
               const isProduction = window.location.hostname !== 'localhost' && 
                                   !window.location.hostname.includes('127.0.0.1') &&
                                   window.location.hostname.includes('.leadstracker.in');
-              
-              if (isProduction && !tokenExpired) {
-                console.warn('⚠️ Production API detected. Token is NOT expired but was rejected. This means token is from LOCAL backend. User must login again on PRODUCTION.');
-                
-                // Add specific error message
-                error.userMessage = 'Your authentication token is from a different backend. Please refresh the page and login again with production credentials to get a valid production token.';
-              } else if (isProduction) {
+              if (isProduction) {
                 console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
+                
+                // Add error message to help user
                 error.userMessage = 'Your session may have expired. Please refresh the page or login again to create notes.';
-              } else {
-                error.userMessage = 'Authentication failed. Token might be invalid or from wrong backend. Please login again.';
               }
               
               // Check backend error message
