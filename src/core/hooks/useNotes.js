@@ -187,22 +187,28 @@ export const useNotes = (companyId, userId, role) => {
         });
       }
       
-      // Ensure visibleUserIds is array of numbers (not objects)
-      const visibleUserIds = noteData.visibleUserIds 
-        ? noteData.visibleUserIds.map(id => {
-            if (typeof id === 'object') {
-              return id.userId || id.id || id;
-            }
-            const numId = typeof id === 'number' ? id : parseInt(id, 10);
-            return isNaN(numId) ? id : numId;
-          })
+      // Ensure visibleUserIds is array of numbers (not objects or strings)
+      const visibleUserIds = noteData.visibleUserIds && Array.isArray(noteData.visibleUserIds)
+        ? noteData.visibleUserIds
+            .map(id => {
+              // Handle objects: extract userId or id
+              if (typeof id === 'object' && id !== null) {
+                const extractedId = id.userId || id.id || id;
+                const numId = typeof extractedId === 'number' ? extractedId : parseInt(extractedId, 10);
+                return isNaN(numId) ? null : numId;
+              }
+              // Handle strings or numbers
+              const numId = typeof id === 'number' ? id : parseInt(id, 10);
+              return isNaN(numId) ? null : numId;
+            })
+            .filter(id => id !== null && id !== undefined && !isNaN(id)) // Remove invalid IDs
         : [];
       
       const finalNoteData = { 
         ...noteData,
         userId: numericUserId,
         createdBy: { userId: numericUserId }, // Match lead format: object with numeric userId
-        visibleUserIds: visibleUserIds // Ensure array of numbers
+        visibleUserIds: visibleUserIds // Ensure array of numbers only
       };
       
       // Log for debugging

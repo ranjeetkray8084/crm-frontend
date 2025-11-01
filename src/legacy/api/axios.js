@@ -82,13 +82,57 @@ axiosInstance.interceptors.request.use(
           
           // Debug logging for notes endpoint to diagnose 401 issues
           if (config.url && config.url.includes('/notes') && config.method === 'post') {
-            console.log('🔍 Notes Request Debug:', {
+            const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+            const userFromStorage = sessionStorage.getItem('user') || localStorage.getItem('user');
+            let userObj = null;
+            try {
+              userObj = userFromStorage ? JSON.parse(userFromStorage) : null;
+            } catch (e) {
+              console.error('Failed to parse user from storage:', e);
+            }
+            
+            // Decode token to see what's in it
+            let tokenPayload = null;
+            try {
+              const parts = token.split('.');
+              if (parts.length === 3) {
+                tokenPayload = JSON.parse(atob(parts[1]));
+              }
+            } catch (e) {
+              console.error('Failed to decode token:', e);
+            }
+            
+            console.log('🔍 Notes Request Debug (PRODUCTION):', {
               url: config.url,
+              fullUrl: fullUrl,
               method: config.method,
               hasToken: !!token,
               tokenLength: token.length,
               tokenPreview: token.substring(0, 20) + '...',
-              authHeader: config.headers['Authorization']?.substring(0, 30) + '...'
+              authHeader: config.headers['Authorization']?.substring(0, 30) + '...',
+              requestPayload: JSON.parse(JSON.stringify(config.data)), // Deep clone to avoid mutation
+              requestPayloadString: JSON.stringify(config.data),
+              userFromStorage: userObj,
+              tokenPayload: tokenPayload,
+              allHeaders: Object.keys(config.headers),
+              contentType: config.headers['Content-Type'],
+              headersSnapshot: { ...config.headers }
+            });
+          }
+          
+          // Also log leads requests in production to compare
+          if (config.url && config.url.includes('/leads') && config.method === 'post' && window.location.hostname.includes('.leadstracker.in')) {
+            console.log('✅ Leads Request Debug (PRODUCTION - WORKING):', {
+              url: config.url,
+              fullUrl: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
+              method: config.method,
+              hasToken: !!token,
+              tokenLength: token.length,
+              tokenPreview: token.substring(0, 20) + '...',
+              authHeader: config.headers['Authorization']?.substring(0, 30) + '...',
+              requestPayload: JSON.parse(JSON.stringify(config.data)),
+              allHeaders: Object.keys(config.headers),
+              contentType: config.headers['Content-Type']
             });
           }
         }
@@ -145,7 +189,7 @@ axiosInstance.interceptors.request.use(
 // Helper function to check if operation is sensitive
 function isSensitiveOperation(method, url) {
   const sensitiveMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
-  const sensitiveEndpoints = ['/auth/', '/users/', '/companies/', '/leads/', '/properties/'];
+  const sensitiveEndpoints = ['/auth/', '/users/', '/companies/', '/leads/', '/properties/', '/notes/'];
   
   return sensitiveMethods.includes(method.toUpperCase()) && 
          sensitiveEndpoints.some(endpoint => url.includes(endpoint));
