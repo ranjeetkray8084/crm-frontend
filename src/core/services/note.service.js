@@ -89,22 +89,36 @@ export class NoteService {
         // Special handling for 401 Unauthorized - likely token from different backend (local vs production)
         if (error.response.status === 401) {
           const isProduction = window.location.hostname.includes('.leadstracker.in');
-          const currentBackend = window.location.hostname.includes('.leadstracker.in') 
-            ? 'production' 
-            : 'local';
+          
+          // Get backend error message if available
+          const backendMessage = error.response.data?.message || 
+                                 error.response.data?.error ||
+                                 (typeof error.response.data === 'string' && error.response.data.trim()) ||
+                                 '';
+          
+          // Create user-friendly message
+          let userMessage;
+          if (backendMessage && backendMessage.toLowerCase().includes('expired')) {
+            userMessage = 'Your session has expired. Please refresh the page and login again.';
+          } else if (backendMessage && backendMessage.toLowerCase().includes('invalid')) {
+            userMessage = 'Your authentication token is invalid. Please refresh the page and login again.';
+          } else {
+            userMessage = isProduction 
+              ? 'Your session has expired or token is invalid. Please refresh the page and login again to get a valid production token.'
+              : 'Authentication failed. Please login again to get a valid token for this backend.';
+          }
           
           return {
             success: false,
-            error: isProduction 
-              ? 'Your session has expired or token is invalid. Please refresh the page and login again to get a valid production token.'
-              : 'Authentication failed. Please login again to get a valid token for this backend.'
+            error: userMessage
           };
         }
         
         // Server responded with error status
         const errorMessage = error.response.data?.message || 
                             error.response.data?.error ||
-                            error.response.data || 
+                            (typeof error.response.data === 'string' && error.response.data.trim()) ||
+                            error.response.data ||
                             `Server error: ${error.response.status}`;
         return {
           success: false,
