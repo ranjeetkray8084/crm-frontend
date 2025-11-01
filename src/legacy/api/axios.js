@@ -458,17 +458,24 @@ axiosInstance.interceptors.response.use(
               
               error.userMessage = 'Your session has expired. Please refresh the page and login again.';
             } else {
-              console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be invalid or revoked.');
+              // Token NOT expired but rejected = likely from wrong backend (local token used with production API)
+              console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be from a different backend (local vs production).');
               
-              // In production, token expiry is common - suggest user to refresh page or re-login
+              // In production, if token is not expired, it's likely from local backend
               const isProduction = window.location.hostname !== 'localhost' && 
                                   !window.location.hostname.includes('127.0.0.1') &&
                                   window.location.hostname.includes('.leadstracker.in');
-              if (isProduction) {
-                console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
+              
+              if (isProduction && !tokenExpired) {
+                console.warn('⚠️ Production API detected. Token is NOT expired but was rejected. This means token is from LOCAL backend. User must login again on PRODUCTION.');
                 
-                // Add error message to help user
+                // Add specific error message
+                error.userMessage = 'Your authentication token is from a different backend. Please refresh the page and login again with production credentials to get a valid production token.';
+              } else if (isProduction) {
+                console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
                 error.userMessage = 'Your session may have expired. Please refresh the page or login again to create notes.';
+              } else {
+                error.userMessage = 'Authentication failed. Token might be invalid or from wrong backend. Please login again.';
               }
               
               // Check backend error message
