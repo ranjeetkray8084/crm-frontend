@@ -12,7 +12,29 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
-      const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), noteData);
+      // Verify token exists before making request
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ No token found when creating note');
+        return {
+          success: false,
+          error: 'Authentication token not found. Please login again.'
+        };
+      }
+
+      const endpoint = API_ENDPOINTS.NOTES.CREATE(companyId);
+      
+      // Log request details in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📝 Creating note:', {
+          endpoint,
+          companyId,
+          hasToken: !!token,
+          noteDataType: noteData?.type
+        });
+      }
+
+      const response = await axios.post(endpoint, noteData);
       return {
         success: true,
         data: response.data,
@@ -22,13 +44,26 @@ export class NoteService {
       let errorMessage = 'Failed to create note';
       
       if (error.response) {
-        errorMessage = error.response.data?.message || 
-                      error.response.data?.error || 
-                      `Server error: ${error.response.status}`;
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        errorMessage = data?.message || 
+                      data?.error || 
+                      `Server error: ${status}`;
+        
+        // Log detailed error info for debugging
+        console.error('❌ Note creation failed:', {
+          status,
+          error: errorMessage,
+          url: error.config?.url,
+          hasToken: !!(sessionStorage.getItem('token') || localStorage.getItem('token'))
+        });
       } else if (error.request) {
         errorMessage = 'No response from server. Please check your connection.';
+        console.error('❌ Network error creating note:', error.message);
       } else {
         errorMessage = error.message || 'Unknown error occurred';
+        console.error('❌ Error creating note:', error);
       }
       
       return {

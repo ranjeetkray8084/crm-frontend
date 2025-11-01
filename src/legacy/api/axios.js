@@ -67,37 +67,52 @@ axiosInstance.interceptors.request.use(
         config.url = config.url.replace('http://', 'https://');
       }
 
-      // Get token from storage
+      // CRITICAL: Get and add token FIRST - ensure it's always added even if other operations fail
       const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      // Use environment-based security configuration
-      const { ENV_CONFIG } = await import('../../core/config/environment.js');
-      const securityConfig = ENV_CONFIG.getSecurityConfig();
-      
-      if (!securityConfig.skipSecurityHeaders) {
-        // Add basic security headers for production/development
-        const { getBasicSecurityHeaders } = await import('../../core/security/SimpleSecurityInit.js');
-        const securityHeaders = getBasicSecurityHeaders();
-        config.headers = { ...config.headers, ...securityHeaders };
-
-        // Add request timestamp
-        config.headers['X-Request-Timestamp'] = Date.now().toString();
-      }
-
-      if (!securityConfig.skipInputSanitization) {
-        // Basic input sanitization for sensitive operations
-        if (isSensitiveOperation(config.method, config.url) && config.data) {
-          const { sanitizeInput } = await import('../../core/security/SimpleSecurityInit.js');
-          config.data = sanitizeRequestData(config.data, sanitizeInput);
+      } else {
+        // Log warning in development to help debug
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ No token found in storage for request:', config.url);
         }
+      }
+
+      // Use environment-based security configuration (wrapped in try-catch to not break token)
+      try {
+        const { ENV_CONFIG } = await import('../../core/config/environment.js');
+        const securityConfig = ENV_CONFIG.getSecurityConfig();
+        
+        if (!securityConfig.skipSecurityHeaders) {
+          // Add basic security headers for production/development
+          const { getBasicSecurityHeaders } = await import('../../core/security/SimpleSecurityInit.js');
+          const securityHeaders = getBasicSecurityHeaders();
+          config.headers = { ...config.headers, ...securityHeaders };
+
+          // Add request timestamp
+          config.headers['X-Request-Timestamp'] = Date.now().toString();
+        }
+
+        if (!securityConfig.skipInputSanitization) {
+          // Basic input sanitization for sensitive operations
+          if (isSensitiveOperation(config.method, config.url) && config.data) {
+            const { sanitizeInput } = await import('../../core/security/SimpleSecurityInit.js');
+            config.data = sanitizeRequestData(config.data, sanitizeInput);
+          }
+        }
+      } catch (securityError) {
+        // If security config fails, log but don't break the request
+        console.warn('Security config error (non-blocking):', securityError);
       }
 
       return config;
     } catch (error) {
       console.error('Request interceptor error:', error);
+      // Even on error, ensure token is added if available
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      if (token && config.headers) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
       return Promise.reject(error);
     }
   },
@@ -154,6 +169,7 @@ axiosInstance.interceptors.response.use(
       const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
       const isLoginEndpoint = error.config?.url?.includes('/api/auth/login');
       const isFollowUpEndpoint = error.config?.url?.includes('/followups');
+      const isNotesEndpoint = error.config?.url?.includes('/notes');
       const isOnLogin = window.location.pathname.includes('/login') || window.location.pathname === '/';
 
       // For login endpoint, provide better error messages
@@ -172,6 +188,27 @@ axiosInstance.interceptors.response.use(
           }
         }
         // Don't log 401 errors for login - they're expected for wrong credentials
+      }
+
+      // For notes endpoint 401, check if token exists and log helpful info
+      if (isNotesEndpoint) {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        console.error('🔴 Notes endpoint 401 Unauthorized:', {
+          url: error.config?.url,
+          hasToken: !!token,
+          tokenLength: token?.length || 0,
+          method: error.config?.method
+        });
+        
+        // Check if token might be expired or invalid
+        if (token) {
+          console.warn('⚠️ Token exists but request was unauthorized. Token might be expired or invalid.');
+        } else {
+          console.error('❌ No token found in storage for notes request');
+        }
+        
+        // Don't logout for notes errors - just reject and let component handle it
+        return Promise.reject(error);
       }
 
       // Don't logout for follow-up API errors (temporary fix for backend JPA issue)
