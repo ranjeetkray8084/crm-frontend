@@ -12,21 +12,14 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
-      // Log FULL payload in production to debug issues
+      // Log FULL payload in production to debug issues - check if userId was removed
       if (window.location.hostname.includes('.leadstracker.in')) {
-        console.log('📝 Note creation FULL payload (production):', JSON.stringify(noteData, null, 2));
-        console.log('📝 Note creation payload details:', {
-          companyId,
+        console.log('📝 Note creation payload received by service:', JSON.stringify(noteData, null, 2));
+        console.log('📝 Payload check - has top-level userId?', {
+          hasUserId: 'userId' in noteData,
           userId: noteData.userId,
-          userIdType: typeof noteData.userId,
           createdBy: noteData.createdBy,
-          createdByType: typeof noteData.createdBy,
-          visibleUserIds: noteData.visibleUserIds,
-          visibleUserIdsType: Array.isArray(noteData.visibleUserIds) ? 'array' : typeof noteData.visibleUserIds,
-          visibleUserIdsLength: Array.isArray(noteData.visibleUserIds) ? noteData.visibleUserIds.length : 'N/A',
-          visibility: noteData.visibility,
-          type: noteData.type,
-          content: noteData.content?.substring(0, 50) + '...'
+          message: 'userId' in noteData ? '❌ userId should NOT be in payload!' : '✅ userId correctly removed'
         });
       }
       
