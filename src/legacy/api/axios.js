@@ -219,18 +219,35 @@ axiosInstance.interceptors.response.use(
         // Check if token is expired by decoding JWT
         let tokenExpired = false;
         let tokenExpiryTime = null;
+        let tokenDecodeError = null;
+        let payloadInfo = null;
+        
         if (token) {
           try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const currentTime = Date.now() / 1000;
-            tokenExpired = payload.exp < currentTime;
-            tokenExpiryTime = new Date(payload.exp * 1000);
+            const parts = token.trim().split('.');
+            if (parts.length === 3) {
+              const payload = JSON.parse(atob(parts[1]));
+              const currentTime = Date.now() / 1000;
+              tokenExpired = payload.exp ? payload.exp < currentTime : false;
+              tokenExpiryTime = payload.exp ? new Date(payload.exp * 1000) : null;
+              payloadInfo = {
+                exp: payload.exp,
+                iat: payload.iat,
+                userId: payload.userId || payload.sub,
+                expDate: payload.exp ? new Date(payload.exp * 1000).toLocaleString() : 'N/A',
+                currentTime: new Date(currentTime * 1000).toLocaleString()
+              };
+            } else {
+              tokenDecodeError = 'Invalid token format: expected 3 parts';
+            }
           } catch (e) {
-            // Token decode failed, but don't assume expired
+            tokenDecodeError = e.message || 'Token decode failed';
+            console.error('❌ Token decode error:', e);
           }
         }
 
-        console.error('🔴 Notes endpoint 401 Unauthorized:', {
+        // Log comprehensive error info
+        const errorLog = {
           url: error.config?.url,
           method: error.config?.method,
           hasToken: !!token,
@@ -240,11 +257,34 @@ axiosInstance.interceptors.response.use(
           authHeaderPreview: authHeader ? authHeader.substring(0, 40) + '...' : 'N/A',
           tokenExpired: tokenExpired,
           tokenExpiryTime: tokenExpiryTime?.toLocaleString() || 'N/A',
+          tokenDecodeError: tokenDecodeError,
+          tokenPayloadInfo: payloadInfo,
           requestHeaders: Object.keys(error.config?.headers || {}),
           responseStatus: error.response?.status,
           responseData: error.response?.data,
-          hostname: window.location.hostname
-        });
+          responseHeaders: error.response?.headers,
+          hostname: window.location.hostname,
+          isProduction: window.location.hostname.includes('.leadstracker.in')
+        };
+        
+        console.error('🔴 Notes endpoint 401 Unauthorized:', errorLog);
+        
+        // Also log separately for better visibility
+        if (tokenExpired) {
+          console.error('❌ TOKEN EXPIRED:', {
+            expired: true,
+            expiryTime: tokenExpiryTime?.toLocaleString(),
+            currentTime: new Date().toLocaleString()
+          });
+        } else if (tokenDecodeError) {
+          console.error('❌ TOKEN DECODE FAILED:', tokenDecodeError);
+        } else if (!tokenExpired && payloadInfo) {
+          console.warn('⚠️ TOKEN NOT EXPIRED but backend rejected:', {
+            expiryTime: tokenExpiryTime?.toLocaleString(),
+            timeRemaining: tokenExpiryTime ? Math.max(0, Math.floor((tokenExpiryTime.getTime() - Date.now()) / 1000)) : 'N/A',
+            userId: payloadInfo.userId
+          });
+        }
         
         // Check if token might be expired or invalid
         if (token) {
