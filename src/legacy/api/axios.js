@@ -328,12 +328,25 @@ axiosInstance.interceptors.response.use(
           requestHeaders: Object.keys(error.config?.headers || {}),
           responseStatus: error.response?.status,
           responseData: error.response?.data,
+          responseDataString: JSON.stringify(error.response?.data || {}),
           responseHeaders: error.response?.headers,
+          requestPayload: error.config?.data,
+          requestPayloadString: JSON.stringify(error.config?.data || {}),
           hostname: window.location.hostname,
           isProduction: window.location.hostname.includes('.leadstracker.in')
         };
         
         console.error('🔴 Notes endpoint 401 Unauthorized:', errorLog);
+        
+        // Log backend error message separately for better visibility
+        if (error.response?.data) {
+          console.error('🔴 Backend 401 Response:', {
+            message: error.response.data.message,
+            error: error.response.data.error,
+            status: error.response.data.status,
+            fullResponse: error.response.data
+          });
+        }
         
         // Also log separately for better visibility
         if (tokenExpired) {
