@@ -164,47 +164,14 @@ axiosInstance.interceptors.request.use(
         }
       }
 
-      // Use environment-based security configuration (wrapped in try-catch to not break token)
-      try {
-        const { ENV_CONFIG } = await import('../../core/config/environment.js');
-        const securityConfig = ENV_CONFIG.getSecurityConfig();
-        
-        if (!securityConfig.skipSecurityHeaders) {
-          // Add basic security headers for production/development
-          const { getBasicSecurityHeaders } = await import('../../core/security/SimpleSecurityInit.js');
-          const securityHeaders = getBasicSecurityHeaders();
-          config.headers = { ...config.headers, ...securityHeaders };
-
-          // Add request timestamp
-          config.headers['X-Request-Timestamp'] = Date.now().toString();
+      // Ensure data is object format (not string) - backend handles validation
+      if (config.data && typeof config.data === 'string') {
+        try {
+          config.data = JSON.parse(config.data);
+          console.warn('⚠️ Request data was string, parsed to object:', config.url);
+        } catch (e) {
+          console.error('❌ Failed to parse stringified request data:', e, config.url);
         }
-
-        if (!securityConfig.skipInputSanitization) {
-          // Basic input sanitization for sensitive operations
-          if (isSensitiveOperation(config.method, config.url) && config.data) {
-            // CRITICAL: Ensure data is always an object, not a string
-            // Axios will automatically JSON.stringify objects, so we must pass objects
-            if (typeof config.data === 'string') {
-              try {
-                config.data = JSON.parse(config.data);
-                console.warn('⚠️ Request data was string, parsed to object:', config.url);
-              } catch (e) {
-                console.error('❌ Failed to parse stringified request data:', e, config.url);
-                // Don't sanitize if we can't parse
-                return config;
-              }
-            }
-            
-            // Now sanitize the object
-            if (typeof config.data === 'object' && config.data !== null && !Array.isArray(config.data)) {
-              const { sanitizeInput } = await import('../../core/security/SimpleSecurityInit.js');
-              config.data = sanitizeRequestData(config.data, sanitizeInput);
-            }
-          }
-        }
-      } catch (securityError) {
-        // If security config fails, log but don't break the request
-        console.warn('Security config error (non-blocking):', securityError);
       }
 
       return config;
@@ -223,57 +190,7 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Helper function to check if operation is sensitive
-function isSensitiveOperation(method, url) {
-  const sensitiveMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
-  const sensitiveEndpoints = ['/auth/', '/users/', '/companies/', '/leads/', '/properties/', '/notes/'];
-  
-  return sensitiveMethods.includes(method.toUpperCase()) && 
-         sensitiveEndpoints.some(endpoint => url.includes(endpoint));
-}
-
-// Helper function to sanitize request data
-function sanitizeRequestData(data, sanitizeInput) {
-  if (!data || typeof data !== 'object') {
-    return data;
-  }
-  
-  // CRITICAL: Preserve arrays - don't convert them to objects
-  if (Array.isArray(data)) {
-    return data.map(item => {
-      if (typeof item === 'string') {
-        return sanitizeInput(item);
-      } else if (typeof item === 'object' && item !== null) {
-        return sanitizeRequestData(item, sanitizeInput);
-      }
-      return item;
-    });
-  }
-  
-  const sanitized = {};
-  
-  for (const [key, value] of Object.entries(data)) {
-    if (typeof value === 'string') {
-      sanitized[key] = sanitizeInput(value);
-    } else if (Array.isArray(value)) {
-      // Preserve arrays - sanitize string items only
-      sanitized[key] = value.map(item => {
-        if (typeof item === 'string') {
-          return sanitizeInput(item);
-        } else if (typeof item === 'object' && item !== null) {
-          return sanitizeRequestData(item, sanitizeInput);
-        }
-        return item;
-      });
-    } else if (typeof value === 'object' && value !== null) {
-      sanitized[key] = sanitizeRequestData(value, sanitizeInput);
-    } else {
-      sanitized[key] = value;
-    }
-  }
-  
-  return sanitized;
-}
+// Removed sanitization functions - backend handles validation
 
 // ✅ Enhanced response interceptor with security measures
 axiosInstance.interceptors.response.use(
