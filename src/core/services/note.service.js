@@ -86,6 +86,21 @@ export class NoteService {
           fullResponse: error.response.data
         });
         
+        // Special handling for 401 Unauthorized - likely token from different backend (local vs production)
+        if (error.response.status === 401) {
+          const isProduction = window.location.hostname.includes('.leadstracker.in');
+          const currentBackend = window.location.hostname.includes('.leadstracker.in') 
+            ? 'production' 
+            : 'local';
+          
+          return {
+            success: false,
+            error: isProduction 
+              ? 'Your session has expired or token is invalid. Please refresh the page and login again to get a valid production token.'
+              : 'Authentication failed. Please login again to get a valid token for this backend.'
+          };
+        }
+        
         // Server responded with error status
         const errorMessage = error.response.data?.message || 
                             error.response.data?.error ||
