@@ -204,13 +204,13 @@ export const useNotes = (companyId, userId, role) => {
             .filter(id => id !== null && id !== undefined && !isNaN(id)) // Remove invalid IDs
         : [];
       
-      // Remove userId from payload - backend should extract it from token
-      // Only keep createdBy like leads do
+      // Note: Backend expects userId directly on Note object (unlike Leads which use createdBy)
+      // Remove any existing userId from noteData to ensure we set the correct one
       const { userId: _, ...noteDataWithoutUserId } = noteData;
       
       const finalNoteData = { 
         ...noteDataWithoutUserId,
-        createdBy: { userId: numericUserId }, // Match lead format: only createdBy, no top-level userId
+        userId: numericUserId, // Backend requires userId directly on Note (line 62 in NoteController)
         visibleUserIds: visibleUserIds // Ensure array of numbers only
       };
       
