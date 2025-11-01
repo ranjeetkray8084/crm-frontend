@@ -68,9 +68,30 @@ axiosInstance.interceptors.request.use(
       }
 
       // CRITICAL: Get and add token FIRST - ensure it's always added even if other operations fail
-      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      let token = sessionStorage.getItem('token') || localStorage.getItem('token');
       if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+        // Clean token - remove any whitespace
+        token = token.trim();
+        
+        // Validate token format (should not be empty after trim)
+        if (!token || token.length === 0) {
+          console.error('❌ Token is empty after trim:', config.url);
+        } else {
+          // Ensure Authorization header is set correctly (case-sensitive)
+          config.headers['Authorization'] = `Bearer ${token}`;
+          
+          // Debug logging for notes endpoint to diagnose 401 issues
+          if (config.url && config.url.includes('/notes') && config.method === 'post') {
+            console.log('🔍 Notes Request Debug:', {
+              url: config.url,
+              method: config.method,
+              hasToken: !!token,
+              tokenLength: token.length,
+              tokenPreview: token.substring(0, 20) + '...',
+              authHeader: config.headers['Authorization']?.substring(0, 30) + '...'
+            });
+          }
+        }
       } else {
         // Log warning in development to help debug
         if (process.env.NODE_ENV === 'development') {
@@ -193,21 +214,58 @@ axiosInstance.interceptors.response.use(
       // For notes endpoint 401, check if token exists and log helpful info
       if (isNotesEndpoint) {
         const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        const authHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
+        
         console.error('🔴 Notes endpoint 401 Unauthorized:', {
           url: error.config?.url,
+          method: error.config?.method,
           hasToken: !!token,
-          tokenLength: token?.length || 0,
-          method: error.config?.method
+          tokenLength: token?.trim()?.length || 0,
+          tokenPreview: token ? token.substring(0, 20) + '...' : 'N/A',
+          hasAuthHeader: !!authHeader,
+          authHeaderPreview: authHeader ? authHeader.substring(0, 40) + '...' : 'N/A',
+          requestHeaders: Object.keys(error.config?.headers || {}),
+          responseStatus: error.response?.status,
+          responseData: error.response?.data
         });
         
         // Check if token might be expired or invalid
         if (token) {
-          console.warn('⚠️ Token exists but request was unauthorized. Token might be expired or invalid.');
+          const cleanedToken = token.trim();
+          if (cleanedToken.length === 0) {
+            console.error('❌ Token is empty after trimming whitespace');
+          } else if (!authHeader || !authHeader.includes('Bearer')) {
+            console.error('❌ Authorization header missing or malformed in request');
+          } else {
+            console.warn('⚠️ Token exists and header looks correct. Token might be expired or invalid.');
+            
+            // In production, token expiry is common - suggest user to refresh page or re-login
+            const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+            if (isProduction) {
+              console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
+              
+              // Add error message to help user
+              error.userMessage = 'Your session may have expired. Please refresh the page or login again to create notes.';
+            }
+            
+            // Check backend error message
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
+            if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
+              console.warn('⚠️ Backend indicates token is expired/invalid. User should re-login.');
+              error.userMessage = error.userMessage || 'Session expired. Please login again.';
+            }
+          }
         } else {
           console.error('❌ No token found in storage for notes request');
+          error.userMessage = 'Authentication token not found. Please login again.';
         }
         
         // Don't logout for notes errors - just reject and let component handle it
+        // But add helpful error message
+        if (!error.userMessage) {
+          error.userMessage = 'Unable to create note. Please check your login status.';
+        }
+        
         return Promise.reject(error);
       }
 

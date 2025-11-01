@@ -47,17 +47,28 @@ export class NoteService {
         const status = error.response.status;
         const data = error.response.data;
         
-        errorMessage = data?.message || 
+        errorMessage = error.userMessage || // User-friendly message from axios interceptor
+                      data?.message || 
                       data?.error || 
-                      `Server error: ${status}`;
+                      (status === 401 ? 'Session expired. Please refresh the page or login again.' : `Server error: ${status}`);
         
         // Log detailed error info for debugging
         console.error('❌ Note creation failed:', {
           status,
           error: errorMessage,
           url: error.config?.url,
-          hasToken: !!(sessionStorage.getItem('token') || localStorage.getItem('token'))
+          hasToken: !!(sessionStorage.getItem('token') || localStorage.getItem('token')),
+          userMessage: error.userMessage,
+          backendMessage: data?.message || data?.error
         });
+        
+        // For 401 errors in production, provide helpful guidance
+        if (status === 401) {
+          const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+          if (isProduction) {
+            console.warn('💡 Production 401 error - This usually means the token expired. User should refresh page or re-login.');
+          }
+        }
       } else if (error.request) {
         errorMessage = 'No response from server. Please check your connection.';
         console.error('❌ Network error creating note:', error.message);

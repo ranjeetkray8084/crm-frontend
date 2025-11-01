@@ -141,11 +141,28 @@ const NoteModals = ({
         closeAddModal();
         return true;
       } else {
-        alert(`Failed to create note: ${result?.error || 'Unknown error'}`);
+        // Check if it's a 401 error (session expired)
+        const errorMessage = result?.error || 'Unknown error';
+        if (errorMessage.includes('Session expired') || errorMessage.includes('session may have expired')) {
+          const shouldRefresh = confirm('Your session has expired. Would you like to refresh the page and login again?');
+          if (shouldRefresh) {
+            window.location.reload();
+          }
+        } else {
+          alert(`Failed to create note: ${errorMessage}`);
+        }
         return false;
       }
     } catch (error) {
-      alert(`Error creating note: ${error.message}`);
+      const errorMessage = error.message || error.userMessage || 'Unknown error occurred';
+      if (errorMessage.includes('Session expired') || errorMessage.includes('session may have expired')) {
+        const shouldRefresh = confirm('Your session has expired. Would you like to refresh the page and login again?');
+        if (shouldRefresh) {
+          window.location.reload();
+        }
+      } else {
+        alert(`Error creating note: ${errorMessage}`);
+      }
       return false;
     }
   };
