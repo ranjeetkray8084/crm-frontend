@@ -176,10 +176,16 @@ export const useNotes = (companyId, userId, role) => {
         return Promise.resolve({ success: false, error: 'Note content is required' });
       }
       
+      // Ensure visibleUserIds is array of numbers (not objects)
+      const visibleUserIds = noteData.visibleUserIds 
+        ? noteData.visibleUserIds.map(id => typeof id === 'object' ? (id.userId || id.id || id) : id)
+        : [];
+      
       const finalNoteData = { 
-        ...noteData, 
+        ...noteData,
         userId,
-        createdBy: userId
+        createdBy: { userId }, // Match lead format: object with userId property
+        visibleUserIds: visibleUserIds // Ensure array of numbers
       };
       
       return executeNoteAction(
