@@ -252,6 +252,20 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     // Enhanced error handling with security
+    // Handle 400 Bad Request errors (payload validation issues)
+    if (error.response?.status === 400 && error.config?.url?.includes('/notes') && error.config?.method === 'post') {
+      console.error('🔴 Notes 400 Bad Request - Backend validation error:', {
+        url: error.config?.url,
+        requestPayload: error.config?.data,
+        requestPayloadString: JSON.stringify(error.config?.data),
+        responseData: error.response?.data,
+        responseDataString: JSON.stringify(error.response?.data || {}),
+        message: error.response?.data?.message,
+        error: error.response?.data?.error,
+        fullResponse: error.response?.data
+      });
+    }
+    
     if (error.response?.status === 401) {
       const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
       const isLoginEndpoint = error.config?.url?.includes('/api/auth/login');

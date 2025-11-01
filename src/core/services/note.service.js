@@ -41,8 +41,19 @@ export class NoteService {
     } catch (error) {
       // Handle different types of errors - same pattern as lead service
       if (error.response) {
+        // Log detailed error for debugging
+        console.error('❌ Note creation failed:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          message: error.response.data?.message,
+          error: error.response.data?.error,
+          fullResponse: error.response.data
+        });
+        
         // Server responded with error status
         const errorMessage = error.response.data?.message || 
+                            error.response.data?.error ||
                             error.response.data || 
                             `Server error: ${error.response.status}`;
         return {
