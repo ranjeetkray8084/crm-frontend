@@ -183,8 +183,24 @@ axiosInstance.interceptors.request.use(
         if (!securityConfig.skipInputSanitization) {
           // Basic input sanitization for sensitive operations
           if (isSensitiveOperation(config.method, config.url) && config.data) {
-            const { sanitizeInput } = await import('../../core/security/SimpleSecurityInit.js');
-            config.data = sanitizeRequestData(config.data, sanitizeInput);
+            // CRITICAL: Ensure data is always an object, not a string
+            // Axios will automatically JSON.stringify objects, so we must pass objects
+            if (typeof config.data === 'string') {
+              try {
+                config.data = JSON.parse(config.data);
+                console.warn('⚠️ Request data was string, parsed to object:', config.url);
+              } catch (e) {
+                console.error('❌ Failed to parse stringified request data:', e, config.url);
+                // Don't sanitize if we can't parse
+                return config;
+              }
+            }
+            
+            // Now sanitize the object
+            if (typeof config.data === 'object' && config.data !== null && !Array.isArray(config.data)) {
+              const { sanitizeInput } = await import('../../core/security/SimpleSecurityInit.js');
+              config.data = sanitizeRequestData(config.data, sanitizeInput);
+            }
           }
         }
       } catch (securityError) {
@@ -254,16 +270,51 @@ axiosInstance.interceptors.response.use(
     // Enhanced error handling with security
     // Handle 400 Bad Request errors (payload validation issues)
     if (error.response?.status === 400 && error.config?.url?.includes('/notes') && error.config?.method === 'post') {
+      // Try to get more details from the response
+      let responseText = '';
+      try {
+        responseText = error.response?.data?.toString() || '';
+      } catch (e) {
+        responseText = String(error.response?.data || '');
+      }
+      
+      // Check if request payload is accidentally a string (double-stringified)
+      let actualPayload = error.config?.data;
+      if (typeof actualPayload === 'string') {
+        try {
+          actualPayload = JSON.parse(actualPayload);
+          console.warn('⚠️ Request payload was a string, parsed it:', actualPayload);
+        } catch (e) {
+          console.error('❌ Request payload is string but not valid JSON:', actualPayload);
+        }
+      }
+      
       console.error('🔴 Notes 400 Bad Request - Backend validation error:', {
         url: error.config?.url,
-        requestPayload: error.config?.data,
-        requestPayloadString: JSON.stringify(error.config?.data),
+        requestPayload: actualPayload,
+        requestPayloadType: typeof error.config?.data,
+        requestPayloadOriginal: error.config?.data,
+        requestPayloadString: JSON.stringify(actualPayload, null, 2),
+        responseStatus: error.response?.status,
+        responseStatusText: error.response?.statusText,
+        responseHeaders: error.response?.headers,
         responseData: error.response?.data,
-        responseDataString: JSON.stringify(error.response?.data || {}),
+        responseDataType: typeof error.response?.data,
+        responseDataString: responseText,
+        responseDataLength: responseText?.length || 0,
         message: error.response?.data?.message,
         error: error.response?.data?.error,
-        fullResponse: error.response?.data
+        fullResponse: error.response?.data,
+        contentType: error.response?.headers?.['content-type'] || error.response?.headers?.['Content-Type']
       });
+      
+      // Suggest checking Network tab for actual response
+      console.error('💡 TIP: Open Browser DevTools > Network tab > Find the failed POST request > Check Response tab for actual error message');
+      
+      // If response is empty, log the raw response
+      if (!error.response?.data || (typeof error.response?.data === 'string' && error.response?.data.trim() === '')) {
+        console.error('⚠️ Backend returned empty response body. Check Network tab for actual response.');
+      }
     }
     
     if (error.response?.status === 401) {

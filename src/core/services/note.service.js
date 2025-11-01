@@ -23,7 +23,43 @@ export class NoteService {
         });
       }
       
-      const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), noteData);
+      // CRITICAL: Ensure noteData is always an object, never a string
+      // Axios.post() expects an object which it will JSON.stringify automatically
+      let payload = noteData;
+      
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+          console.warn('⚠️ noteData was string, parsed to object');
+        } catch (e) {
+          console.error('❌ Failed to parse noteData string:', e);
+          return {
+            success: false,
+            error: 'Invalid note data format'
+          };
+        }
+      }
+      
+      // Double-check it's an object
+      if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+        console.error('❌ Invalid payload type:', typeof payload, payload);
+        return {
+          success: false,
+          error: 'Invalid note data format - must be an object'
+        };
+      }
+      
+      // Log final payload before sending
+      if (window.location.hostname.includes('.leadstracker.in') || process.env.NODE_ENV === 'development') {
+        console.log('📤 Sending note payload to backend (ensured object):', {
+          payloadType: typeof payload,
+          isArray: Array.isArray(payload),
+          payload: payload,
+          payloadKeys: Object.keys(payload)
+        });
+      }
+      
+      const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), payload);
       
       // Check if response is successful (status 200-299)
       if (response.status >= 200 && response.status < 300) {
