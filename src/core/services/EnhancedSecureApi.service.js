@@ -10,7 +10,7 @@ import { tokenManager } from '../security/TokenManager.js';
 class EnhancedSecureApiService {
   constructor() {
     this.axios = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
+      baseURL: 'https://backend.leadstracker.in', // ALWAYS USE PRODUCTION
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',

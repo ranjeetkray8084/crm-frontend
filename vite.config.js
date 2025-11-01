@@ -3,14 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  // Load environment variables
-  const env = loadEnv(mode, process.cwd(), '');
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'https://backend.leadstracker.in';
+  // ALWAYS USE PRODUCTION API - Force production backend
+  const apiBaseUrl = 'https://backend.leadstracker.in';
   
   // Debug logging
   console.log('🔧 Vite Mode:', mode);
-  console.log('🔗 Vite Proxy Target:', apiBaseUrl);
-  console.log('🌍 Environment VITE_API_BASE_URL:', env.VITE_API_BASE_URL);
+  console.log('🔗 Vite Proxy Target (PRODUCTION):', apiBaseUrl);
 
   return {
     plugins: [react()],

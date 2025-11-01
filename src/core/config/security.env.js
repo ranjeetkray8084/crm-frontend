@@ -6,7 +6,7 @@
 export const SECURITY_CONFIG = {
   // API Configuration
   API: {
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
+    BASE_URL: 'https://backend.leadstracker.in', // ALWAYS USE PRODUCTION
     TIMEOUT: 30000,
     MAX_RETRIES: 3,
     ENABLE_HTTPS: import.meta.env.NODE_ENV === 'production'

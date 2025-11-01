@@ -9,8 +9,8 @@ export const ENV_CONFIG = {
   isProduction: import.meta.env.NODE_ENV === 'production',
   isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
   
-  // API Configuration
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
+  // API Configuration - ALWAYS USE PRODUCTION
+  apiBaseUrl: 'https://backend.leadstracker.in',
   
   // Security Configuration
   enableSecurity: import.meta.env.VITE_ENABLE_SECURITY !== 'false',

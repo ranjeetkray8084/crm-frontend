@@ -371,7 +371,7 @@ export function validateApiUrl(url) {
  * Get secure API base URL
  */
 export function getSecureApiUrl() {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  const envUrl = 'https://backend.leadstracker.in'; // ALWAYS USE PRODUCTION
   const defaultUrl = 'https://backend.leadstracker.in';
   
   if (envUrl && validateApiUrl(envUrl)) {
