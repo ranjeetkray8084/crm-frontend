@@ -12,97 +12,45 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
-      // Verify token exists and is valid before making request
-      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-      if (!token) {
-        console.error('❌ No token found when creating note');
+      const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), noteData);
+      
+      // Check if response is successful (status 200-299)
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          data: response.data,
+          message: 'Note created successfully'
+        };
+      } else {
         return {
           success: false,
-          error: 'Authentication token not found. Please login again.'
+          error: response.data?.message || 'Failed to create note'
         };
       }
-
-      // Check if token is expired
-      try {
-        const { isTokenExpired } = await import('../utils/authUtils.js');
-        if (isTokenExpired(token)) {
-          console.error('❌ Token is expired when creating note');
-          
-          // Clear expired token
-          sessionStorage.removeItem('token');
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('user');
-          localStorage.removeItem('user');
-          
-          return {
-            success: false,
-            error: 'Your session has expired. Please refresh the page and login again.'
-          };
-        }
-      } catch (importError) {
-        // If import fails, continue with request - backend will validate
-        console.warn('⚠️ Could not check token expiration, proceeding with request');
-      }
-
-      const endpoint = API_ENDPOINTS.NOTES.CREATE(companyId);
-      
-      // Log request details in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📝 Creating note:', {
-          endpoint,
-          companyId,
-          hasToken: !!token,
-          noteDataType: noteData?.type
-        });
-      }
-
-      const response = await axios.post(endpoint, noteData);
-      return {
-        success: true,
-        data: response.data,
-        message: 'Note created successfully'
-      };
     } catch (error) {
-      let errorMessage = 'Failed to create note';
-      
+      // Handle different types of errors - same pattern as lead service
       if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-        
-        errorMessage = error.userMessage || // User-friendly message from axios interceptor
-                      data?.message || 
-                      data?.error || 
-                      (status === 401 ? 'Session expired. Please refresh the page or login again.' : `Server error: ${status}`);
-        
-        // Log detailed error info for debugging
-        console.error('❌ Note creation failed:', {
-          status,
-          error: errorMessage,
-          url: error.config?.url,
-          hasToken: !!(sessionStorage.getItem('token') || localStorage.getItem('token')),
-          userMessage: error.userMessage,
-          backendMessage: data?.message || data?.error
-        });
-        
-        // For 401 errors in production, provide helpful guidance
-        if (status === 401) {
-          const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-          if (isProduction) {
-            console.warn('💡 Production 401 error - This usually means the token expired. User should refresh page or re-login.');
-          }
-        }
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 
+                            error.response.data || 
+                            `Server error: ${error.response.status}`;
+        return {
+          success: false,
+          error: errorMessage
+        };
       } else if (error.request) {
-        errorMessage = 'No response from server. Please check your connection.';
-        console.error('❌ Network error creating note:', error.message);
+        // Network error
+        return {
+          success: false,
+          error: 'Network error. Please check your connection.'
+        };
       } else {
-        errorMessage = error.message || 'Unknown error occurred';
-        console.error('❌ Error creating note:', error);
+        // Other error
+        return {
+          success: false,
+          error: error.message || 'Failed to create note'
+        };
       }
-      
-      return {
-        success: false,
-        error: errorMessage
-      };
     }
   }
 
