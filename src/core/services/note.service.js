@@ -12,6 +12,18 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
+      // Log payload in production to debug issues
+      if (window.location.hostname.includes('.leadstracker.in')) {
+        console.log('📝 Note creation payload (production):', {
+          companyId,
+          userId: noteData.userId,
+          createdBy: noteData.createdBy,
+          visibleUserIds: noteData.visibleUserIds,
+          visibility: noteData.visibility,
+          type: noteData.type
+        });
+      }
+      
       const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), noteData);
       
       // Check if response is successful (status 200-299)
