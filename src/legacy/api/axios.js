@@ -119,8 +119,8 @@ axiosInstance.interceptors.request.use(
             });
           }
           
-          // Also log leads requests in production to compare
-          if (config.url && config.url.includes('/leads') && config.method === 'post' && window.location.hostname.includes('.leadstracker.in')) {
+          // Also log leads PUT requests in production to debug 401 errors
+          if (config.url && config.url.includes('/leads') && (config.method === 'post' || config.method === 'put') && window.location.hostname.includes('.leadstracker.in')) {
             const userFromStorage = sessionStorage.getItem('user') || localStorage.getItem('user');
             let userObj = null;
             try {
@@ -140,7 +140,7 @@ axiosInstance.interceptors.request.use(
               console.error('Failed to decode token (leads):', e);
             }
             
-            console.log('✅ Leads Request Debug (PRODUCTION - WORKING):', {
+            console.log(`🔍 Leads ${config.method.toUpperCase()} Request Debug (PRODUCTION):`, {
               url: config.url,
               fullUrl: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
               method: config.method,
@@ -148,7 +148,7 @@ axiosInstance.interceptors.request.use(
               tokenLength: token.length,
               tokenPreview: token.substring(0, 20) + '...',
               authHeader: config.headers['Authorization']?.substring(0, 30) + '...',
-              requestPayload: JSON.parse(JSON.stringify(config.data)),
+              requestPayload: typeof config.data === 'object' ? JSON.parse(JSON.stringify(config.data)) : config.data,
               userFromStorage: userObj,
               tokenPayload: tokenPayload,
               allHeaders: Object.keys(config.headers),
@@ -363,8 +363,10 @@ axiosInstance.interceptors.response.use(
         // Don't log 401 errors for login - they're expected for wrong credentials
       }
 
-      // For notes endpoint 401, check if token exists and log helpful info
-      if (isNotesEndpoint) {
+      // For leads PUT endpoint 401, check if token exists and log helpful info
+      const isLeadsPutEndpoint = error.config?.url?.includes('/leads') && error.config?.method === 'put';
+      
+      if (isLeadsPutEndpoint || isNotesEndpoint) {
         const token = sessionStorage.getItem('token') || localStorage.getItem('token');
         const authHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
         
@@ -422,7 +424,8 @@ axiosInstance.interceptors.response.use(
           isProduction: window.location.hostname.includes('.leadstracker.in')
         };
         
-        console.error('🔴 Notes endpoint 401 Unauthorized:', errorLog);
+        const endpointType = isLeadsPutEndpoint ? 'Leads PUT' : 'Notes';
+        console.error(`🔴 ${endpointType} endpoint 401 Unauthorized:`, errorLog);
         
         // Log backend error message separately for better visibility
         if (error.response?.data) {
@@ -451,77 +454,62 @@ axiosInstance.interceptors.response.use(
           });
         }
         
-        // Check if token might be expired or invalid
-        if (token) {
-          const cleanedToken = token.trim();
-          if (cleanedToken.length === 0) {
-            console.error('❌ Token is empty after trimming whitespace');
-          } else if (!authHeader || !authHeader.includes('Bearer')) {
-            console.error('❌ Authorization header missing or malformed in request');
-          } else {
-            // Check if token is expired
-            let tokenExpired = false;
-            try {
-              const payload = JSON.parse(atob(token.split('.')[1]));
-              const currentTime = Date.now() / 1000;
-              tokenExpired = payload.exp < currentTime;
-            } catch (e) {
-              // Token decode failed
-            }
-
-            if (tokenExpired) {
-              console.warn('⚠️ Token is expired. Clearing token and asking user to re-login.');
-              
-              // Clear expired token
-              sessionStorage.removeItem('token');
-              localStorage.removeItem('token');
-              sessionStorage.removeItem('user');
-              localStorage.removeItem('user');
-              
-              error.userMessage = 'Your session has expired. Please refresh the page and login again.';
-            } else {
-              console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be invalid or revoked.');
-              
-              // In production, token expiry is common - suggest user to refresh page or re-login
-              const isProduction = window.location.hostname !== 'localhost' && 
-                                  !window.location.hostname.includes('127.0.0.1') &&
-                                  window.location.hostname.includes('.leadstracker.in');
-              if (isProduction) {
-                console.warn('⚠️ Production API detected. Token is NOT expired but was rejected. This means token is from LOCAL backend. User must login again on PRODUCTION.');
-                
-                // CRITICAL FIX: Clear token from different backend environment
-                console.log('🔄 Clearing invalid token to force re-authentication...');
-                sessionStorage.removeItem('token');
-                sessionStorage.removeItem('user');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                
-                // Add error message to help user
-                error.userMessage = 'Your login token is from a different environment. Please log in again to continue.';
-                
-                // Force redirect to login after short delay
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 1000);
-              }
-              
-              // Check backend error message
-              const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
-              if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
-                console.warn('⚠️ Backend indicates token is expired/invalid. User should re-login.');
-                error.userMessage = error.userMessage || 'Session expired. Please login again.';
-              }
-            }
-          }
+        // Clear token if expired
+        if (tokenExpired) {
+          console.warn('⚠️ Token is expired. Clearing token and asking user to re-login.');
+          
+          // Clear expired token
+          sessionStorage.removeItem('token');
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          localStorage.removeItem('user');
+          
+          error.userMessage = 'Your session has expired. Please refresh the page and login again.';
+        } else if (!token) {
+          console.error('❌ No token found in storage');
+          error.userMessage = 'Authentication required. Please login again.';
+        } else if (!authHeader || !authHeader.includes('Bearer')) {
+          console.error('❌ Authorization header missing or malformed in request');
+          error.userMessage = 'Authorization header missing. Please refresh the page.';
         } else {
-          console.error('❌ No token found in storage for notes request');
-          error.userMessage = 'Authentication token not found. Please login again.';
+          console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be invalid or revoked.');
+          
+          // In production, token expiry is common - suggest user to refresh page or re-login
+          const isProduction = window.location.hostname !== 'localhost' && 
+                              !window.location.hostname.includes('127.0.0.1') &&
+                              window.location.hostname.includes('.leadstracker.in');
+          if (isProduction) {
+            console.warn('⚠️ Production API detected. Token is NOT expired but was rejected. This means token is from LOCAL backend. User must login again on PRODUCTION.');
+            
+            // CRITICAL FIX: Clear token from different backend environment
+            console.log('🔄 Clearing invalid token to force re-authentication...');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Add error message to help user
+            error.userMessage = 'Your login token is from a different environment. Please log in again to continue.';
+            
+            // Force redirect to login after short delay
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1000);
+          }
+          
+          // Check backend error message
+          const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
+          if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
+            console.warn('⚠️ Backend indicates token is expired/invalid. User should re-login.');
+            error.userMessage = error.userMessage || 'Session expired. Please login again.';
+          }
         }
         
-        // Don't logout for notes errors - just reject and let component handle it
+        // Don't logout for notes/leads errors - just reject and let component handle it
         // But add helpful error message
         if (!error.userMessage) {
-          error.userMessage = 'Unable to create note. Please check your login status.';
+          const endpointType = isLeadsPutEndpoint ? 'update lead' : 'create note';
+          error.userMessage = `Unable to ${endpointType}. Please check your login status.`;
         }
         
         return Promise.reject(error);

@@ -96,35 +96,15 @@ export class NoteService {
                                  (typeof error.response.data === 'string' && error.response.data.trim()) ||
                                  '';
           
-          // Check if token exists and is not expired (likely wrong backend token)
-          let tokenInfo = null;
-          try {
-            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-            if (token) {
-              const parts = token.trim().split('.');
-              if (parts.length === 3) {
-                const payload = JSON.parse(atob(parts[1]));
-                const currentTime = Date.now() / 1000;
-                const isExpired = payload.exp ? payload.exp < currentTime : false;
-                tokenInfo = { isExpired, hasToken: true };
-              }
-            }
-          } catch (e) {
-            // Ignore token decode errors
-          }
-          
           // Create user-friendly message
           let userMessage;
           if (backendMessage && backendMessage.toLowerCase().includes('expired')) {
             userMessage = 'Your session has expired. Please refresh the page and login again.';
           } else if (backendMessage && backendMessage.toLowerCase().includes('invalid')) {
             userMessage = 'Your authentication token is invalid. Please refresh the page and login again.';
-          } else if (tokenInfo && !tokenInfo.isExpired && tokenInfo.hasToken) {
-            // Token exists and not expired but rejected = likely from wrong backend
-            userMessage = 'Your authentication token is from a different backend. Please refresh the page and login again with production credentials.';
           } else {
             userMessage = isProduction 
-              ? 'Authentication failed. Please refresh the page and login again to get a valid production token.'
+              ? 'Your session has expired or token is invalid. Please refresh the page and login again to get a valid production token.'
               : 'Authentication failed. Please login again to get a valid token for this backend.';
           }
           

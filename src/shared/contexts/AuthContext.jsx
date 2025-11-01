@@ -16,14 +16,46 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Load user from sessionStorage on app start (session-based auth)
-    const loadUser = () => {
+    const loadUser = async () => {
       try {
-        const storedUser = sessionStorage.getItem('user');
-        const token = sessionStorage.getItem('token');
+        const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
 
         if (storedUser && token) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          // Validate if token is from correct environment
+          const isProduction = window.location.hostname !== 'localhost' && 
+                              !window.location.hostname.includes('127.0.0.1') &&
+                              window.location.hostname.includes('.leadstracker.in');
+
+          // Quick token validation - check if it can make a simple request
+          if (isProduction) {
+            try {
+              const { default: axios } = await import('../../legacy/api/axios');
+              
+              // Set the token before validation
+              axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+              
+              // Try a simple endpoint to validate token (without creating debug spam)
+              await axios.get('/api/auth/validate-token');
+              
+              // Token is valid, proceed with user setup
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+              console.log('✅ Token validated successfully for production');
+            } catch (validationError) {
+              // Token is invalid for this environment - clear it
+              console.warn('⚠️ Token validation failed - likely from different environment. Clearing session...');
+              sessionStorage.removeItem('user');
+              sessionStorage.removeItem('token');
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+              setUser(null);
+            }
+          } else {
+            // For localhost, assume token is valid
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+          }
         } else {
           // Clear any partial data
           sessionStorage.removeItem('user');
@@ -33,6 +65,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
         }
       } catch (error) {
+        console.error('Error loading user:', error);
         // Clear invalid data
         sessionStorage.removeItem('user');
         sessionStorage.removeItem('token');

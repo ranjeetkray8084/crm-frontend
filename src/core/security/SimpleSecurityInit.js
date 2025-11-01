@@ -335,13 +335,23 @@ export function sanitizeInput(input) {
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim();
   
-  // Step 4: Security logging
+  // Step 4: Security logging - only log actual threats, not normal sanitization
   if (input !== sanitized) {
-    console.warn('🚨 Security threat detected and blocked:', {
-      original: input.substring(0, 100),
-      sanitized: sanitized.substring(0, 100),
-      blocked: input.includes('<') || input.includes('>') || input.includes('script') || input.includes('javascript')
-    });
+    // Only log if there was an actual security threat detected
+    const hasActualThreat = input.includes('<script') || 
+                            input.includes('javascript:') || 
+                            input.includes('onerror=') || 
+                            input.includes('onload=') ||
+                            input.match(/(union\s+select|drop\s+table|delete\s+from)/i);
+    
+    if (hasActualThreat) {
+      console.warn('🚨 Security threat detected and blocked:', {
+        original: input.substring(0, 100),
+        sanitized: sanitized.substring(0, 100),
+        threatType: 'XSS or SQL Injection attempt'
+      });
+    }
+    // Don't log for normal sanitization (like removing brackets or other harmless patterns)
   }
   
   return sanitized;
