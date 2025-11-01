@@ -12,7 +12,7 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
-      // Verify token exists before making request
+      // Verify token exists and is valid before making request
       const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       if (!token) {
         console.error('❌ No token found when creating note');
@@ -20,6 +20,28 @@ export class NoteService {
           success: false,
           error: 'Authentication token not found. Please login again.'
         };
+      }
+
+      // Check if token is expired
+      try {
+        const { isTokenExpired } = await import('../utils/authUtils.js');
+        if (isTokenExpired(token)) {
+          console.error('❌ Token is expired when creating note');
+          
+          // Clear expired token
+          sessionStorage.removeItem('token');
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          localStorage.removeItem('user');
+          
+          return {
+            success: false,
+            error: 'Your session has expired. Please refresh the page and login again.'
+          };
+        }
+      } catch (importError) {
+        // If import fails, continue with request - backend will validate
+        console.warn('⚠️ Could not check token expiration, proceeding with request');
       }
 
       const endpoint = API_ENDPOINTS.NOTES.CREATE(companyId);

@@ -216,6 +216,20 @@ axiosInstance.interceptors.response.use(
         const token = sessionStorage.getItem('token') || localStorage.getItem('token');
         const authHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
         
+        // Check if token is expired by decoding JWT
+        let tokenExpired = false;
+        let tokenExpiryTime = null;
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            tokenExpired = payload.exp < currentTime;
+            tokenExpiryTime = new Date(payload.exp * 1000);
+          } catch (e) {
+            // Token decode failed, but don't assume expired
+          }
+        }
+
         console.error('🔴 Notes endpoint 401 Unauthorized:', {
           url: error.config?.url,
           method: error.config?.method,
@@ -224,9 +238,12 @@ axiosInstance.interceptors.response.use(
           tokenPreview: token ? token.substring(0, 20) + '...' : 'N/A',
           hasAuthHeader: !!authHeader,
           authHeaderPreview: authHeader ? authHeader.substring(0, 40) + '...' : 'N/A',
+          tokenExpired: tokenExpired,
+          tokenExpiryTime: tokenExpiryTime?.toLocaleString() || 'N/A',
           requestHeaders: Object.keys(error.config?.headers || {}),
           responseStatus: error.response?.status,
-          responseData: error.response?.data
+          responseData: error.response?.data,
+          hostname: window.location.hostname
         });
         
         // Check if token might be expired or invalid
@@ -237,22 +254,46 @@ axiosInstance.interceptors.response.use(
           } else if (!authHeader || !authHeader.includes('Bearer')) {
             console.error('❌ Authorization header missing or malformed in request');
           } else {
-            console.warn('⚠️ Token exists and header looks correct. Token might be expired or invalid.');
-            
-            // In production, token expiry is common - suggest user to refresh page or re-login
-            const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-            if (isProduction) {
-              console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
-              
-              // Add error message to help user
-              error.userMessage = 'Your session may have expired. Please refresh the page or login again to create notes.';
+            // Check if token is expired
+            let tokenExpired = false;
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const currentTime = Date.now() / 1000;
+              tokenExpired = payload.exp < currentTime;
+            } catch (e) {
+              // Token decode failed
             }
-            
-            // Check backend error message
-            const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
-            if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
-              console.warn('⚠️ Backend indicates token is expired/invalid. User should re-login.');
-              error.userMessage = error.userMessage || 'Session expired. Please login again.';
+
+            if (tokenExpired) {
+              console.warn('⚠️ Token is expired. Clearing token and asking user to re-login.');
+              
+              // Clear expired token
+              sessionStorage.removeItem('token');
+              localStorage.removeItem('token');
+              sessionStorage.removeItem('user');
+              localStorage.removeItem('user');
+              
+              error.userMessage = 'Your session has expired. Please refresh the page and login again.';
+            } else {
+              console.warn('⚠️ Token exists and header looks correct, but backend rejected. Token might be invalid or revoked.');
+              
+              // In production, token expiry is common - suggest user to refresh page or re-login
+              const isProduction = window.location.hostname !== 'localhost' && 
+                                  !window.location.hostname.includes('127.0.0.1') &&
+                                  window.location.hostname.includes('.leadstracker.in');
+              if (isProduction) {
+                console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
+                
+                // Add error message to help user
+                error.userMessage = 'Your session may have expired. Please refresh the page or login again to create notes.';
+              }
+              
+              // Check backend error message
+              const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
+              if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
+                console.warn('⚠️ Backend indicates token is expired/invalid. User should re-login.');
+                error.userMessage = error.userMessage || 'Session expired. Please login again.';
+              }
             }
           }
         } else {
