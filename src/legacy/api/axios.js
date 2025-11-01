@@ -122,6 +122,25 @@ axiosInstance.interceptors.request.use(
           
           // Also log leads requests in production to compare
           if (config.url && config.url.includes('/leads') && config.method === 'post' && window.location.hostname.includes('.leadstracker.in')) {
+            const userFromStorage = sessionStorage.getItem('user') || localStorage.getItem('user');
+            let userObj = null;
+            try {
+              userObj = userFromStorage ? JSON.parse(userFromStorage) : null;
+            } catch (e) {
+              console.error('Failed to parse user from storage (leads):', e);
+            }
+            
+            // Decode token to see what's in it
+            let tokenPayload = null;
+            try {
+              const parts = token.split('.');
+              if (parts.length === 3) {
+                tokenPayload = JSON.parse(atob(parts[1]));
+              }
+            } catch (e) {
+              console.error('Failed to decode token (leads):', e);
+            }
+            
             console.log('✅ Leads Request Debug (PRODUCTION - WORKING):', {
               url: config.url,
               fullUrl: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
@@ -131,8 +150,11 @@ axiosInstance.interceptors.request.use(
               tokenPreview: token.substring(0, 20) + '...',
               authHeader: config.headers['Authorization']?.substring(0, 30) + '...',
               requestPayload: JSON.parse(JSON.stringify(config.data)),
+              userFromStorage: userObj,
+              tokenPayload: tokenPayload,
               allHeaders: Object.keys(config.headers),
-              contentType: config.headers['Content-Type']
+              contentType: config.headers['Content-Type'],
+              headersSnapshot: { ...config.headers }
             });
           }
         }

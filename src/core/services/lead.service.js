@@ -56,6 +56,10 @@ export class LeadService {
    */
   static async createLead(companyId, leadData) {
     try {
+      // Log in production for comparison with notes
+      if (window.location.hostname.includes('.leadstracker.in')) {
+        console.log('✅ Leads creation payload (PRODUCTION - WORKING):', JSON.stringify(leadData, null, 2));
+      }
       const response = await axios.post(API_ENDPOINTS.LEADS.CREATE(companyId), leadData);
       
       // Check if response is successful (status 200-299)
