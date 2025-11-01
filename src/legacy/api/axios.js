@@ -487,10 +487,22 @@ axiosInstance.interceptors.response.use(
                                   !window.location.hostname.includes('127.0.0.1') &&
                                   window.location.hostname.includes('.leadstracker.in');
               if (isProduction) {
-                console.warn('⚠️ Production environment detected. Token may have expired. User should refresh the page or re-login.');
+                console.warn('⚠️ Production API detected. Token is NOT expired but was rejected. This means token is from LOCAL backend. User must login again on PRODUCTION.');
+                
+                // CRITICAL FIX: Clear token from different backend environment
+                console.log('🔄 Clearing invalid token to force re-authentication...');
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('user');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 
                 // Add error message to help user
-                error.userMessage = 'Your session may have expired. Please refresh the page or login again to create notes.';
+                error.userMessage = 'Your login token is from a different environment. Please log in again to continue.';
+                
+                // Force redirect to login after short delay
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 1000);
               }
               
               // Check backend error message
