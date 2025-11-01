@@ -176,17 +176,45 @@ export const useNotes = (companyId, userId, role) => {
         return Promise.resolve({ success: false, error: 'Note content is required' });
       }
       
+      // Ensure userId is numeric (not email or string)
+      const numericUserId = typeof userId === 'number' ? userId : parseInt(userId, 10);
+      
+      if (isNaN(numericUserId)) {
+        console.error('❌ Invalid userId for note creation:', userId);
+        return Promise.resolve({ 
+          success: false, 
+          error: 'Invalid user ID. Please login again.' 
+        });
+      }
+      
       // Ensure visibleUserIds is array of numbers (not objects)
       const visibleUserIds = noteData.visibleUserIds 
-        ? noteData.visibleUserIds.map(id => typeof id === 'object' ? (id.userId || id.id || id) : id)
+        ? noteData.visibleUserIds.map(id => {
+            if (typeof id === 'object') {
+              return id.userId || id.id || id;
+            }
+            const numId = typeof id === 'number' ? id : parseInt(id, 10);
+            return isNaN(numId) ? id : numId;
+          })
         : [];
       
       const finalNoteData = { 
         ...noteData,
-        userId,
-        createdBy: { userId }, // Match lead format: object with userId property
+        userId: numericUserId,
+        createdBy: { userId: numericUserId }, // Match lead format: object with numeric userId
         visibleUserIds: visibleUserIds // Ensure array of numbers
       };
+      
+      // Log for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📝 Note creation payload:', {
+          companyId,
+          userId: numericUserId,
+          createdBy: finalNoteData.createdBy,
+          visibleUserIds: finalNoteData.visibleUserIds,
+          visibility: finalNoteData.visibility
+        });
+      }
       
       return executeNoteAction(
         () => NoteService.createNote(companyId, finalNoteData),
