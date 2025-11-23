@@ -143,12 +143,18 @@ export const useNotes = (companyId, userId, role) => {
           }
           return result;
         } else {
-          throw new Error(result?.error || errorMsg || 'Unknown error');
+          // Extract error message - handle both Error objects and plain error strings
+          const errorText = result?.error || errorMsg || 'Unknown error';
+          throw new Error(typeof errorText === 'string' ? errorText : errorText.message || 'Unknown error');
         }
       } catch (err) {
-        setError(err.message);
-        customAlert(`❌ ${err.message}`);
-        return { success: false, error: err.message };
+        const errorMessage = err.message || err.error || 'Unknown error occurred';
+        setError(errorMessage);
+        
+        // Show alert with error message
+        customAlert(`❌ ${errorMessage}`);
+        
+        return { success: false, error: errorMessage };
       } finally {
         setLoading(false);
       }
@@ -176,11 +182,54 @@ export const useNotes = (companyId, userId, role) => {
         return Promise.resolve({ success: false, error: 'Note content is required' });
       }
       
+      // Ensure userId is numeric (not email or string)
+      const numericUserId = typeof userId === 'number' ? userId : parseInt(userId, 10);
+      
+      if (isNaN(numericUserId)) {
+        console.error('❌ Invalid userId for note creation:', userId);
+        return Promise.resolve({ 
+          success: false, 
+          error: 'Invalid user ID. Please login again.' 
+        });
+      }
+      
+      // Ensure visibleUserIds is array of numbers (not objects or strings)
+      const visibleUserIds = noteData.visibleUserIds && Array.isArray(noteData.visibleUserIds)
+        ? noteData.visibleUserIds
+            .map(id => {
+              // Handle objects: extract userId or id
+              if (typeof id === 'object' && id !== null) {
+                const extractedId = id.userId || id.id || id;
+                const numId = typeof extractedId === 'number' ? extractedId : parseInt(extractedId, 10);
+                return isNaN(numId) ? null : numId;
+              }
+              // Handle strings or numbers
+              const numId = typeof id === 'number' ? id : parseInt(id, 10);
+              return isNaN(numId) ? null : numId;
+            })
+            .filter(id => id !== null && id !== undefined && !isNaN(id)) // Remove invalid IDs
+        : [];
+      
+      // Note: Backend expects userId directly on Note object (unlike Leads which use createdBy)
+      // Remove any existing userId from noteData to ensure we set the correct one
+      const { userId: _, ...noteDataWithoutUserId } = noteData;
+      
       const finalNoteData = { 
-        ...noteData, 
-        userId,
-        createdBy: userId
+        ...noteDataWithoutUserId,
+        userId: numericUserId, // Backend requires userId directly on Note (line 62 in NoteController)
+        visibleUserIds: visibleUserIds // Ensure array of numbers only
       };
+      
+      // Log for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📝 Note creation payload:', {
+          companyId,
+          userId: numericUserId,
+          createdBy: finalNoteData.createdBy,
+          visibleUserIds: finalNoteData.visibleUserIds,
+          visibility: finalNoteData.visibility
+        });
+      }
       
       return executeNoteAction(
         () => NoteService.createNote(companyId, finalNoteData),

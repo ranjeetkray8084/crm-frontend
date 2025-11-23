@@ -141,11 +141,62 @@ const NoteModals = ({
         closeAddModal();
         return true;
       } else {
-        alert(`Failed to create note: ${result?.error || 'Unknown error'}`);
+        // Check if it's a 401 error (session expired or token mismatch)
+        const errorMessage = result?.error || 'Unknown error';
+        
+        // Check for various 401-related messages
+        const isAuthError = errorMessage.includes('session has expired') || 
+                           errorMessage.includes('session may have expired') ||
+                           errorMessage.includes('Session expired') ||
+                           errorMessage.includes('token is invalid') ||
+                           errorMessage.includes('different backend') ||
+                           errorMessage.includes('Authentication failed') ||
+                           errorMessage.includes('authentication') ||
+                           errorMessage.includes('login again') ||
+                           errorMessage.includes('refresh the page');
+        
+        if (isAuthError) {
+          const shouldRefresh = confirm(`${errorMessage}\n\nWould you like to refresh the page and login again?`);
+          if (shouldRefresh) {
+            // Clear invalid token
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.reload();
+          }
+        } else {
+          alert(`Failed to create note: ${errorMessage}`);
+        }
         return false;
       }
     } catch (error) {
-      alert(`Error creating note: ${error.message}`);
+      const errorMessage = error.message || error.userMessage || 'Unknown error occurred';
+      
+      // Check for various 401-related messages
+      const isAuthError = errorMessage.includes('session has expired') || 
+                         errorMessage.includes('session may have expired') ||
+                         errorMessage.includes('Session expired') ||
+                         errorMessage.includes('token is invalid') ||
+                         errorMessage.includes('different backend') ||
+                         errorMessage.includes('Authentication failed') ||
+                         errorMessage.includes('authentication') ||
+                         errorMessage.includes('login again') ||
+                         errorMessage.includes('refresh the page');
+      
+      if (isAuthError) {
+        const shouldRefresh = confirm(`${errorMessage}\n\nWould you like to refresh the page and login again?`);
+        if (shouldRefresh) {
+          // Clear invalid token
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.reload();
+        }
+      } else {
+        alert(`Error creating note: ${errorMessage}`);
+      }
       return false;
     }
   };

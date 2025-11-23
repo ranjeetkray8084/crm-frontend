@@ -12,29 +12,98 @@ export class NoteService {
    */
   static async createNote(companyId, noteData) {
     try {
-      const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), noteData);
-      return {
-        success: true,
-        data: response.data,
-        message: 'Note created successfully'
-      };
-    } catch (error) {
-      let errorMessage = 'Failed to create note';
+      // CRITICAL: Ensure noteData is always an object, never a string
+      // Axios.post() expects an object which it will JSON.stringify automatically
+      let payload = noteData;
       
-      if (error.response) {
-        errorMessage = error.response.data?.message || 
-                      error.response.data?.error || 
-                      `Server error: ${error.response.status}`;
-      } else if (error.request) {
-        errorMessage = 'No response from server. Please check your connection.';
-      } else {
-        errorMessage = error.message || 'Unknown error occurred';
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch (e) {
+          return {
+            success: false,
+            error: 'Invalid note data format'
+          };
+        }
       }
       
-      return {
-        success: false,
-        error: errorMessage
-      };
+      // Double-check it's an object
+      if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+        return {
+          success: false,
+          error: 'Invalid note data format - must be an object'
+        };
+      }
+      
+      const response = await axios.post(API_ENDPOINTS.NOTES.CREATE(companyId), payload);
+      
+      // Check if response is successful (status 200-299)
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          data: response.data,
+          message: 'Note created successfully'
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data?.message || 'Failed to create note'
+        };
+      }
+    } catch (error) {
+      // Handle different types of errors - same pattern as lead service
+      if (error.response) {
+        // Special handling for 401 Unauthorized - likely token from different backend (local vs production)
+        if (error.response.status === 401) {
+          const isProduction = window.location.hostname.includes('.leadstracker.in');
+          
+          // Get backend error message if available
+          const backendMessage = error.response.data?.message || 
+                                 error.response.data?.error ||
+                                 (typeof error.response.data === 'string' && error.response.data.trim()) ||
+                                 '';
+          
+          // Create user-friendly message
+          let userMessage;
+          if (backendMessage && backendMessage.toLowerCase().includes('expired')) {
+            userMessage = 'Your session has expired. Please refresh the page and login again.';
+          } else if (backendMessage && backendMessage.toLowerCase().includes('invalid')) {
+            userMessage = 'Your authentication token is invalid. Please refresh the page and login again.';
+          } else {
+            userMessage = isProduction 
+              ? 'Your session has expired or token is invalid. Please refresh the page and login again to get a valid production token.'
+              : 'Authentication failed. Please login again to get a valid token for this backend.';
+          }
+          
+          return {
+            success: false,
+            error: userMessage
+          };
+        }
+        
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 
+                            error.response.data?.error ||
+                            (typeof error.response.data === 'string' && error.response.data.trim()) ||
+                            error.response.data ||
+                            `Server error: ${error.response.status}`;
+        return {
+          success: false,
+          error: errorMessage
+        };
+      } else if (error.request) {
+        // Network error
+        return {
+          success: false,
+          error: 'Network error. Please check your connection.'
+        };
+      } else {
+        // Other error
+        return {
+          success: false,
+          error: error.message || 'Failed to create note'
+        };
+      }
     }
   }
 

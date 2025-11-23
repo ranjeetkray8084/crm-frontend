@@ -20,7 +20,31 @@ if (typeof document !== 'undefined') {
 const AddNoteForm = ({ onSubmit, onCancel }) => {
   const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
   const role = user.role;
-  const userId = user.userId;
+  
+  // Ensure userId is numeric - extract from user object or token
+  let userId = user.id || user.userId;
+  if (userId && typeof userId !== 'number') {
+    const parsed = parseInt(userId, 10);
+    if (!isNaN(parsed)) {
+      userId = parsed;
+    } else {
+      // If still not numeric, try to get from token
+      try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.userId && typeof payload.userId === 'number') {
+            userId = payload.userId;
+          } else if (payload.sub && typeof payload.sub === 'number') {
+            userId = payload.sub;
+          }
+        }
+      } catch (e) {
+        console.error('❌ Could not extract userId from token:', e);
+      }
+    }
+  }
+  
   const companyId = user.companyId;
 
   const [formData, setFormData] = useState({
@@ -78,13 +102,27 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
     if (selectedUsers.length === availableUsers.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(availableUsers.map(u => u.userId));
+      // Ensure we extract numeric IDs only
+      const userIds = availableUsers.map(u => {
+        const id = u.id || u.userId;
+        return typeof id === 'number' ? id : parseInt(id, 10);
+      }).filter(id => !isNaN(id));
+      setSelectedUsers(userIds);
     }
   };
 
   const handleCheckboxChange = (id) => {
+    // Ensure id is numeric
+    const numericId = typeof id === 'number' ? id : parseInt(id, 10);
+    if (isNaN(numericId)) {
+      console.error('❌ Invalid user ID in checkbox:', id);
+      return;
+    }
+    
     setSelectedUsers(prev =>
-      prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]
+      prev.includes(numericId) 
+        ? prev.filter(uid => uid !== numericId) 
+        : [...prev, numericId]
     );
   };
 
@@ -99,6 +137,14 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
       return alert('Please select at least one user/admin');
     }
   
+    // Ensure visibleUserIds is array of numbers
+    const visibleUserIds = (vis === 'SPECIFIC_USERS' || vis === 'SPECIFIC_ADMIN') 
+      ? selectedUsers.map(id => {
+          const numId = typeof id === 'number' ? id : parseInt(id, 10);
+          return isNaN(numId) ? id : numId;
+        }).filter(id => !isNaN(id))
+      : [];
+
     const noteData = {
       content: formData.content,
       priority: formData.priority,
@@ -106,7 +152,7 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
       type: formData.type,
       dateTime: formData.type === 'EVENT' ? `${formData.date}T${formData.time}:00` : null,
       visibility: vis,
-      visibleUserIds: (vis === 'SPECIFIC_USERS' || vis === 'SPECIFIC_ADMIN') ? selectedUsers : [],
+      visibleUserIds: visibleUserIds, // Array of numbers only
     };
   
     setIsSubmitting(true);
@@ -217,17 +263,23 @@ const AddNoteForm = ({ onSubmit, onCancel }) => {
               {loading ? (
                 <div className="text-gray-500 text-sm">Loading users...</div>
               ) : availableUsers.length > 0 ? (
-                availableUsers.map((user) => (
-                  <label key={user.userId} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(user.userId)}
-                      onChange={() => handleCheckboxChange(user.userId)}
-                      disabled={isSubmitting}
-                    />
-                    <span>{user.name || 'Unnamed'}</span>
-                  </label>
-                ))
+                availableUsers.map((user) => {
+                  const userId = user.id || user.userId;
+                  const numericUserId = typeof userId === 'number' ? userId : parseInt(userId, 10);
+                  const displayUserId = !isNaN(numericUserId) ? numericUserId : userId;
+                  
+                  return (
+                    <label key={displayUserId} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(numericUserId)}
+                        onChange={() => handleCheckboxChange(numericUserId)}
+                        disabled={isSubmitting}
+                      />
+                      <span>{user.name || 'Unnamed'}</span>
+                    </label>
+                  );
+                })
               ) : (
                 <div className="text-gray-500 text-sm">No users found</div>
               )}

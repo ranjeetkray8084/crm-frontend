@@ -109,17 +109,56 @@ export class LeadService {
    */
   static async updateLead(companyId, leadId, leadData) {
     try {
-      const response = await axios.put(API_ENDPOINTS.LEADS.UPDATE(companyId, leadId), leadData);
+      // CRITICAL: Ensure leadData is always an object, never a string
+      // Axios.put() expects an object which it will JSON.stringify automatically
+      let payload = leadData;
+      
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch (e) {
+          return {
+            success: false,
+            error: 'Invalid lead data format'
+          };
+        }
+      }
+      
+      // Double-check it's an object
+      if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+        return {
+          success: false,
+          error: 'Invalid lead data format - must be an object'
+        };
+      }
+
+      const response = await axios.put(API_ENDPOINTS.LEADS.UPDATE(companyId, leadId), payload);
       return {
         success: true,
         data: response.data,
         message: 'Lead updated successfully'
       };
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to update lead'
-      };
+      // Enhanced error handling
+      if (error.response) {
+        const errorMessage = error.response.data?.message || 
+                            error.response.data || 
+                            `Server error: ${error.response.status}`;
+        return {
+          success: false,
+          error: errorMessage
+        };
+      } else if (error.request) {
+        return {
+          success: false,
+          error: 'Network error. Please check your connection.'
+        };
+      } else {
+        return {
+          success: false,
+          error: error.message || 'Failed to update lead'
+        };
+      }
     }
   }
 

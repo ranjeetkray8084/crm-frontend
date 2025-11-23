@@ -40,7 +40,36 @@ const NotesSection = () => {
       companyId = parseInt(companyIdAlt, 10);
     }
 
-    const userId = user.id || user.userId;
+    // Ensure userId is numeric - try id first, then userId, validate it's a number
+    let userId = user.id || user.userId;
+    
+    // If userId is not a number, try to parse it or get from token
+    if (userId && typeof userId !== 'number') {
+      const parsed = parseInt(userId, 10);
+      if (!isNaN(parsed)) {
+        userId = parsed;
+      } else {
+        // If still not numeric, it might be email - log warning
+        console.warn('⚠️ UserId is not numeric:', userId, 'Attempting to extract from token...');
+        // Try to get from token payload
+        try {
+          const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.userId && typeof payload.userId === 'number') {
+              userId = payload.userId;
+              console.log('✅ Extracted numeric userId from token:', userId);
+            } else if (payload.sub && typeof payload.sub === 'number') {
+              userId = payload.sub;
+              console.log('✅ Extracted numeric userId from token sub:', userId);
+            }
+          }
+        } catch (e) {
+          console.error('❌ Could not extract userId from token:', e);
+        }
+      }
+    }
+    
     const userRole = user.role || 'USER';
 
     setUserInfo({ companyId, userId, role: userRole });
