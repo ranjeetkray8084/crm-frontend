@@ -3,7 +3,7 @@ export const securityConfig = {
   // Production environment
   production: {
     api: {
-      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in') + '/api',
+      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in') + '/api',
       timeout: 30000,
       maxRetries: 3,
       enableHTTPS: true,
@@ -35,7 +35,7 @@ export const securityConfig = {
   // Development environment
   development: {
     api: {
-      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in'),
+      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in'),
       timeout: 30000,
       maxRetries: 3,
       enableHTTPS: false,
@@ -76,13 +76,13 @@ export const SECURITY_CONSTANTS = {
   // Rate limiting
   RATE_LIMIT_WINDOW: 60000, // 1 minute
   MAX_REQUESTS_PER_WINDOW: 100,
-  
+
   // Request validation
   MAX_REQUEST_SIZE: 10485760, // 10MB
   MAX_FIELD_LENGTH: 10000,
   ALLOWED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
   MAX_FILE_SIZE: 5242880, // 5MB
-  
+
   // Security headers
   SECURITY_HEADERS: {
     'X-Content-Type-Options': 'nosniff',
@@ -92,7 +92,7 @@ export const SECURITY_CONSTANTS = {
     'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
   },
-  
+
   // Suspicious patterns
   SUSPICIOUS_PATTERNS: [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
@@ -106,7 +106,7 @@ export const SECURITY_CONSTANTS = {
     /window\./gi,
     /location\./gi
   ],
-  
+
   // Blocked field names
   BLOCKED_FIELD_NAMES: [
     '__proto__',
@@ -125,43 +125,43 @@ export const SECURITY_CONSTANTS = {
 export const securityUtils = {
   // Check if current environment is production
   isProduction: () => process.env.NODE_ENV === 'production',
-  
+
   // Check if HTTPS is enabled
   isHTTPSEnabled: () => {
     const config = getCurrentSecurityConfig();
     return config.api.enableHTTPS;
   },
-  
+
   // Check if security feature is enabled
   isSecurityFeatureEnabled: (feature) => {
     const config = getCurrentSecurityConfig();
     return config.security[feature] || false;
   },
-  
+
   // Get API base URL based on environment
   getApiBaseURL: () => {
     const config = getCurrentSecurityConfig();
     return config.api.baseURL;
   },
-  
+
   // Validate URL security
   isSecureURL: (url) => {
     if (!url) return false;
-    
+
     // Block suspicious protocols
     const blockedProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
     if (blockedProtocols.some(protocol => url.toLowerCase().startsWith(protocol))) {
       return false;
     }
-    
+
     // Force HTTPS in production
     if (securityUtils.isProduction() && !url.startsWith('https://')) {
       return false;
     }
-    
+
     return true;
   },
-  
+
   // Generate secure random string
   generateSecureRandom: (length = 32) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -171,13 +171,13 @@ export const securityUtils = {
     }
     return result;
   },
-  
+
   // Hash sensitive data (basic implementation)
   hashData: (data) => {
     if (typeof data !== 'string') {
       data = JSON.stringify(data);
     }
-    
+
     // Simple hash function - in production, use proper cryptographic hashing
     let hash = 0;
     for (let i = 0; i < data.length; i++) {

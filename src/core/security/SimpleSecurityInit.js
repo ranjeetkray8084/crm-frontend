@@ -9,14 +9,14 @@
 export async function initializeBasicSecurity() {
   try {
     console.log('🔒 Initializing basic security features...');
-    
+
     // Initialize basic session
     if (!sessionStorage.getItem('crm_session_id')) {
       const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       sessionStorage.setItem('crm_session_id', sessionId);
       console.log('✅ Session ID initialized');
     }
-    
+
     // Setup basic security headers
     const securityHeaders = {
       'X-Content-Type-Options': 'nosniff',
@@ -26,11 +26,11 @@ export async function initializeBasicSecurity() {
       'X-Client-Version': '1.0.0',
       'X-Platform': 'web'
     };
-    
+
     // Store security headers for use in API calls
     sessionStorage.setItem('crm_security_headers', JSON.stringify(securityHeaders));
     console.log('✅ Security headers initialized');
-    
+
     // Setup basic error monitoring
     window.addEventListener('error', (event) => {
       console.warn('🚨 Window Error:', {
@@ -40,21 +40,21 @@ export async function initializeBasicSecurity() {
         timestamp: Date.now()
       });
     });
-    
+
     window.addEventListener('unhandledrejection', (event) => {
       console.warn('🚨 Unhandled Promise Rejection:', {
         reason: event.reason?.toString(),
         timestamp: Date.now()
       });
     });
-    
+
     console.log('✅ Error monitoring initialized');
-    
+
     // Log security initialization
     console.log('✅ Basic security features initialized successfully');
-    
+
     return true;
-    
+
   } catch (error) {
     console.error('❌ Basic security initialization failed:', error);
     return false;
@@ -101,9 +101,9 @@ export function sanitizeInput(input) {
   if (typeof input !== 'string') {
     return input;
   }
-  
+
   let sanitized = input;
-  
+
   // Step 1: SQL Injection Protection
   const sqlPatterns = [
     /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi,
@@ -132,12 +132,12 @@ export function sanitizeInput(input) {
     /(\bIMPORT\b)/gi,
     /(\bEXPORT\b)/gi
   ];
-  
+
   sqlPatterns.forEach(pattern => {
     sanitized = sanitized.replace(pattern, '[BLOCKED]');
   });
-  
-  // Step 2: Comprehensive XSS Prevention (but preserve email-friendly characters)
+
+  // Step 2: Comprehensive XSS Prevention
   const xssPatterns = [
     // Script tags (all variants) - Most aggressive blocking
     /<script[^>]*>[\s\S]*?<\/script>/gi,
@@ -146,7 +146,7 @@ export function sanitizeInput(input) {
     /<script/gi,
     /script>/gi,
     /script/gi, // Block the word "script" anywhere
-    
+
     // Event handlers (all variants)
     /on\w+\s*=\s*["'][^"']*["']/gi,
     /on\w+\s*=\s*[^>\s]+/gi,
@@ -200,7 +200,7 @@ export function sanitizeInput(input) {
     /onstalled/gi,
     /onsuspend/gi,
     /ontimeupdate/gi,
-    
+
     // JavaScript protocols
     /javascript\s*:/gi,
     /vbscript\s*:/gi,
@@ -211,7 +211,7 @@ export function sanitizeInput(input) {
     /vbscript/gi,
     /alert\s*\(/gi, // Block alert function
     /alert/gi, // Block alert keyword
-    
+
     // Dangerous HTML elements
     /<iframe[^>]*>[\s\S]*?<\/iframe>/gi,
     /<iframe[^>]*>/gi,
@@ -243,7 +243,7 @@ export function sanitizeInput(input) {
     /<style[^>]*>[\s\S]*?<\/style>/gi,
     /<style[^>]*>/gi,
     /<\/style>/gi,
-    
+
     // Style attributes and CSS
     /style\s*=\s*["'][^"']*["']/gi,
     /style\s*=/gi,
@@ -252,13 +252,13 @@ export function sanitizeInput(input) {
     /@import/gi,
     /url\s*\(\s*["']?javascript:/gi,
     /url\s*\(\s*["']?data:/gi,
-    
+
     // Base64 and data URLs
     /data\s*:\s*text\/plain;base64/gi,
     /data\s*:\s*text\/html;base64/gi,
     /data\s*:\s*application\/javascript;base64/gi,
     /data\s*:\s*text\/javascript;base64/gi,
-    
+
     // HTML entities and encoding
     /&#x?[0-9a-f]+;/gi,
     /&#[0-9]+;/gi,
@@ -291,8 +291,8 @@ export function sanitizeInput(input) {
     /&lt;title/gi,
     /&lt;style/gi,
     /&lt;\/style/gi,
-    
-    // Dangerous characters and patterns (but preserve email-friendly characters)
+
+    // Dangerous characters and patterns
     /<[^>]*>/g,
     /[<>]/g,
     /["']/g,
@@ -305,7 +305,7 @@ export function sanitizeInput(input) {
     /`/g,
     /~/g,
     /!/g,
-    // Removed /@/g to allow @ symbol for emails
+    /@/g,
     /#/g,
     /\*/g,
     /\+/g,
@@ -320,21 +320,21 @@ export function sanitizeInput(input) {
     /;/g,
     /:/g,
     /,/g,
-    // Removed /\./g to allow dots for emails
-    // Removed /\//g to allow forward slashes in some contexts
+    /\./g,
+    /\//g
   ];
-  
+
   // Apply XSS protection patterns
   xssPatterns.forEach(pattern => {
     sanitized = sanitized.replace(pattern, '[BLOCKED]');
   });
-  
+
   // Step 3: Final cleanup
   sanitized = sanitized
     .replace(/\[BLOCKED\]/g, '') // Remove blocked markers
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim();
-  
+
   // Step 4: Security logging
   if (input !== sanitized) {
     console.warn('🚨 Security threat detected and blocked:', {
@@ -343,7 +343,7 @@ export function sanitizeInput(input) {
       blocked: input.includes('<') || input.includes('>') || input.includes('script') || input.includes('javascript')
     });
   }
-  
+
   return sanitized;
 }
 
@@ -353,12 +353,12 @@ export function sanitizeInput(input) {
 export function validateApiUrl(url) {
   const allowedDomains = [
     'leadstracker.in',
-    'backend.leadstracker.in',
+    'app.leadstracker.in',
     'crm.leadstracker.in',
     'localhost',
     '127.0.0.1'
   ];
-  
+
   try {
     const urlObj = new URL(url);
     return allowedDomains.some(domain => urlObj.hostname.includes(domain));
@@ -372,12 +372,12 @@ export function validateApiUrl(url) {
  */
 export function getSecureApiUrl() {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  const defaultUrl = 'https://backend.leadstracker.in';
-  
+  const defaultUrl = 'https://app.leadstracker.in';
+
   if (envUrl && validateApiUrl(envUrl)) {
     return envUrl;
   }
-  
+
   return defaultUrl;
 }
 

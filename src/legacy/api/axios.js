@@ -3,7 +3,7 @@ import axios from "axios";
 
 // ✅ Backend API base URL - pointing to Spring Boot backend
 // Use environment variable for development, fallback to production URL
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://backend.leadstracker.in";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://app.leadstracker.in";
 
 // Debug log to verify which URL is being used
 console.log('🔗 API Base URL:', BASE_URL);
@@ -76,7 +76,7 @@ axiosInstance.interceptors.request.use(
       // Use environment-based security configuration
       const { ENV_CONFIG } = await import('../../core/config/environment.js');
       const securityConfig = ENV_CONFIG.getSecurityConfig();
-      
+
       if (!securityConfig.skipSecurityHeaders) {
         // Add basic security headers for production/development
         const { getBasicSecurityHeaders } = await import('../../core/security/SimpleSecurityInit.js');
@@ -110,9 +110,9 @@ axiosInstance.interceptors.request.use(
 function isSensitiveOperation(method, url) {
   const sensitiveMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
   const sensitiveEndpoints = ['/auth/', '/users/', '/companies/', '/leads/', '/properties/'];
-  
-  return sensitiveMethods.includes(method.toUpperCase()) && 
-         sensitiveEndpoints.some(endpoint => url.includes(endpoint));
+
+  return sensitiveMethods.includes(method.toUpperCase()) &&
+    sensitiveEndpoints.some(endpoint => url.includes(endpoint));
 }
 
 // Helper function to sanitize request data
@@ -120,9 +120,9 @@ function sanitizeRequestData(data, sanitizeInput) {
   if (!data || typeof data !== 'object') {
     return data;
   }
-  
+
   const sanitized = {};
-  
+
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
       sanitized[key] = sanitizeInput(value);
@@ -132,7 +132,7 @@ function sanitizeRequestData(data, sanitizeInput) {
       sanitized[key] = value;
     }
   }
-  
+
   return sanitized;
 }
 
@@ -161,7 +161,7 @@ axiosInstance.interceptors.response.use(
         // Only log if it's not a simple credential error
         if (!error.response || error.response.status !== 401) {
           console.log('🔍 Login failed - checking error type...');
-          
+
           // Check if it's a network error vs authentication error
           if (!error.response) {
             error.message = 'Unable to connect to server. Please check your internet connection.';
@@ -195,13 +195,13 @@ axiosInstance.interceptors.response.use(
     // Handle network errors
     if (!error.response) {
       console.error('🚨 Network error:', error.message);
-      
+
       // Check if it's a connection error
-      if (error.code === 'NETWORK_ERROR' || 
-          error.message.includes('Network Error') ||
-          error.message.includes('ERR_NETWORK') ||
-          error.message.includes('ERR_CONNECTION_REFUSED') ||
-          error.message.includes('ERR_INTERNET_DISCONNECTED')) {
+      if (error.code === 'NETWORK_ERROR' ||
+        error.message.includes('Network Error') ||
+        error.message.includes('ERR_NETWORK') ||
+        error.message.includes('ERR_CONNECTION_REFUSED') ||
+        error.message.includes('ERR_INTERNET_DISCONNECTED')) {
         error.message = 'Unable to connect to server. Please check your internet connection and try again.';
         error.isNetworkError = true;
       }

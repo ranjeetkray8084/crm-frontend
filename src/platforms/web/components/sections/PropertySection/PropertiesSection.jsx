@@ -335,7 +335,7 @@ const PropertiesSection = ({ userRole, userId, companyId }) => {
     console.log('🔧 Property code modal closed, refreshing properties');
     setShowPropertyCodeModal(false);
     setSelectedProperty(null);
-    loadProperties(); // Refresh properties when modal closes
+    handleRefresh(); // Preserve current filters/search and page
   };
 
   const actionHandlers = {

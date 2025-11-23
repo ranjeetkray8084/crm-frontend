@@ -6,7 +6,7 @@
 class BackendHealthCheck {
   constructor() {
     this.baseURLs = [
-      'https://backend.leadstracker.in',
+      'https://app.leadstracker.in',
       'http://localhost:8080',
       'http://127.0.0.1:8080',
       'http://localhost:3000'
@@ -19,14 +19,14 @@ class BackendHealthCheck {
    */
   async checkBackendHealth() {
     console.log('🏥 Checking backend health...');
-    
+
     for (const url of this.baseURLs) {
       try {
         console.log(`🔍 Testing URL: ${url}`);
-        
+
         // Directly test login endpoint since all other endpoints require auth
         const loginTest = await this.testLoginEndpoint(url);
-        
+
         if (loginTest.working) {
           console.log(`✅ Backend is healthy at: ${url}`);
           this.workingURL = url;
@@ -40,7 +40,7 @@ class BackendHealthCheck {
         console.log(`❌ URL ${url} failed:`, error.message);
       }
     }
-    
+
     console.log('🚨 All backend URLs failed');
     return {
       healthy: false,
@@ -74,26 +74,26 @@ class BackendHealthCheck {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
+
         // Use different methods for different endpoints
         const method = endpoint === '/api/test/cors' ? 'GET' : 'GET';
         const headers = {
           'Accept': 'application/json'
         };
-        
+
         // Add Content-Type for POST requests
         if (endpoint === '/api/test/cors') {
           headers['Content-Type'] = 'application/json';
         }
-        
+
         const response = await fetch(`${baseURL}${endpoint}`, {
           method: method,
           headers: headers,
           signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         // If we get any response (even error), server is reachable
         // Accept 401 (Unauthorized) as a valid response - means server is working
         if (response.status !== 0 && response.status !== undefined) {
@@ -103,7 +103,7 @@ class BackendHealthCheck {
             // Still consider server reachable but note the issue
             return { healthy: true, data: { status: response.status, endpoint, warning: 'CORS endpoint requires auth' } };
           }
-          
+
           console.log(`✅ Server reachable via ${endpoint} (status: ${response.status})`);
           return { healthy: true, data: { status: response.status, endpoint } };
         }
@@ -114,7 +114,7 @@ class BackendHealthCheck {
         }
       }
     }
-    
+
     throw new Error('Server not reachable');
   }
 
@@ -132,7 +132,7 @@ class BackendHealthCheck {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
+
       // Test with dummy credentials to check if endpoint responds
       const response = await fetch(`${baseURL}/api/auth/login`, {
         method: 'POST',
@@ -146,9 +146,9 @@ class BackendHealthCheck {
         }),
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       // We expect 401 (Unauthorized) for invalid credentials, not connection error
       // Any 4xx or 5xx response means server is reachable
       if (response.status >= 400) {
@@ -166,10 +166,10 @@ class BackendHealthCheck {
       if (error.name === 'AbortError') {
         console.log(`❌ Login endpoint timeout at ${baseURL}`);
         return { working: false, error: 'Request timeout' };
-      } else if (error.message.includes('Failed to fetch') || 
-                 error.message.includes('NetworkError') ||
-                 error.message.includes('ERR_NETWORK') ||
-                 error.message.includes('ERR_CONNECTION_REFUSED')) {
+      } else if (error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('ERR_NETWORK') ||
+        error.message.includes('ERR_CONNECTION_REFUSED')) {
         console.log(`❌ Login endpoint connection error at ${baseURL}:`, error.message);
         return { working: false, error: 'Connection error' };
       } else {
@@ -185,10 +185,10 @@ class BackendHealthCheck {
    */
   async fixBackendConnection() {
     console.log('🔧 Attempting to fix backend connection...');
-    
+
     // Check if backend is healthy
     const healthCheck = await this.checkBackendHealth();
-    
+
     if (healthCheck.healthy) {
       console.log(`✅ Backend connection fixed: ${healthCheck.url}`);
       return {
@@ -197,7 +197,7 @@ class BackendHealthCheck {
         message: 'Backend is accessible'
       };
     }
-    
+
     // Try to test login endpoint specifically
     console.log('🔍 Testing login endpoints...');
     for (const url of this.baseURLs) {
@@ -211,7 +211,7 @@ class BackendHealthCheck {
         };
       }
     }
-    
+
     console.log('❌ Could not fix backend connection');
     return {
       fixed: false,
@@ -231,7 +231,7 @@ class BackendHealthCheck {
    */
   async getConnectionStatus() {
     const healthCheck = await this.checkBackendHealth();
-    
+
     return {
       connected: healthCheck.healthy,
       url: healthCheck.url,

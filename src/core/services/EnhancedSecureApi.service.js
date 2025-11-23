@@ -10,7 +10,7 @@ import { tokenManager } from '../security/TokenManager.js';
 class EnhancedSecureApiService {
   constructor() {
     this.axios = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in',
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ class EnhancedSecureApiService {
         'X-Platform': 'web'
       }
     });
-    
+
     this.security = securityMiddleware;
     this.setupInterceptors();
     this.initializeTokenManager();
@@ -88,12 +88,12 @@ class EnhancedSecureApiService {
         try {
           // Validate response
           const validatedResponse = this.security.validateResponse(response);
-          
+
           // Decrypt sensitive data if needed
           if (response.data && typeof response.data === 'object') {
             response.data = dataEncryption.decryptSensitiveFields(response.data);
           }
-          
+
           return validatedResponse;
         } catch (error) {
           this.security.logSecurityEvent('RESPONSE_VALIDATION_ERROR', { error: error.message });
@@ -116,9 +116,9 @@ class EnhancedSecureApiService {
   isSensitiveOperation(method, url) {
     const sensitiveMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
     const sensitiveEndpoints = ['/auth/', '/users/', '/companies/', '/leads/', '/properties/'];
-    
-    return sensitiveMethods.includes(method.toUpperCase()) && 
-           sensitiveEndpoints.some(endpoint => url.includes(endpoint));
+
+    return sensitiveMethods.includes(method.toUpperCase()) &&
+      sensitiveEndpoints.some(endpoint => url.includes(endpoint));
   }
 
   /**
@@ -129,28 +129,28 @@ class EnhancedSecureApiService {
     if (error.response?.status === 401) {
       // Token expired or invalid
       tokenManager.clearTokens();
-      this.security.logSecurityEvent('TOKEN_EXPIRED', { 
+      this.security.logSecurityEvent('TOKEN_EXPIRED', {
         url: error.config?.url,
-        status: error.response.status 
+        status: error.response.status
       });
       window.location.href = '/login';
     } else if (error.response?.status === 403) {
       // Access forbidden
-      this.security.logSecurityEvent('ACCESS_FORBIDDEN', { 
+      this.security.logSecurityEvent('ACCESS_FORBIDDEN', {
         url: error.config?.url,
-        status: error.response.status 
+        status: error.response.status
       });
     } else if (error.response?.status === 429) {
       // Rate limited
-      this.security.logSecurityEvent('RATE_LIMITED', { 
+      this.security.logSecurityEvent('RATE_LIMITED', {
         url: error.config?.url,
         retryAfter: error.response.headers['retry-after']
       });
     } else if (error.response?.status >= 500) {
       // Server error
-      this.security.logSecurityEvent('SERVER_ERROR', { 
+      this.security.logSecurityEvent('SERVER_ERROR', {
         url: error.config?.url,
-        status: error.response.status 
+        status: error.response.status
       });
     }
   }
@@ -176,7 +176,7 @@ class EnhancedSecureApiService {
 
       // Make request
       const response = await this.axios.get(url, secureConfig);
-      
+
       // Validate response
       return this.security.validateResponse(response);
     } catch (error) {
@@ -201,7 +201,7 @@ class EnhancedSecureApiService {
 
       // Sanitize request data
       const sanitizedData = this.security.sanitizeRequestData(data);
-      
+
       // Add security headers
       const secureConfig = {
         ...config,
@@ -210,7 +210,7 @@ class EnhancedSecureApiService {
 
       // Make request
       const response = await this.axios.post(url, sanitizedData, secureConfig);
-      
+
       // Validate response
       return this.security.validateResponse(response);
     } catch (error) {
@@ -235,7 +235,7 @@ class EnhancedSecureApiService {
 
       // Sanitize request data
       const sanitizedData = this.security.sanitizeRequestData(data);
-      
+
       // Add security headers
       const secureConfig = {
         ...config,
@@ -244,7 +244,7 @@ class EnhancedSecureApiService {
 
       // Make request
       const response = await this.axios.put(url, sanitizedData, secureConfig);
-      
+
       // Validate response
       return this.security.validateResponse(response);
     } catch (error) {
@@ -274,7 +274,7 @@ class EnhancedSecureApiService {
 
       // Make request
       const response = await this.axios.delete(url, secureConfig);
-      
+
       // Validate response
       return this.security.validateResponse(response);
     } catch (error) {
@@ -313,7 +313,7 @@ class EnhancedSecureApiService {
 
       // Make request
       const response = await this.axios.post(url, formData, secureConfig);
-      
+
       // Validate response
       return this.security.validateResponse(response);
     } catch (error) {
@@ -336,7 +336,7 @@ class EnhancedSecureApiService {
           if (value.size > 10 * 1024 * 1024) {
             return false;
           }
-          
+
           // Validate file type
           const allowedTypes = [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
@@ -346,13 +346,13 @@ class EnhancedSecureApiService {
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'text/csv', 'text/plain'
           ];
-          
+
           if (!allowedTypes.includes(value.type)) {
             return false;
           }
         }
       }
-      
+
       return true;
     } catch (error) {
       console.error('File validation error:', error);

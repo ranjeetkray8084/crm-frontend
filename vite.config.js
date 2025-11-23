@@ -5,7 +5,7 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   // Load environment variables
   const env = loadEnv(mode, process.cwd(), '');
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'https://backend.leadstracker.in';
+  const apiBaseUrl = env.VITE_API_BASE_URL || 'https://app.leadstracker.in';
   
   // Debug logging
   console.log('🔧 Vite Mode:', mode);

@@ -6,7 +6,7 @@
 export const SECURITY_CONFIG = {
   // API Configuration
   API: {
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in',
     TIMEOUT: 30000,
     MAX_RETRIES: 3,
     ENABLE_HTTPS: import.meta.env.NODE_ENV === 'production'
@@ -61,7 +61,7 @@ export const SECURITY_CONFIG = {
 
   // Security Headers Configuration
   SECURITY_HEADERS: {
-    CONTENT_SECURITY_POLICY: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://backend.leadstracker.in;",
+    CONTENT_SECURITY_POLICY: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://app.leadstracker.in;",
     STRICT_TRANSPORT_SECURITY: 'max-age=31536000; includeSubDomains; preload',
     X_FRAME_OPTIONS: 'DENY',
     X_CONTENT_TYPE_OPTIONS: 'nosniff',
@@ -115,7 +115,7 @@ export const SECURITY_CONFIG = {
   // Allowed Domains
   ALLOWED_DOMAINS: [
     'leadstracker.in',
-    'backend.leadstracker.in',
+    'app.leadstracker.in',
     'crm.leadstracker.in',
     'localhost',
     '127.0.0.1'
@@ -165,7 +165,7 @@ export function validateSecurityConfig() {
 // Initialize security configuration
 export function initializeSecurityConfig() {
   const isValid = validateSecurityConfig();
-  
+
   if (isValid) {
     console.log('Security configuration validated successfully');
   } else {

@@ -2,7 +2,7 @@
 export const config = {
   // API Configuration
   api: {
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in',
 
     timeout: 30000,
     retries: 3
@@ -24,7 +24,7 @@ export const config = {
       tablet: 1024,
       desktop: 1200
     },
-    
+
     // Animation durations
     animations: {
       fast: 200,
@@ -73,21 +73,21 @@ export const config = {
 export const environments = {
   development: {
     api: {
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in'
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in'
     },
     debug: true
   },
-  
+
   production: {
     api: {
-      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in') + '/api'
+      baseURL: (import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in') + '/api'
     },
     debug: false
   },
-  
+
   mobile: {
     api: {
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in'
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in'
     },
     storage: {
       // Use AsyncStorage for React Native

@@ -9,7 +9,7 @@ Create a `.env.production` file in the root directory:
 ```bash
 # Production Environment Variables
 VITE_NODE_ENV=production
-VITE_API_BASE_URL=https://backend.leadstracker.in
+VITE_API_BASE_URL=https://app.leadstracker.in
 VITE_ENABLE_SECURITY=true
 VITE_FORCE_HTTPS=true
 VITE_SECURITY_ALERTS=true
@@ -63,7 +63,7 @@ The application automatically detects the environment and applies appropriate se
 3. **Set environment variables** in your hosting provider's dashboard:
    ```
    VITE_NODE_ENV=production
-   VITE_API_BASE_URL=https://backend.leadstracker.in
+   VITE_API_BASE_URL=https://app.leadstracker.in
    VITE_ENABLE_SECURITY=true
    VITE_FORCE_HTTPS=true
    VITE_SECURITY_ALERTS=true

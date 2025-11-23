@@ -8,15 +8,15 @@ export const ENV_CONFIG = {
   isDevelopment: import.meta.env.NODE_ENV === 'development',
   isProduction: import.meta.env.NODE_ENV === 'production',
   isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
-  
+
   // API Configuration
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://backend.leadstracker.in',
-  
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://app.leadstracker.in',
+
   // Security Configuration
   enableSecurity: import.meta.env.VITE_ENABLE_SECURITY !== 'false',
   forceHttps: import.meta.env.VITE_FORCE_HTTPS !== 'false',
   securityAlerts: import.meta.env.VITE_SECURITY_ALERTS !== 'false',
-  
+
   // Get current environment
   getCurrentEnv() {
     if (this.isLocalhost) return 'localhost';
@@ -24,11 +24,11 @@ export const ENV_CONFIG = {
     if (this.isProduction) return 'production';
     return 'unknown';
   },
-  
+
   // Get security configuration for current environment
   getSecurityConfig() {
     const env = this.getCurrentEnv();
-    
+
     switch (env) {
       case 'localhost':
         return {
@@ -38,7 +38,7 @@ export const ENV_CONFIG = {
           skipSecurityHeaders: true,
           skipInputSanitization: true
         };
-        
+
       case 'development':
         return {
           enableSecurity: true,
@@ -47,7 +47,7 @@ export const ENV_CONFIG = {
           skipSecurityHeaders: false,
           skipInputSanitization: false
         };
-        
+
       case 'production':
         return {
           enableSecurity: true,
@@ -56,7 +56,7 @@ export const ENV_CONFIG = {
           skipSecurityHeaders: false,
           skipInputSanitization: false
         };
-        
+
       default:
         return {
           enableSecurity: true,
@@ -67,12 +67,12 @@ export const ENV_CONFIG = {
         };
     }
   },
-  
+
   // Get current configuration (no logging in production)
   getConfigInfo() {
     const env = this.getCurrentEnv();
     const securityConfig = this.getSecurityConfig();
-    
+
     return {
       environment: env,
       apiBaseUrl: this.apiBaseUrl,

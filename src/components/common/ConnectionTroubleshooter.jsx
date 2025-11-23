@@ -83,13 +83,13 @@ const ConnectionTroubleshooter = ({ isOpen, onClose, onRetry }) => {
             ) : (
               <AlertTriangle className="w-5 h-5 text-red-500" />
             )}
-            
+
             <div className="flex-1">
               <p className="font-medium text-gray-900">
-                {isChecking 
-                  ? 'Checking connection...' 
-                  : connectionStatus?.connected 
-                    ? 'Connection successful' 
+                {isChecking
+                  ? 'Checking connection...'
+                  : connectionStatus?.connected
+                    ? 'Connection successful'
                     : 'Connection failed'
                 }
               </p>
@@ -127,7 +127,7 @@ const ConnectionTroubleshooter = ({ isOpen, onClose, onRetry }) => {
           <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
             <h4 className="font-medium text-blue-900 mb-2">Backend URLs Tested:</h4>
             <div className="space-y-1">
-              <div className="text-sm text-blue-700">• https://backend.leadstracker.in</div>
+              <div className="text-sm text-blue-700">• https://app.leadstracker.in</div>
               <div className="text-sm text-blue-700">• http://localhost:8080</div>
               <div className="text-sm text-blue-700">• http://127.0.0.1:8080</div>
               <div className="text-sm text-blue-700">• http://localhost:3000</div>
@@ -144,7 +144,7 @@ const ConnectionTroubleshooter = ({ isOpen, onClose, onRetry }) => {
               <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
               {isChecking ? 'Checking...' : 'Retry Connection'}
             </button>
-            
+
             <button
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -158,7 +158,7 @@ const ConnectionTroubleshooter = ({ isOpen, onClose, onRetry }) => {
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Globe className="w-4 h-4" />
               <span>
-                {navigator.onLine ? 'Online' : 'Offline'} • 
+                {navigator.onLine ? 'Online' : 'Offline'} •
                 Connection: {navigator.connection?.effectiveType || 'Unknown'}
               </span>
             </div>

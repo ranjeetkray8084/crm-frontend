@@ -35,7 +35,7 @@ class SecurityMiddleware {
       /constructor/gi,
       /prototype/gi
     ];
-    
+
     // SQL injection patterns
     this.sqlInjectionPatterns = [
       /union\s+select/gi,
@@ -54,7 +54,7 @@ class SecurityMiddleware {
       /'\s*or\s*'1'\s*=\s*'1/gi,
       /'\s*union\s*select/gi
     ];
-    
+
     // XSS patterns
     this.xssPatterns = [
       /<iframe/gi,
@@ -75,7 +75,7 @@ class SecurityMiddleware {
       /<div\s+[^>]*onclick/gi,
       /<a\s+[^>]*onclick/gi
     ];
-    
+
     this.securityEvents = [];
     this.maxSecurityEvents = 1000;
   }
@@ -91,22 +91,22 @@ class SecurityMiddleware {
     }
 
     const sanitized = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       if (this.isValidField(key) && this.isValidValue(value)) {
         // Enhanced sanitization
         const sanitizedValue = this.sanitizeValue(value);
-        
+
         // Check for additional security threats
         if (this.detectSecurityThreats(key, sanitizedValue)) {
-          this.logSecurityEvent('SECURITY_THREAT_DETECTED', { 
-            field: key, 
+          this.logSecurityEvent('SECURITY_THREAT_DETECTED', {
+            field: key,
             value: typeof sanitizedValue === 'string' ? sanitizedValue.substring(0, 100) : sanitizedValue,
             threat: 'Malicious content detected'
           });
           continue; // Skip this field
         }
-        
+
         // Encrypt sensitive fields
         if (this.isSensitiveField(key)) {
           sanitized[key] = dataEncryption.encrypt(sanitizedValue);
@@ -115,8 +115,8 @@ class SecurityMiddleware {
           sanitized[key] = sanitizedValue;
         }
       } else {
-        this.logSecurityEvent('INVALID_FIELD_REJECTED', { 
-          field: key, 
+        this.logSecurityEvent('INVALID_FIELD_REJECTED', {
+          field: key,
           reason: !this.isValidField(key) ? 'Invalid field name' : 'Invalid field value'
         });
       }
@@ -132,16 +132,16 @@ class SecurityMiddleware {
    */
   isValidField(fieldName) {
     if (typeof fieldName !== 'string') return false;
-    
+
     // Block suspicious field names
     const suspiciousFields = ['__proto__', 'constructor', 'prototype'];
     if (suspiciousFields.includes(fieldName)) return false;
-    
+
     // Block fields with suspicious patterns
     if (this.suspiciousPatterns.some(pattern => pattern.test(fieldName))) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -152,17 +152,17 @@ class SecurityMiddleware {
    */
   isValidValue(value) {
     if (value === null || value === undefined) return false;
-    
+
     // Block suspicious values
     if (typeof value === 'string') {
       if (this.suspiciousPatterns.some(pattern => pattern.test(value))) {
         return false;
       }
-      
+
       // Block extremely long strings
       if (value.length > 10000) return false;
     }
-    
+
     return true;
   }
 
@@ -176,29 +176,29 @@ class SecurityMiddleware {
       // Remove HTML tags and attributes
       value = value.replace(/<[^>]*>/g, '');
       value = value.replace(/<[^>]*$/g, ''); // Remove incomplete tags
-      
+
       // Remove suspicious characters and patterns
       value = value.replace(/[<>\"'&]/g, '');
       value = value.replace(/javascript:/gi, '');
       value = value.replace(/vbscript:/gi, '');
       value = value.replace(/data:/gi, '');
       value = value.replace(/on\w+\s*=/gi, '');
-      
+
       // Remove SQL injection patterns
       this.sqlInjectionPatterns.forEach(pattern => {
         value = value.replace(pattern, '');
       });
-      
+
       // Remove XSS patterns
       this.xssPatterns.forEach(pattern => {
         value = value.replace(pattern, '');
       });
-      
+
       // Remove suspicious JavaScript functions
       this.suspiciousPatterns.forEach(pattern => {
         value = value.replace(pattern, '');
       });
-      
+
       // Decode HTML entities
       value = value.replace(/&lt;/g, '<');
       value = value.replace(/&gt;/g, '>');
@@ -206,15 +206,15 @@ class SecurityMiddleware {
       value = value.replace(/&quot;/g, '"');
       value = value.replace(/&#x27;/g, "'");
       value = value.replace(/&#x2F;/g, '/');
-      
+
       // Remove null bytes and control characters
       value = value.replace(/\0/g, '');
       value = value.replace(/[\x00-\x1F\x7F]/g, '');
-      
+
       // Trim whitespace
       value = value.trim();
     }
-    
+
     return value;
   }
 
@@ -228,32 +228,32 @@ class SecurityMiddleware {
     if (typeof value !== 'string') {
       return false;
     }
-    
+
     // Check for script injection
     if (this.suspiciousPatterns.some(pattern => pattern.test(value))) {
       return true;
     }
-    
+
     // Check for SQL injection
     if (this.sqlInjectionPatterns.some(pattern => pattern.test(value))) {
       return true;
     }
-    
+
     // Check for XSS
     if (this.xssPatterns.some(pattern => pattern.test(value))) {
       return true;
     }
-    
+
     // Check for suspicious file paths
     if (value.includes('..') || value.includes('/etc/') || value.includes('/var/')) {
       return true;
     }
-    
+
     // Check for suspicious URLs
     if (value.match(/https?:\/\/[^\s]+/) && !this.isAllowedDomain(value)) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -270,8 +270,8 @@ class SecurityMiddleware {
       'address', 'street', 'city', 'zip', 'postal',
       'bank', 'account', 'routing', 'iban', 'swift'
     ];
-    
-    return sensitiveFields.some(field => 
+
+    return sensitiveFields.some(field =>
       fieldName.toLowerCase().includes(field.toLowerCase())
     );
   }
@@ -284,15 +284,15 @@ class SecurityMiddleware {
   isAllowedDomain(value) {
     const allowedDomains = [
       'leadstracker.in',
-      'backend.leadstracker.in',
+      'app.leadstracker.in',
       'crm.leadstracker.in',
       'localhost',
       '127.0.0.1'
     ];
-    
+
     const urlMatch = value.match(/https?:\/\/([^\/\s]+)/);
     if (!urlMatch) return false;
-    
+
     const domain = urlMatch[1];
     return allowedDomains.some(allowed => domain.includes(allowed));
   }
@@ -312,7 +312,7 @@ class SecurityMiddleware {
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Resource-Policy': 'same-origin',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://backend.leadstracker.in;",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://app.leadstracker.in;",
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
       'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -321,7 +321,7 @@ class SecurityMiddleware {
       'X-Request-ID': this.generateRequestId(),
       'X-Timestamp': Date.now().toString()
     };
-    
+
     return {
       ...headers,
       ...securityHeaders
@@ -372,7 +372,7 @@ class SecurityMiddleware {
         /file:\/\//,
         /ftp:\/\//
       ];
-      
+
       if (suspiciousUrls.some(pattern => pattern.test(requestConfig.url))) {
         return true;
       }
@@ -385,7 +385,7 @@ class SecurityMiddleware {
         'X-Real-IP',
         'X-Forwarded-Host'
       ];
-      
+
       if (suspiciousHeaders.some(header => requestConfig.headers[header])) {
         return true;
       }
@@ -408,19 +408,19 @@ class SecurityMiddleware {
       url: window.location.href,
       sessionId: this.getSessionId()
     };
-    
+
     this.securityEvents.push(event);
-    
+
     // Keep only last N events
     if (this.securityEvents.length > this.maxSecurityEvents) {
       this.securityEvents = this.securityEvents.slice(-this.maxSecurityEvents);
     }
-    
+
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.warn('Security Event:', event);
     }
-    
+
     // Send to security monitoring service
     this.sendSecurityEvent(event);
   }
@@ -438,7 +438,7 @@ class SecurityMiddleware {
         'MALICIOUS_CONTENT',
         'UNAUTHORIZED_ACCESS_ATTEMPT'
       ];
-      
+
       if (criticalEvents.includes(event.type)) {
         console.warn('Critical security event detected:', event);
       }
@@ -477,18 +477,18 @@ class SecurityMiddleware {
       // Check for required headers
       const requiredHeaders = ['X-Client-Version', 'X-Platform', 'X-Request-Timestamp'];
       const missingHeaders = requiredHeaders.filter(header => !config.headers?.[header]);
-      
+
       if (missingHeaders.length > 0) {
         this.logSecurityEvent('MISSING_SECURITY_HEADERS', { missingHeaders, config });
         return false;
       }
-      
+
       // Check for suspicious URL modifications
       if (config.url && config.url.includes('localhost') && process.env.NODE_ENV === 'production') {
         this.logSecurityEvent('SUSPICIOUS_URL_DETECTED', { url: config.url });
         return false;
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error validating request integrity:', error);
