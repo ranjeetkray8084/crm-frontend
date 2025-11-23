@@ -124,7 +124,10 @@ function sanitizeRequestData(data, sanitizeInput) {
   const sanitized = {};
 
   for (const [key, value] of Object.entries(data)) {
-    if (typeof value === 'string') {
+    // CRITICAL: Never sanitize password fields - they need special characters!
+    if (key.toLowerCase() === 'password' || key.toLowerCase() === 'newpassword' || key.toLowerCase() === 'oldpassword') {
+      sanitized[key] = value; // Keep password as-is
+    } else if (typeof value === 'string') {
       sanitized[key] = sanitizeInput(value);
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeRequestData(value, sanitizeInput);
